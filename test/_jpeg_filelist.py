@@ -1,0 +1,22 @@
+
+filelist_v2 = [
+    '../hdl/jpegenc_v2/cb_dct.v       ',     
+    '../hdl/jpegenc_v2/cb_huff.v      ',
+    '../hdl/jpegenc_v2/cb_quantizer.v ',
+    '../hdl/jpegenc_v2/cbd_q_h.v      ',
+    '../hdl/jpegenc_v2/cr_dct.v       ',
+    '../hdl/jpegenc_v2/cr_huff.v      ',
+    '../hdl/jpegenc_v2/cr_quantizer.v ',
+    '../hdl/jpegenc_v2/crd_q_h.v      ',
+    '../hdl/jpegenc_v2/ff_checker.v   ',
+    '../hdl/jpegenc_v2/fifo_out.v     ',
+    '../hdl/jpegenc_v2/jpeg_top.v     ',
+    '../hdl/jpegenc_v2/pre_fifo.v     ',
+    '../hdl/jpegenc_v2/rgb2ycbcr.v    ',
+    '../hdl/jpegenc_v2/sync_fifo_32.v ',
+    '../hdl/jpegenc_v2/sync_fifo_ff.v ',
+    '../hdl/jpegenc_v2/y_dct.v        ',
+    '../hdl/jpegenc_v2/y_huff.v       ',
+    '../hdl/jpegenc_v2/y_quantizer.v  ',
+    '../hdl/jpegenc_v2/yd_q_h.v       ', 
+]
