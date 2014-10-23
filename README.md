@@ -19,9 +19,9 @@ each other.
 
 JPEG Encoders
 =============
-jpegenc_v1: is the VHDL JPEG encoder converted to Verilog
-jpegenc_v2: is the Verilog JPEG encoder.
-jpegenc_v3: ...
+  - jpegenc_v1: is the VHDL JPEG encoder converted to Verilog
+  - jpegenc_v2: is the Verilog JPEG encoder.
+  - jpegenc_v3: ...
 
 (@todo: the above need better names)
 
@@ -34,26 +34,31 @@ To run the test the following need to be installed:
   * Python (currently using 2.7)
   
   * MyHDL
-    >> hg clone https://bitbucket.org/jandecaluwe/myhdl
-    >> cd myhdl
-    >> hg up -C 0.9-dev
-
+  ```
+  >> hg clone https://bitbucket.org/jandecaluwe/myhdl
+  >> cd myhdl
+  >> hg up -C 0.9-dev
+  ```
+  
   * Python Imaging Library (e.g. pip install Pillow)
 
 The MyHDL VPI module needs to be built and copied to the  test 
 directory
 
-  >> cd myhdl/cosimulation/icarus
-  >> make 
-  >> cp myhdl.vpi <somewhere>/test_jpeg/test
-  
+```
+>> cd myhdl/cosimulation/icarus
+>> make 
+>> cp myhdl.vpi <somewhere>/test_jpeg/test
+```  
 
 Once the tools and installed and the VPI module built the test can
 be run.
 
-  >> cd test
-  >> python test_jpecenc.py
-  
+```
+>> cd test
+>> python test_jpecenc.py
+```
+
 Depending on the test file the test can take significant time to run.
 Majority of the time is spent in the Verilog simulator (as seen from
 top).  
@@ -73,6 +78,6 @@ awesomely ...
 
 Performance
 -----------
-and fast ...
+and fast ... correct?
 
 
