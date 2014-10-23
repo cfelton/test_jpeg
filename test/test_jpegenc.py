@@ -5,8 +5,8 @@ import sys
 import os
 import argparse
 from argparse import Namespace
-from array import array
 
+from PIL import Image
 from myhdl import *
 
 from _jpeg_prep_cosim import prep_cosim
@@ -15,20 +15,19 @@ from _jpeg_intf import JPEGEnc
 def test_jpegenc(args):
 
     clock = Signal(bool(0))
-    reset = ResetSignal(0, active=0, async=True)
-    jpegi = JPEGEnc()
-    
-    tbdut = prep_cosim(clock, reset, jpegi, args=args)
+    reset = ResetSignal(0, active=1, async=True)
+    jpegi = JPEGEnc(clock, reset)
+
+    tbdut = prep_cosim(clock, reset, jpegi, args=args)    
 
     @always(delay(10))
     def tbclk():
         clock.next = not clock
 
     def _test():
-        
-        @instance
-        def tbstim():
-            print("start simulation ...")
+        tbintf = jpegi.get_gens()
+
+        def _pulse_reset():
             yield delay(13)
             reset.next = reset.active
             yield delay(113)
@@ -36,24 +35,43 @@ def test_jpegenc(args):
             yield delay(13)
             yield clock.posedge
 
-            for ii in xrange(100):
+        @instance
+        def tbstim():
+            print("start simulation ...")
+            yield _pulse_reset()
+            
+            img = Image.open(args.imgfn)
+            yield jpegi.put_image(img)
+            bic = [None]
+            yield jpegi.get_jpeg(bic)
+            
+            while not jpegi.done:
+                yield delay(1000)
                 yield clock.posedge
 
             print("end simulation")
             raise StopSimulation
 
-        return tbclk, tbstim
+        return tbclk, tbstim, tbintf
 
-    traceSignals.name = 'vcd/_test_jpegenc'
-    traceSignals.timescale = '1ns'
-    
-    fn = traceSignals.name + '.vcd'
-    if os.path.isfile(fn):
-        os.remove(fn)
 
-    Simulation((traceSignals(_test), tbdut,)).run()
+    if args.trace:
+        traceSignals.name = 'vcd/_test_jpegenc'
+        traceSignals.timescale = '1ns'    
+        fn = traceSignals.name + '.vcd'
+        if os.path.isfile(fn):
+            os.remove(fn)
+        gt = traceSignals(_test)
+    else:
+        gt = _test()
+
+    # run the simulation
+    Simulation((gt, tbdut,)).run()
+
 
 if __name__ == '__main__':
-    args = Namespace()
+    args = Namespace(
+        trace=False,
+        imgfn='smb.jpg')
     test_jpegenc(args)
 

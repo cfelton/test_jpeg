@@ -1,4 +1,6 @@
 
+`timescale 1ns/1ps
+
 module tb_jpegenc;
    
    reg clock;   
@@ -12,7 +14,12 @@ module tb_jpegenc;
    wire [4:0]  jpeg_eof_cnt;
    wire        jpeg_eof_p;   
 	       
-		      
+		
+   initial begin
+      $dumpfile("vcd/_tb_jpegenc.vcd");
+      $dumpvars(0, tb_jpegenc);
+   end
+      
    initial begin
       $from_myhdl(clock, reset, jpeg_eof, jpeg_en, jpeg_dati);
       $to_myhdl(jpeg_bits, jpeg_rdy, jpeg_eof_cnt, jpeg_eof_p);      
