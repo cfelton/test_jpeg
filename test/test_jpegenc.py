@@ -75,6 +75,9 @@ def test_jpegenc(args):
 if __name__ == '__main__':
     args = Namespace(
         trace=False,
-        imgfn='smb.jpg')
+        imgfn='smb.jpg',
+        build_only=False,
+        build_skip_v1=True
+    )
     test_jpegenc(args)
 

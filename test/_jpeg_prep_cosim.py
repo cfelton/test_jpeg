@@ -13,9 +13,10 @@ def prep_cosim(clock, reset, jpeg_intf, args=None):
     # build the first JPEG encoder
     # @note: this encoder is still being converted to 
     #    Verilog, for now just build
-    for ff in filelist_v1:        
-        cmd = "iverilog -g2005 %s" % (ff,)
-        os.system(cmd)
+    if not args.build_skip_v1:
+        for ff in filelist_v1:        
+            cmd = "iverilog -g2005 %s" % (ff,)
+            os.system(cmd)
 
     # build the second JPEG encoder
     # @todo: use subprocess, check the return and the "log"
@@ -47,8 +48,14 @@ def prep_cosim(clock, reset, jpeg_intf, args=None):
 
     return gcosim
                           
+
 if __name__ == '__main__':
-    args = Namespace(build_only=True)
+    args = Namespace(
+        build_only=True
+        build_skip_v1=False,
+        build_skip_v2=False
+    )
+    
     prep_cosim(Signal(bool(0)), 
                ResetSignal(0, 0, False),
                None,
