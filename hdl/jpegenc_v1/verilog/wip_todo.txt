@@ -1,0 +1,474 @@
+BUF_FIFO.v:   /// @todo: better home??? 
+BUF_FIFO.v-   parameter C_EXTRA_LINES = 8;
+BUF_FIFO.v-   parameter C_MAX_LINE_WIDTH = 1280;
+BUF_FIFO.v-   
+--
+BUF_FIFO.v:   // @todo : manually instantiate
+BUF_FIFO.v-   //U_SUB_RAMZ : entity work.SUB_RAMZ
+BUF_FIFO.v-   //generic map 
+BUF_FIFO.v-   //(
+--
+CtrlSM.v:    // @todo: check, VHDL used global values from the package
+CtrlSM.v-    //    need to verify these are correct
+CtrlSM.v-    localparam NUM_STAGES = 6;
+CtrlSM.v-    localparam CMP_MAX = 4;
+--
+CtrlSM.v:    // @todo: manually fix
+CtrlSM.v-    //type T_ARR_SM_SETTINGS is array(NUM_STAGES+1 downto 1) of T_SM_SETTINGS;
+CtrlSM.v-    //signal Reg             : T_ARR_SM_SETTINGS;
+CtrlSM.v-    reg [2:0] 	   main_state;
+--
+CtrlSM.v:    // @todo: manually fix
+CtrlSM.v-    //signal RSM             : T_SM_SETTINGS;
+CtrlSM.v-    
+CtrlSM.v-    reg 		    out_mux_ctrl_s;
+--
+CtrlSM.v:    // @todo: fix, need to explicitly list record
+CtrlSM.v-    //fdct_sm_settings <= Reg(1);
+CtrlSM.v-    //zig_sm_settings  <= Reg(2);
+CtrlSM.v-    //qua_sm_settings  <= Reg(3);
+--
+CtrlSM.v:    // @todo: manually convert
+CtrlSM.v-    //G_S_CTRL_SM : for i in 1 to NUM_STAGES generate
+CtrlSM.v-    //
+CtrlSM.v-    //  -- CTRLSM 1..NUM_STAGES
+--
+CtrlSM.v:		    // @todo: manually convert
+CtrlSM.v-		    //if i = 1 then
+CtrlSM.v:		    //  -- @todo: manually convert
+CtrlSM.v-		    //  --Reg(i).x_cnt   <= RSM.x_cnt;
+CtrlSM.v-		    //  --Reg(i).y_cnt   <= RSM.y_cnt;
+CtrlSM.v-		    //  --Reg(i).cmp_idx <= RSM.cmp_idx;
+--
+CtrlSM.v:		      // @todo: manually convert
+CtrlSM.v-		      //if idle(NUM_STAGES+1 downto 1) = (NUM_STAGES+1 downto 1 => '1') then
+CtrlSM.v-		      //  main_state     <= EOI;
+CtrlSM.v-		      //  jfif_eoi       <= '1';
+--
+DCT1D.v:// @todo: fix, manually convert
+DCT1D.v-//romedatao    : in T_ROM1DATAO;
+DCT1D.v-//romodatao    : in T_ROM1DATAO;
+DCT1D.v:// @todo: fix, manually convert
+DCT1D.v-//romeaddro    : out T_ROM1ADDRO;
+DCT1D.v-//romoaddro    : out T_ROM1ADDRO;
+DCT1D.v-
+--
+DCT1D.v:// @todo: manually convert
+DCT1D.v-
+DCT1D.v-reg [IP_W:0] databuf_reg[N - 1:0];
+DCT1D.v-reg [IP_W:0] latchbuf_reg[N - 1:0];
+--
+DCT1D.v:reg wmemsel_d4 = 1'b 0;  // @todo: fix, manually convert
+DCT1D.v-//signal romedatao_d1    : T_ROM1DATAO;
+DCT1D.v-//signal romodatao_d1    : T_ROM1DATAO;
+DCT1D.v-//signal romedatao_d2    : T_ROM1DATAO;
+--
+DCT1D.v:      // @todo: fix, manually convert
+DCT1D.v-      //latchbuf_reg    <= (others => (others => '0')); 
+DCT1D.v-      //databuf_reg     <= (others => (others => '0'));
+DCT1D.v-      stage2_reg <= 1'b 0;
+--
+DCT1D.v:        // @todo: fix, manually convert
+DCT1D.v-        //col_reg        <= (0=>'1',others => '0');
+DCT1D.v-        col_2_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
+DCT1D.v-      end
+--
+DCT1D.v:      // @todo: fix, manually convert
+DCT1D.v-      //if even_not_odd = '0' then
+DCT1D.v:      //  -- @todo: fix, manually convert
+DCT1D.v-      //  dcto_1 <= STD_LOGIC_VECTOR(RESIZE
+DCT1D.v-      //    (RESIZE(SIGNED(romedatao(0)),DA_W) + 
+DCT1D.v-      //    (RESIZE(SIGNED(romedatao(1)),DA_W-1) & '0') +
+--
+DCT1D.v:    // @todo: fix, manually convert
+DCT1D.v-  // read precomputed MAC results from LUT
+DCT1D.v-  //p_romaddr : process(CLK, RST)
+DCT1D.v-  //begin
+--
+DCT2D.v:// @todo: manually convert
+DCT2D.v-//romedatao    : in T_ROM2DATAO;
+DCT2D.v-//romodatao    : in T_ROM2DATAO;
+DCT2D.v:// @todo: manually convert
+DCT2D.v-//romeaddro    : out T_ROM2ADDRO;
+DCT2D.v-//romoaddro    : out T_ROM2ADDRO;
+DCT2D.v-
+--
+DCT2D.v:reg [DA2_W - 1:0] dcto_5 = 0;  // @todo: fix, manually convert
+DCT2D.v-//signal romedatao_d1    : T_ROM2DATAO;
+DCT2D.v-//signal romodatao_d1    : T_ROM2DATAO;
+DCT2D.v-//signal romedatao_d2    : T_ROM2DATAO;
+--
+DCT2D.v:  // @todo: fix, manually convert
+DCT2D.v-  //ramraddro_sg:
+DCT2D.v-  //ramraddro  <= STD_LOGIC_VECTOR(rowr_reg & colr_reg);  
+DCT2D.v-  //rmemsel_sg:
+--
+DCT2D.v:      // @todo: fix, manually convert
+DCT2D.v-      //latchbuf_reg         <= (others => (others => '0')); 
+DCT2D.v-      //databuf_reg          <= (others => (others => '0'));
+DCT2D.v-      odv_d0 <= 1'b 0;
+--
+DCT2D.v:        // @todo: fix, manually convert
+DCT2D.v-        // -- right shift input data
+DCT2D.v-        // latchbuf_reg(N-2 downto 0) <= latchbuf_reg(N-1 downto 1);
+DCT2D.v-        // latchbuf_reg(N-1)          <= RESIZE(SIGNED(ramdatao),RAMDATA_W+1);       
+--
+DCT2D.v:          // @todo: fix, manually convert
+DCT2D.v-          //-- after this sum databuf_reg is in range of -256 to 254 (min to max) 
+DCT2D.v-          //databuf_reg(0)  <= latchbuf_reg(1)+RESIZE(SIGNED(ramdatao),RAMDATA_W+1);
+DCT2D.v-          //databuf_reg(1)  <= latchbuf_reg(2)+latchbuf_reg(7);
+--
+DCT2D.v:        // @todo: fix, manually convert
+DCT2D.v-        //col_reg        <= (0=>'1',others => '0');
+DCT2D.v-      end
+DCT2D.v-      //------------------------------
+--
+DCT2D.v:        // @todo: fix, manually convert
+DCT2D.v-        //colr_reg      <= (0=>'1',others => '0');
+DCT2D.v-        datareadyack <= 1'b 1;
+DCT2D.v-      end
+--
+DCT2D.v:      // @todo: fix, manually convert
+DCT2D.v-      //if even_not_odd = '0' then
+DCT2D.v-      //  dcto_1 <= STD_LOGIC_VECTOR(RESIZE
+DCT2D.v-      //    (RESIZE(SIGNED(romedatao(0)),DA2_W) + 
+--
+DCT2D.v:    // @todo: fix, manually convert
+DCT2D.v-  //p_romaddr : process(CLK, RST)
+DCT2D.v-  //begin
+DCT2D.v-  //  if RST = '1' then
+--
+DoubleFifo.v:  // @todo: manually instantiate
+DoubleFifo.v-  //U_FIFO_1 : entity work.FIFO   
+DoubleFifo.v-  //generic map
+DoubleFifo.v-  //(
+--
+DoubleFifo.v:  // @todo: manually instantiate
+DoubleFifo.v-  //U_FIFO_2 : entity work.FIFO   
+DoubleFifo.v-  //generic map
+DoubleFifo.v-  //(
+--
+FDCT.v:// @todo: fix, manaully fix record usage
+FDCT.v-//fdct_sm_settings   : in  T_SM_SETTINGS;
+FDCT.v-// BUF_FIFO
+FDCT.v-// ZIG ZAG
+--
+FDCT.v:// @todo: fix, manually convert ??
+FDCT.v-//constant C_Y_1       : signed(14 downto 0) := to_signed(4899,  15);
+FDCT.v-//constant C_Y_2       : signed(14 downto 0) := to_signed(9617,  15);
+FDCT.v-//constant C_Y_3       : signed(14 downto 0) := to_signed(1868,  15);
+--
+FDCT.v:  // @todo: fix, manually convert (instantiate)
+FDCT.v-  //U_FRAM1 : entity work.RAMZ
+FDCT.v-  //generic map
+FDCT.v-  //( 
+--
+FDCT.v:  // @todo: fix, manually convert (instantiate)
+FDCT.v-  //U_MDCT : entity work.MDCT
+FDCT.v-  //      port map
+FDCT.v-  //(	  
+--
+FDCT.v:  // @todo: fix, manually convert (instantiate)
+FDCT.v-  //U_FIFO1 : entity work.FIFO   
+FDCT.v-  //generic map
+FDCT.v-  //(
+--
+FDCT.v:      // @todo: fix, manually convert
+FDCT.v-      //Cb_Reg <= Cb_Reg_1 + Cb_Reg_2 + Cb_Reg_3 + to_signed(128*16384, Cb_Reg'length);
+FDCT.v-      //Cr_Reg <= Cr_Reg_1 + Cr_Reg_2 + Cr_Reg_3 + to_signed(128*16384, Cr_Reg'length);
+FDCT.v-    end
+--
+FDCT.v:  // @todo: fix, manually convert (instantiate)  
+FDCT.v-  //U_RAMZ : entity work.RAMZ
+FDCT.v-  //generic map
+FDCT.v-  //( 
+--
+FIFO.v:      // @todo: manual convert the following 
+FIFO.v-      //if count_reg = 2**ADDR_WIDTH or
+FIFO.v-      //  (count_reg = 2**ADDR_WIDTH-1 and wr_en_reg = '1' and rd_en_reg = '0') then 
+FIFO.v-      //  full_reg        <= '1';
+--
+HostIF.v:    // @todo: verify these constants, some converted funky?
+HostIF.v-    parameter C_ENC_START_REG        = 36'h 0000_0000;
+HostIF.v-    parameter C_IMAGE_SIZE_REG       = 36'h 0000_0004;
+HostIF.v-    parameter C_IMAGE_RAM_ACCESS_REG = 36'h 0000_0008;
+--
+HostIF.v:          // @todo: fix, manually convert
+HostIF.v-          //if std_match(OPB_ABus, C_QUANTIZER_RAM_LUM) then
+HostIF.v-          //  qdata      <= OPB_DBus_in(qdata'range);
+HostIF.v-          //  qaddr      <= '0' & OPB_ABus(qaddr'high+2-1 downto 2);
+--
+Huffman.v:// @todo: fix, doesn't convert
+Huffman.v-parameter [1:0]
+Huffman.v-  IDLE = 0,
+Huffman.v-  RUN_VLC = 1,
+--
+Huffman.v:  // @todo: fix, manually instantiate, converter 
+Huffman.v-  //U_DC_ROM : entity work.DC_ROM
+Huffman.v-  //port map
+Huffman.v-  //(
+--
+Huffman.v:  // @todo: fix, manually instantiate, converter   
+Huffman.v-  //U_AC_ROM : entity work.AC_ROM
+Huffman.v-  //port map
+Huffman.v-  //(
+--
+Huffman.v:  // @todo: fix, manually instantiate, converter   
+Huffman.v-  //U_DC_CR_ROM : entity work.DC_CR_ROM
+Huffman.v-  //port map
+Huffman.v-  //(
+--
+Huffman.v:  // @todo: fix, manually instantiate, converter   
+Huffman.v-  //U_AC_CR_ROM : entity work.AC_CR_ROM
+Huffman.v-  //port map
+Huffman.v-  //(
+--
+Huffman.v:  // @todo: fix, manually instantiate, converter   
+Huffman.v-  //U_DoubleFifo : entity work.DoubleFifo
+Huffman.v-  //port map
+Huffman.v-  //(
+--
+Huffman.v:  // @todo: fix, manually instantiate, converter   
+Huffman.v-  always @(posedge CLK or posedge RST) begin
+Huffman.v-    if(RST == 1'b 1) begin
+Huffman.v-      rle_buf_sel_s <= 1'b 0;
+--
+Huffman.v:          // @todo: fix no convert
+Huffman.v-          //word_reg <= shift_left(word_reg, to_integer(num_fifo_wrs & "000"));
+Huffman.v-          // adjust bit pointer after some bytes were written to FIFO
+Huffman.v-          // modulo 8 operation
+--
+Huffman.v:          // @todo: fix, didn't convert
+Huffman.v-          //word_reg <= shift_left(word_reg, to_integer(num_fifo_wrs & "000"));
+Huffman.v-          // adjust bit pointer after some bytes were written to FIFO
+Huffman.v-          // modulo 8 operation
+--
+Huffman.v:            // @todo: fix, doesn't convert
+Huffman.v-            //if bit_ptr - (num_fifo_wrs & "000") /= 0 and last_block = '1' then
+Huffman.v-            //  state <= PAD;  
+Huffman.v-            //else
+--
+JpegEnc.v:    // @todo: fix, 
+JpegEnc.v-    //signal fdct_sm_settings   : T_SM_SETTINGS;
+JpegEnc.v-    //signal zig_sm_settings    : T_SM_SETTINGS;
+JpegEnc.v-    //signal qua_sm_settings    : T_SM_SETTINGS;
+--
+JpegEnc.v:       //-- @todo: fix
+JpegEnc.v-       //--fdct_sm_settings   => fdct_sm_settings,
+JpegEnc.v-       
+JpegEnc.v-       //-- ZIGZAG
+--
+JpegEnc.v:       //-- @todo: fix
+JpegEnc.v-       //--zig_sm_settings    => zig_sm_settings,
+JpegEnc.v-       
+JpegEnc.v-       //-- Quantizer
+--
+JpegEnc.v:       //-- @todo: fix
+JpegEnc.v-       //--qua_sm_settings    => qua_sm_settings,
+JpegEnc.v-       
+JpegEnc.v-       //-- RLE
+--
+JpegEnc.v:       //-- @todo: fix
+JpegEnc.v-       //--rle_sm_settings    => rle_sm_settings,
+JpegEnc.v-       
+JpegEnc.v-       //-- Huffman
+--
+JpegEnc.v:       //-- @todo: fix
+JpegEnc.v-       //--huf_sm_settings    => huf_sm_settings,
+JpegEnc.v-       
+JpegEnc.v-       //-- ByteStuffdr
+--
+JpegEnc.v:       //-- @todo: fix
+JpegEnc.v-       //--bs_sm_settings     => bs_sm_settings,
+JpegEnc.v-       
+JpegEnc.v-       //-- JFIF GEN
+--
+JpegEnc.v:	 // @todo: fix "settings"
+JpegEnc.v-	 //.fdct_sm_settings   (fdct_sm_settings	   ),
+JpegEnc.v-  	 
+JpegEnc.v-	 //-- BUF_FIFO	      			   
+--
+JpegEnc.v:	 	 // @todo: fix "settings"
+JpegEnc.v-	 //.zig_sm_settings    (zig_sm_settings  ),
+JpegEnc.v-  	 
+JpegEnc.v-	 //-- Quantizer      			    
+--
+JpegEnc.v:	 // @todo: fix "settings"		   
+JpegEnc.v-	 //.qua_sm_settings    (qua_sm_settings	   ),
+JpegEnc.v-  	
+JpegEnc.v-	 //-- RLE	      			   ),
+--
+JpegEnc.v:	 // @todo: fix "settings"
+JpegEnc.v-	 //.rle_sm_settings    (rle_sm_settings,	  ),
+JpegEnc.v-  	 
+JpegEnc.v-	 //-- HUFFMAN	      			  
+--
+JpegEnc.v:  // @todo: fix, manually instantiate, converter doesn't handle  
+JpegEnc.v-  //U_RLE_TOP : entity work.RLE_TOP
+JpegEnc.v-  //port map
+JpegEnc.v-  //(
+--
+JpegEnc.v:  // @todo: fix, manually instantiate, converter doesn't handle  
+JpegEnc.v-  //U_Huffman : entity work.Huffman
+JpegEnc.v-  //port map
+JpegEnc.v-  //(
+--
+JpegEnc.v:  // @todo: fix, manually instantiate, converter doesn't handle  
+JpegEnc.v-  //U_ByteStuffer : entity work.ByteStuffer
+JpegEnc.v-  //port map
+JpegEnc.v-  //(
+--
+JpegEnc.v:  // @todo: fix, manually instantiate, converter doesn't handle  
+JpegEnc.v-  //U_JFIFGen : entity work.JFIFGen
+JpegEnc.v-  //port map
+JpegEnc.v-  //(
+--
+JpegEnc.v:  // @todo: fix, manually instantiate, converter doesn't handle  
+JpegEnc.v-  //U_OutMux : entity work.OutMux
+JpegEnc.v-  //port map
+JpegEnc.v-  //(
+--
+MDCT.v:    // @todo: fix, converter doesn't handle user defined types
+MDCT.v-    
+MDCT.v-    //signal romedatao_s          : T_ROM1DATAO;
+MDCT.v-    //signal romodatao_s          : T_ROM1DATAO;
+--
+MDCT.v:  // @todo: fix, manually instantiate
+MDCT.v-  //U_DCT1D : entity work.DCT1D
+MDCT.v-  //  port map(       
+MDCT.v-  //      clk          => clk,         
+--
+MDCT.v:  // @todo: fix, manually instantiate  
+MDCT.v-  //U_DCT2D : entity work.DCT2D
+MDCT.v-  //  port map(       
+MDCT.v-  //      clk          => clk,         
+--
+MDCT.v:  // @todo: fix, manually instantiate
+MDCT.v-  //U1_RAM : entity work.RAM   
+MDCT.v-  //  port map (      
+MDCT.v-  //        d          => ramdatai_s,               
+--
+MDCT.v:  // @todo: fix, manually instantiate
+MDCT.v-  //U2_RAM : entity work.RAM   
+MDCT.v-  //  port map (      
+MDCT.v-  //        d          => ramdatai_s,               
+--
+MDCT.v:  // @todo: fix, manually instantiate
+MDCT.v-  //U_DBUFCTL : entity work.DBUFCTL         
+MDCT.v-  //        port map(         
+MDCT.v-  //                clk            => clk,
+--
+MDCT.v:  // @todo: fix, manually instantiate
+MDCT.v-  //G_ROM_ST1 : for i in 0 to 8 generate
+MDCT.v-  //  U1_ROME : entity work.ROME 
+MDCT.v-  //  port map( 
+--
+MDCT.v:  // @todo: fix, manually instantiate
+MDCT.v-  //G_ROM_ST2 : for i in 0 to 10 generate
+MDCT.v-  //  U2_ROME : entity work.ROME 
+MDCT.v-  //  port map( 
+--
+QUANTIZER.v:  // @todo manually instantiate
+QUANTIZER.v-  //U_RAMQ : entity work.RAMZ
+QUANTIZER.v-  //  generic map
+QUANTIZER.v-  //  (
+--
+QUANTIZER.v:  // @todo manually instantiate
+QUANTIZER.v-  //r_divider : entity work.r_divider
+QUANTIZER.v-  //port map
+QUANTIZER.v-  //(
+--
+QUANTIZER.v:        // @todo fix
+QUANTIZER.v-        //romaddr_s <= romaddr_s + TO_UNSIGNED(1,romaddr_s'length);
+QUANTIZER.v-      end
+QUANTIZER.v-      //pipeline_reg <= pipeline_reg(pipeline_reg'length-2 downto 0) & divalid;
+--
+QUANTIZER.v:      // @todo fix the following
+QUANTIZER.v-      // sign_bit_pipe <= sign_bit_pipe(sign_bit_pipe'length-2 downto 0) & di(SIZE_C-1);
+QUANTIZER.v-    end
+QUANTIZER.v-  end
+--
+QUANTIZER.v:  // @todo: fix
+QUANTIZER.v-  assign dovalid = pipeline_reg[4];
+QUANTIZER.v-//------------------------------------------------------------------------------
+QUANTIZER.v-
+--
+QUANT_TOP.v:  // @todo: instantiate manually
+QUANT_TOP.v-  //U_quantizer : entity work.quantizer
+QUANT_TOP.v-  //generic map
+QUANT_TOP.v-  //  ( 
+--
+QUANT_TOP.v:  // @todo: manually instantiate
+QUANT_TOP.v-  //U_RAMZ : entity work.RAMZ
+QUANT_TOP.v-  //generic map
+QUANT_TOP.v-  //( 
+--
+RLE.v:            // @todo: fix
+RLE.v-            //acc_reg <= RESIZE(SIGNED(di),RAMDATA_W+1) - RESIZE(prev_dc_reg_0,RAMDATA_W+1);
+RLE.v-	     acc_reg <= $signed(di) - prev_dc_reg_0;	     
+RLE.v-             prev_dc_reg_0 <= (di);
+--
+RLE.v:            // @todo: fix              
+RLE.v-            //acc_reg <= RESIZE(SIGNED(di),RAMDATA_W+1) - RESIZE(prev_dc_reg_1,RAMDATA_W+1);
+RLE.v-	     acc_reg <= $signed(di) - prev_dc_reg_1;
+RLE.v-             prev_dc_reg_1 <= (di);
+--
+RLE.v:            // @todo: fix              
+RLE.v-            //acc_reg <= RESIZE(SIGNED(di),RAMDATA_W+1) - RESIZE(prev_dc_reg_2,RAMDATA_W+1);
+RLE.v-	     acc_reg <= $signed(di) - prev_dc_reg_2;	     
+RLE.v-             prev_dc_reg_2 <= (di);
+--
+RLE.v:              // @todo: fix              
+RLE.v-              //acc_reg        <= RESIZE(SIGNED(di),RAMDATA_W+1);              
+RLE.v-              runlength_reg <= zero_cnt[3:0];
+RLE.v-              zero_cnt <= {6{1'b0}};
+--
+RLE.v:          // @todo: fix          
+RLE.v-          //acc_reg        <= RESIZE(SIGNED(zrl_di),RAMDATA_W+1);
+RLE.v-          runlength_reg <= zero_cnt[3:0];
+RLE.v-          if(((zrl_di)) == 0) begin
+--
+RLE.v:      // @todo: need to manually fix (doh)
+RLE.v-      // compute Symbol-1 Size
+RLE.v-      //if acc_reg = TO_SIGNED(-1,RAMDATA_W+1) then
+RLE.v-      //  size_reg <= TO_UNSIGNED(1,SIZE_REG_C);
+--
+RLE.v:      // @todo: fix, need to manually fix
+RLE.v-      // compute Symbol-1 Size
+RLE.v-      // positive input
+RLE.v-      //if acc_reg = TO_SIGNED(1,RAMDATA_W+1) then
+--
+RLE_TOP.v:  // @todo: manual instantiation
+RLE_TOP.v-  //U_rle : entity work.rle
+RLE_TOP.v-  //generic map
+RLE_TOP.v-  //  ( 
+--
+RLE_TOP.v:  // @todo: manual instantiation
+RLE_TOP.v-  //U_RleDoubleFifo : entity work.RleDoubleFifo
+RLE_TOP.v-  //port map
+RLE_TOP.v-  //(
+--
+RLE_TOP.v:        // @todo: manually fix!
+RLE_TOP.v-        //if dbuf_data = (dbuf_data'range => '0') and wr_cnt /= 0 then
+RLE_TOP.v-        //  ready_pb <= '1';
+RLE_TOP.v-        //else
+--
+RLE_TOP.v:        // end @todo manually fix
+RLE_TOP.v-      end
+RLE_TOP.v-    end
+RLE_TOP.v-  end
+--
+ZIGZAG.v:   // @todo: need to manually convert the ZIGZIG RAM'r
+ZIGZAG.v-   //type ZIGZAG_TYPE is   array (0 to 2**RAMADDR_W-1) of INTEGER range 0 to 2**RAMADDR_W-1;
+ZIGZAG.v-   //constant ZIGZAG_ARRAY : ZIGZAG_TYPE := 
+ZIGZAG.v-   //                    (
+--
+ZIGZAG.v:      // @todo: ...
+ZIGZAG.v-   end
+ZIGZAG.v-   
+ZIGZAG.v-   wire 		    fifo_wr;
+--
+ZZ_TOP.v:   // @todo: can't use record, break it down to the 3 members.
+ZZ_TOP.v-   //    port is currently unused.
+ZZ_TOP.v-   //zig_sm_settings    : in  T_SM_SETTINGS;
+ZZ_TOP.v-   // Quantizer
