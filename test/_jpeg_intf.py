@@ -92,10 +92,12 @@ class JPEGEnc(object):
                 self.done.next = False
                 img = imglst[0]
                 nx,ny = img.size
+                print("encode image %s %d x %d" % (str(img), nx, ny,))
                 for yy in xrange(0, ny, 8):
                     for xx in xrange(0, nx, 8):
                         self.enable.next = True
                         
+                        #print("   sending block %3d,%3d out of %3d,%3d" % (xx, yy, nx, ny))
                         if yy >= ny-8 and xx >= nx-8:
                             self.end_of_file_signal.next = True
 
@@ -132,10 +134,14 @@ class JPEGEnc(object):
         def t_bus_out():
             ii = 0
             while True:
-                yield self.data_ready.posedge
-                self._bitstream.append(self.jpeg_bitstream)                
-                ii += 1
-                if ii > 10:
+                yield self.clock.posedge
+                #yield self.data_ready.posedge
+                if self.data_ready:
+                    self._bitstream.append(self.jpeg_bitstream)                
+                    ii += 1
+
+                #if ii > 10:
+                if self.eof_data_partial_ready:
                     yield self._outq.put(self._bitstream)
 
         return t_bus_out

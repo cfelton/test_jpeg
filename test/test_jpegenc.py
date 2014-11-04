@@ -49,6 +49,9 @@ def test_jpegenc(args):
                 yield delay(1000)
                 yield clock.posedge
 
+            for ii in range(1000):
+                yield clock.posedge
+
             print("end simulation")
             raise StopSimulation
 
