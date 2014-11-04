@@ -1,12 +1,25 @@
 
 import os
+from argparse import Namespace
 from myhdl import *
+from _jpeg_filelist import filelist_v1
 from _jpeg_filelist import filelist_v2
 
 def prep_cosim(clock, reset, jpeg_intf, args=None):
     """
     """
-    global filelist_v2
+    global filelist_v1, filelist_v2
+
+    # build the first JPEG encoder
+    # @note: this encoder is still being converted to 
+    #    Verilog, for now just build
+    for ff in filelist_v1:        
+        cmd = "iverilog -g2005 %s" % (ff,)
+        os.system(cmd)
+
+    # build the second JPEG encoder
+    # @todo: use subprocess, check the return and the "log"
+    #   to verify it build correctly.
     files = filelist_v2 + ['tb_jpegenc.v']
     cmd = "iverilog -o jpegenc_v2 %s " % ("".join(files))
     print("compiling ...")
@@ -14,6 +27,9 @@ def prep_cosim(clock, reset, jpeg_intf, args=None):
 
     if not os.path.exists('vcd'):
         os.makedirs('vcd')
+
+    if args.build_only:
+        return None
 
     print("cosimulation setup ...")
     cmd = "vvp -m ./myhdl.vpi jpegenc_v2"
@@ -31,4 +47,9 @@ def prep_cosim(clock, reset, jpeg_intf, args=None):
 
     return gcosim
                           
-    
+if __name__ == '__main__':
+    args = Namespace(build_only=True)
+    prep_cosim(Signal(bool(0)), 
+               ResetSignal(0, 0, False),
+               None,
+               args)

@@ -1,4 +1,46 @@
 
+# Version 1 JPEG encoder
+filelist_v1 = [
+    '../hdl/jpegenc_v1/verilog/AC_CR_ROM.v',
+    '../hdl/jpegenc_v1/verilog/AC_ROM.v',
+    '../hdl/jpegenc_v1/verilog/DC_ROM.v',
+    '../hdl/jpegenc_v1/verilog/DC_CR_ROM.v',
+    '../hdl/jpegenc_v1/verilog/BUF_FIFO.v',
+    '../hdl/jpegenc_v1/verilog/ByteStuffer.v',
+    '../hdl/jpegenc_v1/verilog/OutMux.v',
+    '../hdl/jpegenc_v1/verilog/CtrlSM.v',
+    '../hdl/jpegenc_v1/verilog/DBUFCTL.v',
+    '../hdl/jpegenc_v1/verilog/RAM.v',
+    '../hdl/jpegenc_v1/verilog/RAMZ.v',
+    '../hdl/jpegenc_v1/verilog/ROMR.v',
+    '../hdl/jpegenc_v1/verilog/SUB_RAMZ.v',
+    '../hdl/jpegenc_v1/verilog/RAMF.v',
+    '../hdl/jpegenc_v1/verilog/FIFO.v',
+    '../hdl/jpegenc_v1/verilog/SingleSM.v',
+    '../hdl/jpegenc_v1/verilog/r_divider.v',
+    '../hdl/jpegenc_v1/verilog/ROMO.v',
+    '../hdl/jpegenc_v1/verilog/ROME.v',
+    '../hdl/jpegenc_v1/verilog/HeaderRam.v',
+    '../hdl/jpegenc_v1/verilog/RLE.v',
+    '../hdl/jpegenc_v1/verilog/RLE_TOP.v',
+    '../hdl/jpegenc_v1/verilog/DoubleFifo.v',
+    '../hdl/jpegenc_v1/verilog/RleDoubleFifo.v',
+    '../hdl/jpegenc_v1/verilog/DCT1D.v',
+    '../hdl/jpegenc_v1/verilog/DCT2D.v',
+    '../hdl/jpegenc_v1/verilog/FDCT.v',
+    '../hdl/jpegenc_v1/verilog/HostIF.v',
+    '../hdl/jpegenc_v1/verilog/Huffman.v',
+    '../hdl/jpegenc_v1/verilog/QUANTIZER.v',
+    '../hdl/jpegenc_v1/verilog/MDCT.v',
+    '../hdl/jpegenc_v1/verilog/ZIGZAG.v',
+    '../hdl/jpegenc_v1/verilog/JFIFGen.v',
+    '../hdl/jpegenc_v1/verilog/QUANT_TOP.v',
+    '../hdl/jpegenc_v1/verilog/ZZ_TOP.v',
+    '../hdl/jpegenc_v1/verilog/JpegEnc.v'
+
+]
+
+# Version 2 JPEG encoder
 filelist_v2 = [
     '../hdl/jpegenc_v2/cb_dct.v       ',     
     '../hdl/jpegenc_v2/cb_huff.v      ',

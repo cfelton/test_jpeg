@@ -26,6 +26,7 @@ class _JPEGEnc(object):
     eof = Signal(bool(0))        # end of figure/frame
     pxl = Signal(intbv(0)[24:])  # pixel bus
     pbv = Signal(bool(0))        # pixel bus valid
+
     # bitstream output
     sob = Signal(bool(0))        # start of bitstream
     eob = Signal(bool(0))        # end of bitstream
