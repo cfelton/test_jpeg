@@ -12,11 +12,11 @@ from _jpeg_intf import JPEGEnc
 
 class JPEGEncV2(JPEGEnc):
     
-    def __init__(self, clock, reset):
+    def __init__(self, clock, reset, args=None):
         """
         """
 
-        self.JPEGEnc.__init__(self, clock, reset, args=args)
+        JPEGEnc.__init__(self, clock, reset, args=args)
 
         # ---[encoder interface]---
         # the default interface (Signals) to the jpeg encoder

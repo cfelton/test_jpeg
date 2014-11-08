@@ -16,7 +16,7 @@ class JPEGEncV1(JPEGEnc):
         """
         """
 
-        self.JPEGEnc.__init__(self, clock, reset, args=args)
+        JPEGEnc.__init__(self, clock, reset, args=args)
 
         # ---[encoder interface]---
         # these are the encoder v1 interface signals
