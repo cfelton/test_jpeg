@@ -71,16 +71,35 @@
 // //////////////////////////////////////////////////////////////////////////////
 // no timescale needed
 
-module DCT2D(
-input wire clk,
-input wire rst,
-input wire [RAMDATA_W - 1:0] ramdatao,
-input wire dataready,
-output wire odv,
-output wire [OP_W - 1:0] dcto,
-output wire [RAMADRR_W - 1:0] ramraddro,
-output wire rmemsel,
-output reg datareadyack
+module DCT2D
+#(
+  /// @todo: these were constnats from MDCT_PKG, not sure if
+  ///    this should be repeated in each module or in a header
+  ///    (ugh preprocessor) not sure if iverilog supports SV pkg.
+  parameter IP_W        = 8,  
+  parameter OP_W        = 12,
+  parameter N           = 8,
+  parameter COE_W       = 12,
+  parameter ROMDATA_W   = COE_W+2,
+  parameter ROMADDR_W   = 6,
+  parameter RAMDATA_W   = 10,  
+  parameter RAMADRR_W   = 6,
+  parameter LEVEL_SHIFT = 128,
+  parameter DA_W        = ROMDATA_W+IP_W,
+  parameter DA2_W       = DA_W+2
+
+  
+)
+(
+ input wire 		       clk,
+ input wire 		       rst,
+ input wire [RAMDATA_W - 1:0]  ramdatao,
+ input wire 		       dataready,
+ output wire 		       odv,
+ output wire [OP_W - 1:0]      dcto,
+ output wire [RAMADRR_W - 1:0] ramraddro,
+ output wire 		       rmemsel,
+ output reg 		       datareadyack
 );
 
 // @todo: manually convert
@@ -229,8 +248,8 @@ reg [DA2_W - 1:0] dcto_5 = 0;  // @todo: fix, manually convert
     end
   end
 
-  always @(posedge CLK or posedge RST) begin
-    if(RST == 1'b 1) begin
+  always @(posedge clk or posedge rst) begin
+    if(rst == 1'b 1) begin
       even_not_odd <= 1'b 0;
       even_not_odd_d1 <= 1'b 0;
       even_not_odd_d2 <= 1'b 0;

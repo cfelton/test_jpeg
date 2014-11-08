@@ -81,25 +81,26 @@ module DCT1D
   ///    (ugh preprocessor) not sure if iverilog supports SV pkg.
   parameter IP_W        = 8,  
   parameter OP_W        = 12,
+  parameter N           = 8,
   parameter COE_W       = 12,
   parameter ROMDATA_W   = COE_W+2,
   parameter ROMADDR_W   = 6,
   parameter RAMDATA_W   = 10,  
-  parameter RAMADDR_W   = 6,
+  parameter RAMADRR_W   = 6,
   parameter LEVEL_SHIFT = 128,
   parameter DA_W        = ROMDATA_W+IP_W
 )
 (
- input wire 		       clk,
- input wire 		       rst,
- input wire [IP_W - 1:0]       dcti,
- input wire 		       idv,
- output wire 		       odv,
- output wire [OP_W - 1:0]      dcto,
- output wire [RAMADRR_W - 1:0] ramwaddro,
- output wire [RAMDATA_W - 1:0] ramdatai,
- output wire 		       ramwe,
- output wire 		       wmemsel
+ input  wire 		     clk,
+ input  wire 		     rst,
+ input  wire [IP_W-1:0]      dcti,
+ input  wire 		     idv,
+ output wire 		     odv,
+ output wire [OP_W-1:0]      dcto,
+ output wire [RAMADRR_W-1:0] ramwaddro,
+ output wire [RAMDATA_W-1:0] ramdatai,
+ output wire 		     ramwe,
+ output wire 		     wmemsel
 );
 
     // @todo: fix, manually convert
@@ -116,28 +117,34 @@ module DCT1D
     reg [IP_W:0] databuf_reg[N - 1:0];
     reg [IP_W:0] latchbuf_reg[N - 1:0];
     
-    reg [RAMADRR_W / 2 - 1:0] col_reg = 0;
-    reg [RAMADRR_W / 2 - 1:0] row_reg = 0;
-    wire [RAMADRR_W / 2 - 1:0] rowr_reg = 0;
-    reg [RAMADRR_W / 2 - 1:0]  inpcnt_reg = 0;
+    reg  [(RAMADRR_W/2) - 1:0] col_reg = 0;
+    reg  [(RAMADRR_W/2) - 1:0] row_reg = 0;
+    wire [(RAMADRR_W/2) - 1:0] rowr_reg = 0;
+    reg  [(RAMADRR_W/2) - 1:0] inpcnt_reg = 0;
+    
     reg 		       ramwe_s = 1'b0;
     reg 		       wmemsel_reg = 1'b0;
     reg 		       stage2_reg = 1'b0;
-    reg [RAMADRR_W - 1:0]      stage2_cnt_reg = 1;
-    reg [RAMADRR_W / 2 - 1:0]  col_2_reg = 0;
-    reg [RAMADRR_W - 1:0]      ramwaddro_s = 0;
+    reg [RAMADRR_W - 1 :0]     stage2_cnt_reg = 1;
+    
+    reg [(RAMADRR_W/2) - 1 :0] col_2_reg = 0;
+    reg [RAMADRR_W - 1 :0]     ramwaddro_s = 0;
+    
     reg 		       even_not_odd = 1'b0;
     reg 		       even_not_odd_d1 = 1'b0;
     reg 		       even_not_odd_d2 = 1'b0;
     reg 		       even_not_odd_d3 = 1'b0;
-    reg 		       ramwe_d1 = 1'b 0;
-    reg 		       ramwe_d2 = 1'b 0;
-    reg 		       ramwe_d3 = 1'b 0;
-    reg 		       ramwe_d4 = 1'b 0;
+    
+    reg 		       ramwe_d1 = 1'b0;
+    reg 		       ramwe_d2 = 1'b0;
+    reg 		       ramwe_d3 = 1'b0;
+    reg 		       ramwe_d4 = 1'b0;
+    
     reg [RAMADRR_W - 1:0]      ramwaddro_d1 = 0;
     reg [RAMADRR_W - 1:0]      ramwaddro_d2 = 0;
     reg [RAMADRR_W - 1:0]      ramwaddro_d3 = 0;
     reg [RAMADRR_W - 1:0]      ramwaddro_d4 = 0;
+    
     reg 		       wmemsel_d1 = 1'b0;
     reg 		       wmemsel_d2 = 1'b0;
     reg 		       wmemsel_d3 = 1'b0;
@@ -160,78 +167,92 @@ module DCT1D
     assign ramwe = ramwe_d4;
     assign ramdatai = dcto_4[DA_W - 1:12];
     assign wmemsel = wmemsel_d4;
-    
+
+    integer ii;
     always @(posedge clk or posedge rst) begin
 	if(rst == 1'b 1) begin
-	    inpcnt_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
-	    // @todo: fix, manually convert
+	    inpcnt_reg  <= 0; //{(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
+	    
 	    //latchbuf_reg    <= (others => (others => '0')); 
             //databuf_reg     <= (others => (others => '0'));
-            stage2_reg <= 1'b 0;
+	    for(ii=0; ii<IP_W; ii=ii+1) begin
+		latchbuf_reg[ii] <= 0;
+		databuf_reg[ii]  <= 0;
+	    end
+	    
+            stage2_reg     <= 1'b0;
             stage2_cnt_reg <= {(((RAMADRR_W - 1))-((0))+1){1'b1}};
-            ramwe_s <= 1'b 0;
-            ramwaddro_s <= {(((RAMADRR_W - 1))-((0))+1){1'b0}};
-            col_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
-            row_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
-            wmemsel_reg <= 1'b0;
-            col_2_reg   <= 0;  //{(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
-    end else begin
-	stage2_reg <= 1'b 0;
-	ramwe_s <= 1'b 0;
-	
-      //------------------------------
-      // 1st stage
-      //------------------------------
-      if(idv == 1'b 1) begin
-        inpcnt_reg <= inpcnt_reg + 1;
-        // right shift input data
-        latchbuf_reg[N - 2:0] <= latchbuf_reg[N - 1:1];
-        latchbuf_reg[N - 1] <= ({1'b0,dcti}) - LEVEL_SHIFT;
-        if(inpcnt_reg == (N - 1)) begin
-            // after this sum databuf_reg is in range of -256 to 254 (min to max) 
-            databuf_reg[0] <= latchbuf_reg[1] + ((({1'b 0,dcti}) - LEVEL_SHIFT));
-            databuf_reg[1] <= latchbuf_reg[2] + latchbuf_reg[7];
-            databuf_reg[2] <= latchbuf_reg[3] + latchbuf_reg[6];
-            databuf_reg[3] <= latchbuf_reg[4] + latchbuf_reg[5];
-            databuf_reg[4] <= latchbuf_reg[1] - ((({1'b 0,dcti}) - LEVEL_SHIFT));	    
-            databuf_reg[5] <= latchbuf_reg[2] - latchbuf_reg[7];
-            databuf_reg[6] <= latchbuf_reg[3] - latchbuf_reg[6];
-            databuf_reg[7] <= latchbuf_reg[4] - latchbuf_reg[5];
-            stage2_reg <= 1'b 1;
-        end
-      end
-      //------------------------------
-      //------------------------------
-      // 2nd stage
-      //------------------------------
-      if(stage2_cnt_reg < N) begin
-        stage2_cnt_reg <= stage2_cnt_reg + 1;
-        // write RAM
-        ramwe_s <= 1'b 1;
-        // reverse col/row order for transposition purpose
-        ramwaddro_s <= {col_2_reg,row_reg};
-        // increment column counter
-        col_reg <= col_reg + 1;
-        col_2_reg <= col_2_reg + 1;
-        // finished processing one input row
-          if(col_reg == 0) begin
-              row_reg <= row_reg + 1;
-              // switch to 2nd memory
-              if(row_reg == (N - 1)) begin
-		  wmemsel_reg <=  ~wmemsel_reg;
-		  col_reg     <= 0; //{(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
-              end
-          end
-      end
-      if(stage2_reg == 1'b 1) begin	  
-          stage2_cnt_reg <= 0; //{(((RAMADRR_W - 1))-((0))+1){1'b0}};	  
-          col_reg        <= 0; 
-          col_2_reg      <= 0; //{(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
-      end
-      //--------------------------------   
-    end
-  end
+	    
+            ramwe_s        <= 1'b0;
+            ramwaddro_s    <= 0; //{(((RAMADRR_W - 1))-((0))+1){1'b0}};
+            col_reg        <= 0; //{(((RAMADRR_W/2 - 1))-((0))+1){1'b0}};
+            row_reg        <= 0; //{(((RAMADRR_W/2 - 1))-((0))+1){1'b0}};
+            wmemsel_reg    <= 1'b0;
+            col_2_reg      <= 0;  //{(((RAMADRR_W/2 - 1))-((0))+1){1'b0}};
+	end 
+	else begin
+	    stage2_reg <= 1'b 0;
+	    ramwe_s <= 1'b 0;
+	    
+	    //------------------------------
+	    // 1st stage
+	    //------------------------------
+	    if(idv == 1'b 1) begin
+		inpcnt_reg <= inpcnt_reg + 1;
 
+		/// @todo: manual conversion / fix.  latchbuf is a 2D array
+		///    need to verify latchbuf_reg is supposed to be a 2D
+		///    and what the following is trying to actually achive
+		// right shift input data
+		//latchbuf_reg[N - 2:0] <= latchbuf_reg[N - 1:1];
+		
+		latchbuf_reg[N - 1] <= ({1'b0,dcti}) - LEVEL_SHIFT;
+		if(inpcnt_reg == (N - 1)) begin
+		    // after this sum databuf_reg is in range of -256 to 254 (min to max) 
+		    databuf_reg[0] <= latchbuf_reg[1] + ((({1'b 0,dcti}) - LEVEL_SHIFT));
+		    databuf_reg[1] <= latchbuf_reg[2] + latchbuf_reg[7];
+		    databuf_reg[2] <= latchbuf_reg[3] + latchbuf_reg[6];
+		    databuf_reg[3] <= latchbuf_reg[4] + latchbuf_reg[5];
+		    databuf_reg[4] <= latchbuf_reg[1] - ((({1'b 0,dcti}) - LEVEL_SHIFT));	    
+		    databuf_reg[5] <= latchbuf_reg[2] - latchbuf_reg[7];
+		    databuf_reg[6] <= latchbuf_reg[3] - latchbuf_reg[6];
+		    databuf_reg[7] <= latchbuf_reg[4] - latchbuf_reg[5];
+		    stage2_reg <= 1'b 1;
+		end
+	    end
+	    
+	    //------------------------------
+	    //------------------------------
+	    // 2nd stage
+	    //------------------------------
+	    if(stage2_cnt_reg < N) begin
+		stage2_cnt_reg <= stage2_cnt_reg + 1;
+		// write RAM
+		ramwe_s <= 1'b 1;
+		// reverse col/row order for transposition purpose
+		ramwaddro_s <= {col_2_reg,row_reg};
+		// increment column counter
+		col_reg <= col_reg + 1;
+		col_2_reg <= col_2_reg + 1;
+		// finished processing one input row
+		if(col_reg == 0) begin
+		    row_reg <= row_reg + 1;
+		    // switch to 2nd memory
+		    if(row_reg == (N - 1)) begin
+			wmemsel_reg <=  ~wmemsel_reg;
+			col_reg     <= 0; //{(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
+		    end
+		end
+	    end
+	    if(stage2_reg == 1'b 1) begin	  
+		stage2_cnt_reg <= 0; //{(((RAMADRR_W - 1))-((0))+1){1'b0}};	  
+		col_reg        <= 0; 
+		col_2_reg      <= 0; //{(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
+	    end
+	    //--------------------------------   
+	end
+    end
+    
     // output data pipeline
     always @(posedge clk or posedge rst) begin
 	if(rst == 1'b1) begin
@@ -243,6 +264,7 @@ module DCT1D
 	    ramwe_d2 <= 1'b 0;
 	    ramwe_d3 <= 1'b 0;
 	    ramwe_d4 <= 1'b 0;
+	    
 	    /// @todo: manually fix, concat expression fails
 	    //ramwaddro_d1 <= {(((RAMADRR_W - 1))-((0))+1){1'b0}};
 	    //ramwaddro_d2 <= {(((RAMADRR_W - 1))-((0))+1){1'b0}};
@@ -338,48 +360,49 @@ module DCT1D
     end
 
     // @todo: fix, manually convert
-  // read precomputed MAC results from LUT
-  //p_romaddr : process(CLK, RST)
-  //begin
-  //  if RST = '1' then
-  //    romeaddro   <= (others => (others => '0')); 
-  //    romoaddro   <= (others => (others => '0')); 
-  //  elsif CLK'event and CLK = '1' then
-  //    for i in 0 to 8 loop
-  //      -- even
-  //      romeaddro(i) <= STD_LOGIC_VECTOR(col_reg(RAMADRR_W/2-1 downto 1)) & 
-  //               databuf_reg(0)(i) & 
-  //               databuf_reg(1)(i) &
-  //               databuf_reg(2)(i) &
-  //               databuf_reg(3)(i);
-  //      -- odd
-  //      romoaddro(i) <= STD_LOGIC_VECTOR(col_reg(RAMADRR_W/2-1 downto 1)) & 
-  //               databuf_reg(4)(i) & 
-  //               databuf_reg(5)(i) &
-  //               databuf_reg(6)(i) &
-  //               databuf_reg(7)(i);
-  //    end loop;
-  //  end if;
-  //end process; 
-  //
-  //p_romdatao_d1 : process(CLK, RST)
-  //begin
-  //  if RST = '1' then
-  //    romedatao_d1    <= (others => (others => '0'));
-  //    romodatao_d1    <= (others => (others => '0'));
-  //    romedatao_d2    <= (others => (others => '0'));
-  //    romodatao_d2    <= (others => (others => '0'));
-  //    romedatao_d3    <= (others => (others => '0'));
-  //    romodatao_d3    <= (others => (others => '0'));
-  //  elsif CLK'event and CLK = '1' then
-  //    romedatao_d1   <= romedatao;
-  //    romodatao_d1   <= romodatao;
-  //    romedatao_d2   <= romedatao_d1;
-  //    romodatao_d2   <= romodatao_d1;
-  //    romedatao_d3   <= romedatao_d2;
-  //    romodatao_d3   <= romodatao_d2;
-  //  end if;
-  //end process;
-//------------------------------------------------------------------------------
-
+    // read precomputed MAC results from LUT
+    //p_romaddr : process(CLK, RST)
+    //begin
+    //  if RST = '1' then
+    //    romeaddro   <= (others => (others => '0')); 
+    //    romoaddro   <= (others => (others => '0')); 
+    //  elsif CLK'event and CLK = '1' then
+    //    for i in 0 to 8 loop
+    //      -- even
+    //      romeaddro(i) <= STD_LOGIC_VECTOR(col_reg(RAMADRR_W/2-1 downto 1)) & 
+    //               databuf_reg(0)(i) & 
+    //               databuf_reg(1)(i) &
+    //               databuf_reg(2)(i) &
+    //               databuf_reg(3)(i);
+    //      -- odd
+    //      romoaddro(i) <= STD_LOGIC_VECTOR(col_reg(RAMADRR_W/2-1 downto 1)) & 
+    //               databuf_reg(4)(i) & 
+    //               databuf_reg(5)(i) &
+    //               databuf_reg(6)(i) &
+    //               databuf_reg(7)(i);
+    //    end loop;
+    //  end if;
+    //end process; 
+    //
+    //p_romdatao_d1 : process(CLK, RST)
+    //begin
+    //  if RST = '1' then
+    //    romedatao_d1    <= (others => (others => '0'));
+    //    romodatao_d1    <= (others => (others => '0'));
+    //    romedatao_d2    <= (others => (others => '0'));
+    //    romodatao_d2    <= (others => (others => '0'));
+    //    romedatao_d3    <= (others => (others => '0'));
+    //    romodatao_d3    <= (others => (others => '0'));
+    //  elsif CLK'event and CLK = '1' then
+    //    romedatao_d1   <= romedatao;
+    //    romodatao_d1   <= romodatao;
+    //    romedatao_d2   <= romedatao_d1;
+    //    romodatao_d2   <= romodatao_d1;
+    //    romedatao_d3   <= romedatao_d2;
+    //    romodatao_d3   <= romodatao_d2;
+    //  end if;
+    //end process;
+    
+    //------------------------------------------------------------------------------
+    
 endmodule
