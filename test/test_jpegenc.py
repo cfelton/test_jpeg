@@ -18,16 +18,19 @@ def test_jpegenc(args):
 
     clock = Signal(bool(0))
     reset = ResetSignal(0, active=1, async=True)
-    jpegi = JPEGEncV2(clock, reset)
 
-    tbdut = prep_cosim(clock, reset, jpegi, args=args)    
+    jpgv1 = JPEGEncV1(clock, reset, args=args)
+    jpgv2 = JPEGEncV2(clock, reset, args=args)
+
+    tbdut = prep_cosim(clock, reset, jpgv1, jpgv2, args=args)    
 
     @always(delay(10))
     def tbclk():
         clock.next = not clock
 
     def _test():
-        tbintf = jpegi.get_gens()
+        tbintf = (jpgv1.get_gens(), jpgb2.get_gens(),)
+        finished = [Signal(bool(0)) for _ in range(2)]
 
         def _pulse_reset():
             yield delay(13)
@@ -37,27 +40,52 @@ def test_jpegenc(args):
             yield delay(13)
             yield clock.posedge
 
-        @instance
+        @instance()
         def tbstim():
             print("start simulation ...")
             yield _pulse_reset()
+            wait = True
+            while wait:
+                if False in finished:
+                    yield delay(100)
+                else:
+                    wait = False
             
-            img = Image.open(args.imgfn)
-            yield jpegi.put_image(img)
-            bic = [None]
-            yield jpegi.get_jpeg(bic)
-            
-            while not jpegi.done:
-                yield delay(1000)
-                yield clock.posedge
-
             for ii in range(1000):
                 yield clock.posedge
 
             print("end simulation")
             raise StopSimulation
 
-        return tbclk, tbstim, tbintf
+        # stimulate V1 (design1) 
+        @instance
+        def tbstimv1():
+            img = Image.open(args.imgfn)
+            yield jpgv1.put_image(img)
+            bic = [None]
+            yield jpgv1.get_jpeg(bic)
+            
+            while not jpgv1.done:
+                yield delay(1000)
+                yield clock.posedge            
+
+            finished[0].next = True
+
+        # stimulate V2 (design2) 
+        @instance
+        def tbstimv2():            
+            img = Image.open(args.imgfn)
+            yield jpgv2.put_image(img)
+            bic = [None]
+            yield jpgv2.get_jpeg(bic)
+            
+            while not jpgv2.done:
+                yield delay(1000)
+                yield clock.posedge
+
+            finished[1].next = True
+
+        return tbclk, tbstim, tbintf, tbstimv1, tbstimv2
 
 
     if args.trace:

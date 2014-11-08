@@ -401,27 +401,27 @@ module JpegEnc
     RLE_TOP
       U_RLE_TOP
 	(
-	 .CLK                (CLK,              ),  
-	 .RST                (RST,		),
+	 .CLK                (CLK               ),  
+	 .RST                (RST 		),
 	 //-- CTRL	      			  
-	 .start_pb           (rle_start,	),
-	 .ready_pb           (rle_ready,	),
+	 .start_pb           (rle_start 	),
+	 .ready_pb           (rle_ready 	),
 	 // @todo: fix "settings"
 	 //.rle_sm_settings    (rle_sm_settings,	  ),
   	 
 	 //-- HUFFMAN	      			  
-	 .huf_buf_sel        (huf_buf_sel,      ),
-	 .huf_rden           (huf_rden,	        ),
-	 .huf_runlength      (huf_runlength,    ),
-	 .huf_size           (huf_size,	        ),
-	 .huf_amplitude      (huf_amplitude,	),
-	 .huf_dval           (huf_dval,	        ),
-	 .huf_fifo_empty     (huf_fifo_empty,	),
+	 .huf_buf_sel        (huf_buf_sel       ),
+	 .huf_rden           (huf_rden 	        ),
+	 .huf_runlength      (huf_runlength     ),
+	 .huf_size           (huf_size 	        ),
+	 .huf_amplitude      (huf_amplitude 	),
+	 .huf_dval           (huf_dval 	        ),
+	 .huf_fifo_empty     (huf_fifo_empty 	),
   	 
 	 //-- Quantizer      			  
-	 .qua_buf_sel        (rle_buf_sel,	),
-	 .qua_rd_addr        (rle_rdaddr,	),
-	 .qua_data           (rle_data,	        ),
+	 .qua_buf_sel        (rle_buf_sel 	),
+	 .qua_rd_addr        (rle_rdaddr 	),
+	 .qua_data           (rle_data 	        ),
   	
 	 //-- HostIF	      			  
 	 .sof                (sof               )

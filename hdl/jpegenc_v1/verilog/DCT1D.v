@@ -74,93 +74,111 @@
 //------------------------------------------------------------------------------
 // no timescale needed
 
-module DCT1D(
-input wire clk,
-input wire rst,
-input wire [IP_W - 1:0] dcti,
-input wire idv,
-output wire odv,
-output wire [OP_W - 1:0] dcto,
-output wire [RAMADRR_W - 1:0] ramwaddro,
-output wire [RAMDATA_W - 1:0] ramdatai,
-output wire ramwe,
-output wire wmemsel
+module DCT1D
+#(
+  /// @todo: these were constnats from MDCT_PKG, not sure if
+  ///    this should be repeated in each module or in a header
+  ///    (ugh preprocessor) not sure if iverilog supports SV pkg.
+  parameter IP_W        = 8,  
+  parameter OP_W        = 12,
+  parameter COE_W       = 12,
+  parameter ROMDATA_W   = COE_W+2,
+  parameter ROMADDR_W   = 6,
+  parameter RAMDATA_W   = 10,  
+  parameter RAMADDR_W   = 6,
+  parameter LEVEL_SHIFT = 128,
+  parameter DA_W        = ROMDATA_W+IP_W
+)
+(
+ input wire 		       clk,
+ input wire 		       rst,
+ input wire [IP_W - 1:0]       dcti,
+ input wire 		       idv,
+ output wire 		       odv,
+ output wire [OP_W - 1:0]      dcto,
+ output wire [RAMADRR_W - 1:0] ramwaddro,
+ output wire [RAMDATA_W - 1:0] ramdatai,
+ output wire 		       ramwe,
+ output wire 		       wmemsel
 );
 
-// @todo: fix, manually convert
-//romedatao    : in T_ROM1DATAO;
-//romodatao    : in T_ROM1DATAO;
-// @todo: fix, manually convert
-//romeaddro    : out T_ROM1ADDRO;
-//romoaddro    : out T_ROM1ADDRO;
+    // @todo: fix, manually convert
+    //romedatao    : in T_ROM1DATAO;
+    //romodatao    : in T_ROM1DATAO;
+    
+    // @todo: fix, manually convert
+    //romeaddro    : out T_ROM1ADDRO;
+    //romoaddro    : out T_ROM1ADDRO;
 
 
 
-//------------------------------------------------------------------------------
-// ARCHITECTURE
-//------------------------------------------------------------------------------
-// @todo: manually convert
+    // @todo: manually convert
+    reg [IP_W:0] databuf_reg[N - 1:0];
+    reg [IP_W:0] latchbuf_reg[N - 1:0];
+    
+    reg [RAMADRR_W / 2 - 1:0] col_reg = 0;
+    reg [RAMADRR_W / 2 - 1:0] row_reg = 0;
+    wire [RAMADRR_W / 2 - 1:0] rowr_reg = 0;
+    reg [RAMADRR_W / 2 - 1:0]  inpcnt_reg = 0;
+    reg 		       ramwe_s = 1'b0;
+    reg 		       wmemsel_reg = 1'b0;
+    reg 		       stage2_reg = 1'b0;
+    reg [RAMADRR_W - 1:0]      stage2_cnt_reg = 1;
+    reg [RAMADRR_W / 2 - 1:0]  col_2_reg = 0;
+    reg [RAMADRR_W - 1:0]      ramwaddro_s = 0;
+    reg 		       even_not_odd = 1'b0;
+    reg 		       even_not_odd_d1 = 1'b0;
+    reg 		       even_not_odd_d2 = 1'b0;
+    reg 		       even_not_odd_d3 = 1'b0;
+    reg 		       ramwe_d1 = 1'b 0;
+    reg 		       ramwe_d2 = 1'b 0;
+    reg 		       ramwe_d3 = 1'b 0;
+    reg 		       ramwe_d4 = 1'b 0;
+    reg [RAMADRR_W - 1:0]      ramwaddro_d1 = 0;
+    reg [RAMADRR_W - 1:0]      ramwaddro_d2 = 0;
+    reg [RAMADRR_W - 1:0]      ramwaddro_d3 = 0;
+    reg [RAMADRR_W - 1:0]      ramwaddro_d4 = 0;
+    reg 		       wmemsel_d1 = 1'b0;
+    reg 		       wmemsel_d2 = 1'b0;
+    reg 		       wmemsel_d3 = 1'b0;
+    reg 		       wmemsel_d4 = 1'b0;  
 
-reg [IP_W:0] databuf_reg[N - 1:0];
-reg [IP_W:0] latchbuf_reg[N - 1:0];
-reg [RAMADRR_W / 2 - 1:0] col_reg = 0;
-reg [RAMADRR_W / 2 - 1:0] row_reg = 0;
-wire [RAMADRR_W / 2 - 1:0] rowr_reg = 0;
-reg [RAMADRR_W / 2 - 1:0] inpcnt_reg = 0;
-reg ramwe_s = 1'b 0;
-reg wmemsel_reg = 1'b 0;
-reg stage2_reg = 1'b 0;
-reg [RAMADRR_W - 1:0] stage2_cnt_reg = 1;
-reg [RAMADRR_W / 2 - 1:0] col_2_reg = 0;
-reg [RAMADRR_W - 1:0] ramwaddro_s = 0;
-reg even_not_odd = 1'b 0;
-reg even_not_odd_d1 = 1'b 0;
-reg even_not_odd_d2 = 1'b 0;
-reg even_not_odd_d3 = 1'b 0;
-reg ramwe_d1 = 1'b 0;
-reg ramwe_d2 = 1'b 0;
-reg ramwe_d3 = 1'b 0;
-reg ramwe_d4 = 1'b 0;
-reg [RAMADRR_W - 1:0] ramwaddro_d1 = 0;
-reg [RAMADRR_W - 1:0] ramwaddro_d2 = 0;
-reg [RAMADRR_W - 1:0] ramwaddro_d3 = 0;
-reg [RAMADRR_W - 1:0] ramwaddro_d4 = 0;
-reg wmemsel_d1 = 1'b 0;
-reg wmemsel_d2 = 1'b 0;
-reg wmemsel_d3 = 1'b 0;
-reg wmemsel_d4 = 1'b 0;  // @todo: fix, manually convert
-//signal romedatao_d1    : T_ROM1DATAO;
-//signal romodatao_d1    : T_ROM1DATAO;
-//signal romedatao_d2    : T_ROM1DATAO;
-//signal romodatao_d2    : T_ROM1DATAO;
-//signal romedatao_d3    : T_ROM1DATAO;
-//signal romodatao_d3    : T_ROM1DATAO;
-reg [DA_W - 1:0] dcto_1 = 0;
-reg [DA_W - 1:0] dcto_2 = 0;
-reg [DA_W - 1:0] dcto_3 = 0;
-reg [DA_W - 1:0] dcto_4 = 0;
+    // @todo: fix, manually convert
+    //signal romedatao_d1    : T_ROM1DATAO;
+    //signal romodatao_d1    : T_ROM1DATAO;
+    //signal romedatao_d2    : T_ROM1DATAO;
+    //signal romodatao_d2    : T_ROM1DATAO;
+    //signal romedatao_d3    : T_ROM1DATAO;
+    //signal romodatao_d3    : T_ROM1DATAO;
+    
+    reg [DA_W - 1:0] 	       dcto_1 = 0;
+    reg [DA_W - 1:0] 	       dcto_2 = 0;
+    reg [DA_W - 1:0] 	       dcto_3 = 0;
+    reg [DA_W - 1:0] 	       dcto_4 = 0;
 
-  assign ramwaddro = ramwaddro_d4;
-  assign ramwe = ramwe_d4;
-  assign ramdatai = dcto_4[DA_W - 1:12];
-  assign wmemsel = wmemsel_d4;
-  always @(posedge clk or posedge rst) begin
-    if(rst == 1'b 1) begin
-      inpcnt_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
-      // @todo: fix, manually convert
-      //latchbuf_reg    <= (others => (others => '0')); 
-      //databuf_reg     <= (others => (others => '0'));
-      stage2_reg <= 1'b 0;
-      stage2_cnt_reg <= {(((RAMADRR_W - 1))-((0))+1){1'b1}};
-      ramwe_s <= 1'b 0;
-      ramwaddro_s <= {(((RAMADRR_W - 1))-((0))+1){1'b0}};
-      col_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
-      row_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
-      wmemsel_reg <= 1'b 0;
-      col_2_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
+    assign ramwaddro = ramwaddro_d4;
+    assign ramwe = ramwe_d4;
+    assign ramdatai = dcto_4[DA_W - 1:12];
+    assign wmemsel = wmemsel_d4;
+    
+    always @(posedge clk or posedge rst) begin
+	if(rst == 1'b 1) begin
+	    inpcnt_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
+	    // @todo: fix, manually convert
+	    //latchbuf_reg    <= (others => (others => '0')); 
+            //databuf_reg     <= (others => (others => '0'));
+            stage2_reg <= 1'b 0;
+            stage2_cnt_reg <= {(((RAMADRR_W - 1))-((0))+1){1'b1}};
+            ramwe_s <= 1'b 0;
+            ramwaddro_s <= {(((RAMADRR_W - 1))-((0))+1){1'b0}};
+            col_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
+            row_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
+            wmemsel_reg <= 1'b0;
+            col_2_reg   <= 0;  //{(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
     end else begin
-      stage2_reg <= 1'b 0;
-      ramwe_s <= 1'b 0;
+	stage2_reg <= 1'b 0;
+	ramwe_s <= 1'b 0;
+	
       //------------------------------
       // 1st stage
       //------------------------------
@@ -168,18 +186,18 @@ reg [DA_W - 1:0] dcto_4 = 0;
         inpcnt_reg <= inpcnt_reg + 1;
         // right shift input data
         latchbuf_reg[N - 2:0] <= latchbuf_reg[N - 1:1];
-        latchbuf_reg[N - 1] <= ({1'b 0,dcti}) - LEVEL_SHIFT;
+        latchbuf_reg[N - 1] <= ({1'b0,dcti}) - LEVEL_SHIFT;
         if(inpcnt_reg == (N - 1)) begin
-          // after this sum databuf_reg is in range of -256 to 254 (min to max) 
-          databuf_reg[0] <= latchbuf_reg[1] + ((({1'b 0,dcti}) - LEVEL_SHIFT));
-          databuf_reg[1] <= latchbuf_reg[2] + latchbuf_reg[7];
-          databuf_reg[2] <= latchbuf_reg[3] + latchbuf_reg[6];
-          databuf_reg[3] <= latchbuf_reg[4] + latchbuf_reg[5];
-          databuf_reg[4] <= latchbuf_reg[1] - ((({1'b 0,dcti}) - LEVEL_SHIFT));
-          databuf_reg[5] <= latchbuf_reg[2] - latchbuf_reg[7];
-          databuf_reg[6] <= latchbuf_reg[3] - latchbuf_reg[6];
-          databuf_reg[7] <= latchbuf_reg[4] - latchbuf_reg[5];
-          stage2_reg <= 1'b 1;
+            // after this sum databuf_reg is in range of -256 to 254 (min to max) 
+            databuf_reg[0] <= latchbuf_reg[1] + ((({1'b 0,dcti}) - LEVEL_SHIFT));
+            databuf_reg[1] <= latchbuf_reg[2] + latchbuf_reg[7];
+            databuf_reg[2] <= latchbuf_reg[3] + latchbuf_reg[6];
+            databuf_reg[3] <= latchbuf_reg[4] + latchbuf_reg[5];
+            databuf_reg[4] <= latchbuf_reg[1] - ((({1'b 0,dcti}) - LEVEL_SHIFT));	    
+            databuf_reg[5] <= latchbuf_reg[2] - latchbuf_reg[7];
+            databuf_reg[6] <= latchbuf_reg[3] - latchbuf_reg[6];
+            databuf_reg[7] <= latchbuf_reg[4] - latchbuf_reg[5];
+            stage2_reg <= 1'b 1;
         end
       end
       //------------------------------
@@ -196,124 +214,128 @@ reg [DA_W - 1:0] dcto_4 = 0;
         col_reg <= col_reg + 1;
         col_2_reg <= col_2_reg + 1;
         // finished processing one input row
-        if(col_reg == 0) begin
-          row_reg <= row_reg + 1;
-          // switch to 2nd memory
-          if(row_reg == (N - 1)) begin
-            wmemsel_reg <=  ~wmemsel_reg;
-            col_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
+          if(col_reg == 0) begin
+              row_reg <= row_reg + 1;
+              // switch to 2nd memory
+              if(row_reg == (N - 1)) begin
+		  wmemsel_reg <=  ~wmemsel_reg;
+		  col_reg     <= 0; //{(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
+              end
           end
-        end
       end
-      if(stage2_reg == 1'b 1) begin
-        stage2_cnt_reg <= {(((RAMADRR_W - 1))-((0))+1){1'b0}};
-        // @todo: fix, manually convert
-        //col_reg        <= (0=>'1',others => '0');
-        col_2_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
+      if(stage2_reg == 1'b 1) begin	  
+          stage2_cnt_reg <= 0; //{(((RAMADRR_W - 1))-((0))+1){1'b0}};	  
+          col_reg        <= 0; 
+          col_2_reg      <= 0; //{(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
       end
       //--------------------------------   
     end
   end
 
-  // output data pipeline
-  always @(posedge CLK or posedge RST) begin
-    if(RST == 1'b 1) begin
-      even_not_odd <= 1'b 0;
-      even_not_odd_d1 <= 1'b 0;
-      even_not_odd_d2 <= 1'b 0;
-      even_not_odd_d3 <= 1'b 0;
-      ramwe_d1 <= 1'b 0;
-      ramwe_d2 <= 1'b 0;
-      ramwe_d3 <= 1'b 0;
-      ramwe_d4 <= 1'b 0;
-      ramwaddro_d1 <= {(((RAMADRR_W - 1))-((0))+1){1'b0}};
-      ramwaddro_d2 <= {(((RAMADRR_W - 1))-((0))+1){1'b0}};
-      ramwaddro_d3 <= {(((RAMADRR_W - 1))-((0))+1){1'b0}};
-      ramwaddro_d4 <= {(((RAMADRR_W - 1))-((0))+1){1'b0}};
-      wmemsel_d1 <= 1'b 0;
-      wmemsel_d2 <= 1'b 0;
-      wmemsel_d3 <= 1'b 0;
-      wmemsel_d4 <= 1'b 0;
-      dcto_1 <= {(((DA_W - 1))-((0))+1){1'b0}};
-      dcto_2 <= {(((DA_W - 1))-((0))+1){1'b0}};
-      dcto_3 <= {(((DA_W - 1))-((0))+1){1'b0}};
-      dcto_4 <= {(((DA_W - 1))-((0))+1){1'b0}};
-    end else begin
-      even_not_odd <= stage2_cnt_reg[0];
-      even_not_odd_d1 <= even_not_odd;
-      even_not_odd_d2 <= even_not_odd_d1;
-      even_not_odd_d3 <= even_not_odd_d2;
-      ramwe_d1 <= ramwe_s;
-      ramwe_d2 <= ramwe_d1;
-      ramwe_d3 <= ramwe_d2;
-      ramwe_d4 <= ramwe_d3;
-      ramwaddro_d1 <= ramwaddro_s;
-      ramwaddro_d2 <= ramwaddro_d1;
-      ramwaddro_d3 <= ramwaddro_d2;
-      ramwaddro_d4 <= ramwaddro_d3;
-      wmemsel_d1 <= wmemsel_reg;
-      wmemsel_d2 <= wmemsel_d1;
-      wmemsel_d3 <= wmemsel_d2;
-      wmemsel_d4 <= wmemsel_d3;
-      // @todo: fix, manually convert
-      //if even_not_odd = '0' then
-      //  -- @todo: fix, manually convert
-      //  dcto_1 <= STD_LOGIC_VECTOR(RESIZE
-      //    (RESIZE(SIGNED(romedatao(0)),DA_W) + 
-      //    (RESIZE(SIGNED(romedatao(1)),DA_W-1) & '0') +
-      //    (RESIZE(SIGNED(romedatao(2)),DA_W-2) & "00"),
-      //    DA_W));
-      //else
-      //  dcto_1 <= STD_LOGIC_VECTOR(RESIZE
-      //    (RESIZE(SIGNED(romodatao(0)),DA_W) + 
-      //    (RESIZE(SIGNED(romodatao(1)),DA_W-1) & '0') +
-      //    (RESIZE(SIGNED(romodatao(2)),DA_W-2) & "00"),
-      //    DA_W));
-      //end if;
-      //
-      //if even_not_odd_d1 = '0' then
-      //  dcto_2 <= STD_LOGIC_VECTOR(RESIZE
-      //    (signed(dcto_1) +
-      //    (RESIZE(SIGNED(romedatao_d1(3)),DA_W-3) & "000") +
-      //    (RESIZE(SIGNED(romedatao_d1(4)),DA_W-4) & "0000"),
-      //    DA_W));
-      //else
-      //  dcto_2 <= STD_LOGIC_VECTOR(RESIZE
-      //    (signed(dcto_1) + 
-      //    (RESIZE(SIGNED(romodatao_d1(3)),DA_W-3) & "000") +
-      //    (RESIZE(SIGNED(romodatao_d1(4)),DA_W-4) & "0000"),
-      //    DA_W));
-      //end if;
-      //
-      //if even_not_odd_d2 = '0' then
-      //  dcto_3 <= STD_LOGIC_VECTOR(RESIZE
-      //    (signed(dcto_2) +
-      //    (RESIZE(SIGNED(romedatao_d2(5)),DA_W-5) & "00000") +
-      //    (RESIZE(SIGNED(romedatao_d2(6)),DA_W-6) & "000000"),
-      //    DA_W));
-      //else
-      //  dcto_3 <= STD_LOGIC_VECTOR(RESIZE
-      //    (signed(dcto_2) + 
-      //    (RESIZE(SIGNED(romodatao_d2(5)),DA_W-5) & "00000") +
-      //    (RESIZE(SIGNED(romodatao_d2(6)),DA_W-6) & "000000"),
-      //    DA_W));
-      //end if;
-      //
-      //if even_not_odd_d3 = '0' then
-      //  dcto_4 <= STD_LOGIC_VECTOR(RESIZE
-      //    (signed(dcto_3) +
-      //    (RESIZE(SIGNED(romedatao_d3(7)),DA_W-7) & "0000000") -
-      //    (RESIZE(SIGNED(romedatao_d3(8)),DA_W-8) & "00000000"),
-      //    DA_W));
-      //else
-      //  dcto_4 <= STD_LOGIC_VECTOR(RESIZE
-      //    (signed(dcto_3) + 
-      //    (RESIZE(SIGNED(romodatao_d3(7)),DA_W-7) & "0000000") -
-      //    (RESIZE(SIGNED(romodatao_d3(8)),DA_W-8) & "00000000"),
-      //    DA_W));
-      //end if;
+    // output data pipeline
+    always @(posedge clk or posedge rst) begin
+	if(rst == 1'b1) begin
+	    even_not_odd <= 1'b 0;
+	    even_not_odd_d1 <= 1'b 0;
+	    even_not_odd_d2 <= 1'b 0;
+	    even_not_odd_d3 <= 1'b 0;
+	    ramwe_d1 <= 1'b 0;
+	    ramwe_d2 <= 1'b 0;
+	    ramwe_d3 <= 1'b 0;
+	    ramwe_d4 <= 1'b 0;
+	    /// @todo: manually fix, concat expression fails
+	    //ramwaddro_d1 <= {(((RAMADRR_W - 1))-((0))+1){1'b0}};
+	    //ramwaddro_d2 <= {(((RAMADRR_W - 1))-((0))+1){1'b0}};
+	    //ramwaddro_d3 <= {(((RAMADRR_W - 1))-((0))+1){1'b0}};
+	    //ramwaddro_d4 <= {(((RAMADRR_W - 1))-((0))+1){1'b0}};
+     
+	    wmemsel_d1 <= 1'b 0;
+	    wmemsel_d2 <= 1'b 0;
+	    wmemsel_d3 <= 1'b 0;
+	    wmemsel_d4 <= 1'b 0;
+	    
+	    dcto_1 <= {(((DA_W - 1))-((0))+1){1'b0}};
+	    dcto_2 <= {(((DA_W - 1))-((0))+1){1'b0}};
+	    dcto_3 <= {(((DA_W - 1))-((0))+1){1'b0}};
+	    dcto_4 <= {(((DA_W - 1))-((0))+1){1'b0}};
+	    
+	end else begin
+	    even_not_odd <= stage2_cnt_reg[0];
+	    even_not_odd_d1 <= even_not_odd;
+	    even_not_odd_d2 <= even_not_odd_d1;
+	    even_not_odd_d3 <= even_not_odd_d2;
+	    ramwe_d1 <= ramwe_s;
+	    ramwe_d2 <= ramwe_d1;
+	    ramwe_d3 <= ramwe_d2;
+	    ramwe_d4 <= ramwe_d3;
+	    ramwaddro_d1 <= ramwaddro_s;
+	    ramwaddro_d2 <= ramwaddro_d1;
+	    ramwaddro_d3 <= ramwaddro_d2;
+	    ramwaddro_d4 <= ramwaddro_d3;
+	    wmemsel_d1 <= wmemsel_reg;
+	    wmemsel_d2 <= wmemsel_d1;
+	    wmemsel_d3 <= wmemsel_d2;
+	    wmemsel_d4 <= wmemsel_d3;
+	    
+	    // @todo: fix, manually convert
+	    //if even_not_odd = '0' then
+	    //  -- @todo: fix, manually convert
+	    //  dcto_1 <= STD_LOGIC_VECTOR(RESIZE
+	    //    (RESIZE(SIGNED(romedatao(0)),DA_W) + 
+	    //    (RESIZE(SIGNED(romedatao(1)),DA_W-1) & '0') +
+	    //    (RESIZE(SIGNED(romedatao(2)),DA_W-2) & "00"),
+	    //    DA_W));
+	    //else
+	    //  dcto_1 <= STD_LOGIC_VECTOR(RESIZE
+	    //    (RESIZE(SIGNED(romodatao(0)),DA_W) + 
+	    //    (RESIZE(SIGNED(romodatao(1)),DA_W-1) & '0') +
+	    //    (RESIZE(SIGNED(romodatao(2)),DA_W-2) & "00"),
+	    //    DA_W));
+	    //end if;
+	    //
+	    //if even_not_odd_d1 = '0' then
+	    //  dcto_2 <= STD_LOGIC_VECTOR(RESIZE
+	    //    (signed(dcto_1) +
+	    //    (RESIZE(SIGNED(romedatao_d1(3)),DA_W-3) & "000") +
+	    //    (RESIZE(SIGNED(romedatao_d1(4)),DA_W-4) & "0000"),
+	    //    DA_W));
+	    //else
+	    //  dcto_2 <= STD_LOGIC_VECTOR(RESIZE
+	    //    (signed(dcto_1) + 
+	    //    (RESIZE(SIGNED(romodatao_d1(3)),DA_W-3) & "000") +
+	    //    (RESIZE(SIGNED(romodatao_d1(4)),DA_W-4) & "0000"),
+	    //    DA_W));
+	    //end if;
+	    //
+	    //if even_not_odd_d2 = '0' then
+	    //  dcto_3 <= STD_LOGIC_VECTOR(RESIZE
+	    //    (signed(dcto_2) +
+	    //    (RESIZE(SIGNED(romedatao_d2(5)),DA_W-5) & "00000") +
+	    //    (RESIZE(SIGNED(romedatao_d2(6)),DA_W-6) & "000000"),
+	    //    DA_W));
+	    //else
+	    //  dcto_3 <= STD_LOGIC_VECTOR(RESIZE
+	    //    (signed(dcto_2) + 
+	    //    (RESIZE(SIGNED(romodatao_d2(5)),DA_W-5) & "00000") +
+	    //    (RESIZE(SIGNED(romodatao_d2(6)),DA_W-6) & "000000"),
+	    //    DA_W));
+	    //end if;
+	    //
+	    //if even_not_odd_d3 = '0' then
+	    //  dcto_4 <= STD_LOGIC_VECTOR(RESIZE
+	    //    (signed(dcto_3) +
+	    //    (RESIZE(SIGNED(romedatao_d3(7)),DA_W-7) & "0000000") -
+	    //    (RESIZE(SIGNED(romedatao_d3(8)),DA_W-8) & "00000000"),
+	    //    DA_W));
+	    //else
+	    //  dcto_4 <= STD_LOGIC_VECTOR(RESIZE
+	    //    (signed(dcto_3) + 
+	    //    (RESIZE(SIGNED(romodatao_d3(7)),DA_W-7) & "0000000") -
+	    //    (RESIZE(SIGNED(romodatao_d3(8)),DA_W-8) & "00000000"),
+	    //    DA_W));
+	    //end if;
+	end
     end
-  end
 
     // @todo: fix, manually convert
   // read precomputed MAC results from LUT

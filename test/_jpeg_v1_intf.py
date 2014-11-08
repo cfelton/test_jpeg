@@ -21,14 +21,14 @@ class JPEGEncV1(JPEGEnc):
         # ---[encoder interface]---
         # these are the encoder v1 interface signals
         #self.mmbus = OPBBus()
-
+        pixel_nbits = self.pixel_nbits
         self.iram_wdata = Signal(intbv(0)[pixel_nbits:])  # input
         self.iram_wren = Signal(bool(0))                  # input
         self.iram_fifo_afull = Signal(bool(0))            # output
         self.ram_byte = Signal(intbv(0)[8:])              # output
         self.ram_wren = Signal(bool(0))                   # output
         self.wraddr = Signal(intbv(0)[24:])               # output
-        self.outif_almost_full = Signal(bool(0))          # input
+        self.almost_full = Signal(bool(0))                # input
         self.frame_size = Signal(intbv(0)[24:])           # output
 
 
