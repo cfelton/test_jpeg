@@ -38,20 +38,27 @@ def prep_cosim(clock, reset, jpeg_intf, args=None):
     gcosim = Cosimulation(cmd,
         clock = clock,
         reset = reset,
+
+        # encoder 1
+
+        # encoder 2
         jpeg_eof = jpeg_intf.end_of_file_signal,
         jpeg_en = jpeg_intf.enable,
         jpeg_dati = jpeg_intf.data_in,
         jpeg_bits = jpeg_intf.jpeg_bitstream,
         jpeg_rdy = jpeg_intf.data_ready,
         jpeg_eof_cnt = jpeg_intf.end_of_file_bitstream_count,
-        jpeg_eof_p = jpeg_intf.eof_data_partial_ready)
+        jpeg_eof_p = jpeg_intf.eof_data_partial_ready
+                          
+        # encoder (future versions)
+    )
 
     return gcosim
                           
 
 if __name__ == '__main__':
     args = Namespace(
-        build_only=True
+        build_only=True,
         build_skip_v1=False,
         build_skip_v2=False
     )

@@ -76,6 +76,7 @@ module JpegEnc
 (
  input wire 			 CLK,
  input wire 			 RST,
+
  input wire [31:0] 		 OPB_ABus,
  input wire [3:0] 		 OPB_BE,
  input wire [31:0] 		 OPB_DBus_in,
@@ -86,6 +87,7 @@ module JpegEnc
  output wire 			 OPB_retry,
  output wire 			 OPB_toutSup,
  output wire 			 OPB_errAck,
+
  input wire [C_PIXEL_BITS - 1:0] iram_wdata,
  input wire 			 iram_wren,
  output wire 			 iram_fifo_afull,

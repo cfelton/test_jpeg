@@ -10,13 +10,15 @@ from PIL import Image
 from myhdl import *
 
 from _jpeg_prep_cosim import prep_cosim
-from _jpeg_intf import JPEGEnc
+# the interfaces to the encoders
+from _jpeg_v1_intf import JPEGEncV1
+from _jpeg_v2_intf import JPEGEncV2
 
 def test_jpegenc(args):
 
     clock = Signal(bool(0))
     reset = ResetSignal(0, active=1, async=True)
-    jpegi = JPEGEnc(clock, reset)
+    jpegi = JPEGEncV2(clock, reset)
 
     tbdut = prep_cosim(clock, reset, jpegi, args=args)    
 
