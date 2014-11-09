@@ -20,7 +20,7 @@ filelist_v1 = [
     '../hdl/jpegenc_v1/verilog/r_divider.v',
     '../hdl/jpegenc_v1/verilog/ROMO.v',
     '../hdl/jpegenc_v1/verilog/ROME.v',
-    '../hdl/jpegenc_v1/verilog/HeaderRam.v',
+    '../hdl/jpegenc_v1/verilog/HeaderRAM.v',
     '../hdl/jpegenc_v1/verilog/RLE.v',
     '../hdl/jpegenc_v1/verilog/RLE_TOP.v',
     '../hdl/jpegenc_v1/verilog/DoubleFifo.v',

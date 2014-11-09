@@ -67,23 +67,6 @@
 // ///  * http://copyfree.org/licenses/mit/license.txt
 // ///
 // //////////////////////////////////////////////////////////////////////////////
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//--------------------------------- LIBRARY/PACKAGE ---------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-// generic packages/libraries:
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-// user packages/libraries:
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//--------------------------------- ENTITY ------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-// no timescale needed
 
 module Huffman
 (
@@ -462,20 +445,22 @@ module Huffman
 	    pad_byte <= {8{1'b0}};
 	end 
 	else begin
-	    ready_pb <= 1'b 0;
+	    ready_pb <= 1'b0;
+	    
 	    case(state)
 	      IDLE : begin
-		  if(start_pb == 1'b 1) begin
-		      first_rle_word <= 1'b 1;
+		  if(start_pb == 1'b1) begin
+		      first_rle_word <= 1'b1;
 		      state <= RUN_VLC;
 		  end
 	      end
+	      
 	      RUN_VLC : begin
 		  // data valid DC or data valid AC
 		  if((d_val_d1 == 1'b 1 && first_rle_word == 1'b 1) || (d_val == 1'b 1 && first_rle_word == 1'b 0)) begin
 		      for (i=0; i <= C_M - 1; i = i + 1) begin
-			  if(i < to_integer[VLC_size]) begin
-			      word_reg[C_M - 1 - to_integer[bit_ptr] - i] <= VLC[to_integer[VLC_size] - 1 - i];
+			  if(i < VLC_size) begin
+			      word_reg[C_M - 1 - bit_ptr - i] <= VLC[VLC_size - 1 - i];
 			  end
 		      end
 		      //bit_ptr <= bit_ptr + resize(VLC_size,bit_ptr'length);
@@ -499,8 +484,8 @@ module Huffman
 	      RUN_VLI : begin
 		  if(HFW_running == 1'b 0) begin
 		      for (i=0; i <= C_M - 1; i = i + 1) begin
-			  if(i < to_integer[VLI_ext_size]) begin
-			      word_reg[C_M - 1 - to_integer[bit_ptr] - i] <= VLI_ext[to_integer[VLI_ext_size] - 1 - i];
+			  if(i < VLI_ext_size) begin
+			      word_reg[C_M - 1 - bit_ptr - i] <= VLI_ext[VLI_ext_size - 1 - i];
 			  end
 		      end
 		      //bit_ptr <= bit_ptr + resize(VLI_ext_size, bit_ptr'length);
