@@ -136,7 +136,15 @@ module CtrlSM
     //    need to verify these are correct
     localparam NUM_STAGES = 6;
     localparam CMP_MAX = 4;
-			 
+	
+    /// @todo: verify correct encoding for states
+    localparam
+      IDLES = 1,
+      JFIF  = 2,
+      HORIZ = 3,
+      COMP  = 4,
+      VERT  = 5,
+      EOI   = 6;
     
     // @todo: manually fix
     //type T_ARR_SM_SETTINGS is array(NUM_STAGES+1 downto 1) of T_SM_SETTINGS;
@@ -209,23 +217,24 @@ module CtrlSM
     //-----------------------------------------------------------------
     // Regs
     //-----------------------------------------------------------------
-    reg [15:0] Reg_x_cnt;
-    reg [15:0] Reg_y_cnt;
-    reg [2:0]  Reg_cmp_idx;
+    reg [15:0] Reg_x_cnt [NUM_STAGES+1 : 1];
+    reg [15:0] Reg_y_cnt [NUM_STAGES+1 : 1];
+    reg [2:0]  Reg_cmp_idx [NUM_STAGES+1 : 1];
+    
     /// @todo: fix, manual convert.  The following needs to be
     ///    manually converted because the use fo recods    
-    genvar  gi;
-    generate for (gi=1; gi <= NUM_STAGES; gi = gi + 1) begin: G_REG_SM
+    genvar  gj;
+    generate for (gj=1; gj <= NUM_STAGES; gj = gj + 1) begin: G_REG_SM
     	always @(posedge CLK or posedge RST) begin
     	    if(RST == 1'b1) begin
-		Reg_x_cnt[gi] <= 0;
-		Reg_y_cnt[gi] <= 0;
-		Reg_cmp_idx[gi] <= 0;
+		Reg_x_cnt[gj] <= 0;
+		Reg_y_cnt[gj] <= 0;
+		Reg_cmp_idx[gj] <= 0;
     	    end 
 	    else begin
-    		if(start[i] == 1'b 1) begin
+    		if(start[gj] == 1'b 1) begin
     		    // @todo: manually convert
-    		    if (gi == 1) begin
+    		    if (gj == 1) begin
     		    //  -- @todo: manually convert
     		    //  --Reg(gi).x_cnt   <= RSM.x_cnt;
     		    //  --Reg(gi).y_cnt   <= RSM.y_cnt;
@@ -233,9 +242,9 @@ module CtrlSM
 		    end
     		    else begin
     			//  Reg(i) <= Reg(i-1);
-			Reg_x_cnt[gi]   <= Reg_x_cnt[gi-1];
-			Reg_y_cnt[gi]   <= Reg_y_cnt[gi-1];
-			Reg_cmp_idx[gi] <= Reg_cmp_idx[gi-1];			
+			Reg_x_cnt[gj]   <= Reg_x_cnt[gj-1];
+			Reg_y_cnt[gj]   <= Reg_y_cnt[gj-1];
+			Reg_cmp_idx[gj] <= Reg_cmp_idx[gj-1];			
     		    end                  
     		end
     	    end
@@ -246,25 +255,34 @@ module CtrlSM
     //-----------------------------------------------------------------
     // Main_SM
     //-----------------------------------------------------------------
+    reg    start_sm;
+    assign start[1] = start_sm;
     always @(posedge CLK or posedge RST) begin
-	if(RST == 1'b 1) begin
-	    main_state <= IDLES;
-	    start[1] <= 1'b 0;
-	    start1_d <= 1'b 0;
-	    jpeg_ready <= 1'b 0;
-	    RSM.x_cnt <= {1{1'b0}};
-	    RSM.y_cnt <= {1{1'b0}};
-	    jpeg_busy <= 1'b 0;
-	    RSM.cmp_idx <= {1{1'b0}};
-	    out_mux_ctrl_s <= 1'b 0;
-	    out_mux_ctrl_s2 <= 1'b 0;
-	    jfif_eoi <= 1'b 0;
-	    out_mux_ctrl <= 1'b 0;
-	    jfif_start <= 1'b 0;
+	if(RST == 1'b1) begin
+	    main_state      <= IDLES;
+	    //start[1]        <= 1'b0;
+	    start_sm        <= 1'b0;
+	    start1_d        <= 1'b0;
+	    jpeg_ready      <= 1'b0;
+
+	    /// @todo: fixe RSM, record to Verilog
+	    //RSM.x_cnt       <= {1{1'b0}};
+	    //RSM.y_cnt       <= {1{1'b0}};
+	    //RSM.cmp_idx     <= {1{1'b0}};
+	    
+	    jpeg_busy       <= 1'b0;
+	    out_mux_ctrl_s  <= 1'b0;
+	    out_mux_ctrl_s2 <= 1'b0;
+	    jfif_eoi        <= 1'b0;
+	    out_mux_ctrl    <= 1'b0;
+	    jfif_start      <= 1'b0;
 	end 
 	else begin
-	    start[1] <= 1'b 0;
-	    start1_d <= start[1];
+	    //start[1] <= 1'b 0;
+	    //start1_d <= start[1];
+	    start_sm <= 1'b0;
+	    start1_d <= start_sm;
+	    
 	    jpeg_ready <= 1'b 0;
 	    jfif_start <= 1'b 0;
 	    out_mux_ctrl_s2 <= out_mux_ctrl_s;
@@ -274,90 +292,107 @@ module CtrlSM
               //-----------------------------
 	      // IDLE
 	      //-----------------------------
-	      IDLES : begin
-		  if(sof == 1'b 1) begin
-		      RSM.x_cnt <= {1{1'b0}};
-		  RSM.y_cnt <= {1{1'b0}};
-		  jfif_start <= 1'b 1;
-		  out_mux_ctrl_s <= 1'b 0;
-		  jfif_eoi <= 1'b 0;
-		  main_state <= JFIF;
-              end
-		  //-----------------------------
-		  // JFIF
-		  //-----------------------------
+	      
+	      IDLES : begin		  
+		  if(sof == 1'b1) begin
+		      /// @todo: fixe RSM, record to Verilog
+		      //RSM.x_cnt <= {1{1'b0}};
+		      //RSM.y_cnt <= {1{1'b0}};
+		      jfif_start <= 1'b 1;
+		      out_mux_ctrl_s <= 1'b 0;
+		      jfif_eoi <= 1'b 0;
+		      main_state <= JFIF;
+                  end
 	      end
+	      
+	      //-----------------------------
+	      // JFIF
+	      //-----------------------------	      
 	      JFIF : begin
 		  if(jfif_ready == 1'b 1) begin
 		      out_mux_ctrl_s <= 1'b 1;
 		      main_state <= HORIZ;
 		  end
-		  //-----------------------------
-		  // HORIZ
-		  //-----------------------------
 	      end
+
+	      //-----------------------------
+	      // HORIZ
+	      //-----------------------------
+	      
 	      HORIZ : begin
-		  if(RSM.x_cnt < ((img_size_x))) begin
-		      main_state <= COMP;
-		  end
-		  else begin
-		      RSM.x_cnt <= {1{1'b0}};
-		  main_state <= VERT;
-              end
-		  //-----------------------------
-		  // COMP
-		  //-----------------------------
+		  /// @todo: fixe RSM, record to Verilog
+		  //if(RSM.x_cnt < ((img_size_x))) begin
+		  //    main_state <= COMP;
+		  //end
+		  //else begin
+		  //    RSM.x_cnt <= {1{1'b0}};
+		  //    main_state <= VERT;
+                  //end
 	      end
+
+	      //-----------------------------
+	      // COMP
+	      //-----------------------------	     
 	      COMP : begin
 		  if(idle[1] == 1'b 1 && start[1] == 1'b 0) begin
-          if(RSM.cmp_idx < ((CMP_MAX))) begin
-              start[1] <= 1'b 1;
-          end
-          else begin
-              RSM.cmp_idx <= {1{1'b0}};
-          RSM.x_cnt <= RSM.x_cnt + 16;
-          main_state <= HORIZ;
-      end
+		      /// @todo: fixe RSM, record to Verilog
+		      //if(RSM.cmp_idx < ((CMP_MAX))) begin
+		      //	  start[1] <= 1'b 1;
+		      //end
+		      //else begin
+		      //	  RSM.cmp_idx <= {1{1'b0}};
+		      //    RSM.x_cnt <= RSM.x_cnt + 16;
+		      //
+		      //main_state <= HORIZ;		      
+		      //end
 		  end
-		  //-----------------------------
-		  // VERT
-		  //-----------------------------
+		  
 	      end
+	      
+	      //-----------------------------
+	      // VERT
+	      //-----------------------------	      
 	      VERT : begin
-		  if(RSM.y_cnt < (((img_size_y)) - 8)) begin
-		      RSM.x_cnt <= {1{1'b0}};
-		  RSM.y_cnt <= RSM.y_cnt + 8;
-		  main_state <= HORIZ;
-        end
-		  else begin
-		      // @todo: manually convert
-		      //if idle(NUM_STAGES+1 downto 1) = (NUM_STAGES+1 downto 1 => '1') then
-		      //  main_state     <= EOI;
-		      //  jfif_eoi       <= '1';
-		      //  out_mux_ctrl_s <= '0';
-		      //  jfif_start     <= '1';
-		      //end if;
-		  end
-		  //-----------------------------
-		  // VERT
-		  //-----------------------------
+		  /// @todo: fixe RSM, record to Verilog
+		  //if(RSM.y_cnt < (((img_size_y)) - 8)) begin
+		  //    RSM.x_cnt <= {1{1'b0}};
+		  //    RSM.y_cnt <= RSM.y_cnt + 8;
+		  //    main_state <= HORIZ;
+                  //end
+		  //else begin
+		  //    // @todo: manually convert
+		  //    //if idle(NUM_STAGES+1 downto 1) = (NUM_STAGES+1 downto 1 => '1') then
+		  //    //  main_state     <= EOI;
+		  //    //  jfif_eoi       <= '1';
+		  //    //  out_mux_ctrl_s <= '0';
+		  //    //  jfif_start     <= '1';
+		  //    //end if;
+		  //end
 	      end
+
+	      //-----------------------------
+	      // VERT
+	      //-----------------------------	      
 	      EOI : begin
 		  if(jfif_ready == 1'b 1) begin
 		      jpeg_ready <= 1'b 1;
 		      main_state <= IDLES;
 		  end
-		  //-----------------------------
-		  // others
-		  //-----------------------------
 	      end
+
+	      //-----------------------------
+	      // others
+	      //-----------------------------	      
 	      default : begin
 		  main_state <= IDLES;
 	      end
 	    endcase
-	    if(start1_d == 1'b 1) begin
-		RSM.cmp_idx <= RSM.cmp_idx + 1;
-	    end
+
+	    /// @todo: fixe RSM, record to Verilog
+	    //if(start1_d == 1'b 1) begin
+	    //	RSM.cmp_idx <= RSM.cmp_idx + 1;
+	    //end
+	    
 	    if(main_state == IDLES) begin
 		jpeg_busy <= 1'b 0;
 	    end
