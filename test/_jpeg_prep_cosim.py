@@ -14,9 +14,7 @@ def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
     # @note: this encoder is still being converted to 
     #    Verilog, for now just build
     if not args.build_skip_v1:
-        #for ff in filelist_v1:        
-        #    cmd = "iverilog -g2005 %s" % (ff,)
-        #    os.system(cmd)
+        # @todo: save std* and create log
         cmd = "iverilog -o jpegenc_v1 %s" % (" ".join(filelist_v1))
         print("compiling v1 ...")
         os.system(cmd)
@@ -29,8 +27,6 @@ def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
     os.system(cmd)
 
     files = ['tb_jpegenc.v']
-    #libdir = "-y ../hdl/jpegenc_v1/verilog/ "
-    #libdir += "-y ../hdl/jpegenc_v2 "
     cmd = "iverilog -o jpegenc %s %s tb_jpegenc.v" % \
     ( 
         " ".join(filelist_v1), 
@@ -55,13 +51,13 @@ def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
 
         # encoder 1 (V1, design1)
         j1_iram_wdata      = jpgv1.iram_wdata,
-        j1_iram_wre        = jpv1.iram_wren,
-        j1_iram_fifo_afull = jpv1.iram_fifo_afull,
-        j1_ram_byte        = jpv1.ram_byte,
-        j1_ram_wren        = jpv1.ram_wren,
-        j1_ram_wraddr      = jpv1.ram_wraddr,
-        j1_almost_full     = jpv1.almost_full,
-        j1_frame_size      = jpv1.frame_size,
+        j1_iram_wren       = jpgv1.iram_wren,
+        j1_iram_fifo_afull = jpgv1.iram_fifo_afull,
+        j1_ram_byte        = jpgv1.ram_byte,
+        j1_ram_wren        = jpgv1.ram_wren,
+        j1_ram_wraddr      = jpgv1.ram_wraddr,
+        j1_almost_full     = jpgv1.almost_full,
+        j1_frame_size      = jpgv1.frame_size,
 
         # encoder 2 (V2, design2)
         j2_eof        = jpgv2.end_of_file_signal,

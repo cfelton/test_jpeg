@@ -29,7 +29,7 @@ def test_jpegenc(args):
         clock.next = not clock
 
     def _test():
-        tbintf = (jpgv1.get_gens(), jpgb2.get_gens(),)
+        tbintf = (jpgv1.get_gens(), jpgv2.get_gens(),)
         finished = [Signal(bool(0)) for _ in range(2)]
 
         def _pulse_reset():
@@ -40,7 +40,7 @@ def test_jpegenc(args):
             yield delay(13)
             yield clock.posedge
 
-        @instance()
+        @instance
         def tbstim():
             print("start simulation ...")
             yield _pulse_reset()
@@ -107,7 +107,7 @@ if __name__ == '__main__':
         trace=False,
         imgfn='smb.jpg',
         build_only=False,
-        build_skip_v1=True
+        build_skip_v1=False
     )
     test_jpegenc(args)
 

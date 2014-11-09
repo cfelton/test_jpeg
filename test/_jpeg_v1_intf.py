@@ -27,7 +27,7 @@ class JPEGEncV1(JPEGEnc):
         self.iram_fifo_afull = Signal(bool(0))            # output
         self.ram_byte = Signal(intbv(0)[8:])              # output
         self.ram_wren = Signal(bool(0))                   # output
-        self.wraddr = Signal(intbv(0)[24:])               # output
+        self.ram_wraddr = Signal(intbv(0)[24:])           # output
         self.almost_full = Signal(bool(0))                # input
         self.frame_size = Signal(intbv(0)[24:])           # output
 
@@ -36,7 +36,7 @@ class JPEGEncV1(JPEGEnc):
         self.block_size = (16,8,)
         
         
-    def stream_ing_in(self):
+    def stream_img_in(self):
         """
         A transactor to take an image and stream it to the jpeg encoder.
         
@@ -54,7 +54,7 @@ class JPEGEncV1(JPEGEnc):
                 self.done.next = False
                 img = imglst[0]
                 nx,ny = img.size
-                print("eincode image %s %d x %d" % (str(img), nx, ny,))
+                print("encode image %s %d x %d" % (str(img), nx, ny,))
                 for yy in xrange(0, ny):
                     for xx in xrange(0, nx):
                         self.iram_wren.next = False

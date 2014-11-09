@@ -1,6 +1,18 @@
 
 **work in progess - don't be suprised if nothing works**
 
+Current Status
+==============
+
+   09-Nov-2014 : The test environment will stream an image to both
+     the design1 and design2 encoders.  The output is not interrogated
+     (yet).  Design1 conversion to verilog is incomplete.
+
+Things to be completed
+----------------------
+
+   #. Finish converting desing 1 to Verilog.
+
 Introduction
 ============
 This repository contains a verification environment to functionally
@@ -21,9 +33,11 @@ JPEG Encoders
 =============
   - jpegenc_v1: is the VHDL JPEG encoder converted to Verilog
   - jpegenc_v2: is the Verilog JPEG encoder.
-  - jpegenc_v3: ...
+  - jpegenc_v3: WIP design3 jpeg encoder
+  - jpegenc_v4: WIP jpeg2k encoder
 
 (@todo: the above need better names)
+
 
 Getting Started
 ===============
@@ -68,13 +82,16 @@ Results
 =======
 Someday (probably never) this section might contain some useful information.
 
+
 Functional
 ----------
 They must work ...
 
+
 Encoding (compression)
 ----------------------
 awesomely ...
+
 
 Performance
 -----------
