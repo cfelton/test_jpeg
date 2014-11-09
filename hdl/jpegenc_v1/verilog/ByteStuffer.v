@@ -86,6 +86,12 @@
 // no timescale needed
 
 module ByteStuffer
+#(
+  /// @todo: these were constnats from JPEG_PKG, not sure if
+  ///    this should be repeated in each module or in a header
+  ///    (ugh preprocessor) not sure if iverilog supports SV pkg.
+  parameter C_HDR_SIZE = 623
+)  
 (
  input wire 	   CLK,
  input wire 	   RST,

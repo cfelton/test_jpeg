@@ -85,21 +85,28 @@
 //-----------------------------------------------------------------------------
 // no timescale needed
 
-module JFIFGen(
-input wire CLK,
-input wire RST,
-input wire start,
-output reg ready,
-input wire eoi,
-input wire [23:0] num_enc_bytes,
-input wire qwren,
-input wire [6:0] qwaddr,
-input wire [7:0] qwdata,
-input wire [31:0] image_size_reg,
-input wire image_size_reg_wr,
-output reg [7:0] ram_byte,
-output reg ram_wren,
-output reg [23:0] ram_wraddr
+module JFIFGen
+#(
+  /// @todo: these were constnats from JPEG_PKG, not sure if
+  ///    this should be repeated in each module or in a header
+  ///    (ugh preprocessor) not sure if iverilog supports SV pkg.
+  parameter C_HDR_SIZE = 623
+)  
+(
+ input wire 	   CLK,
+ input wire 	   RST,
+ input wire 	   start,
+ output reg 	   ready,
+ input wire 	   eoi,
+ input wire [23:0] num_enc_bytes,
+ input wire 	   qwren,
+ input wire [6:0]  qwaddr,
+ input wire [7:0]  qwdata,
+ input wire [31:0] image_size_reg,
+ input wire 	   image_size_reg_wr,
+ output reg [7:0]  ram_byte,
+ output reg 	   ram_wren,
+ output reg [23:0] ram_wraddr
 );
 
 // CTRL
@@ -108,68 +115,63 @@ output reg [23:0] ram_wraddr
 // OUT RAM
 
 
+    parameter C_SIZE_Y_H = 25;
+    parameter C_SIZE_Y_L = 26;
+    parameter C_SIZE_X_H = 27;
+    parameter C_SIZE_X_L = 28;
+    parameter C_EOI = 16'h FFD9;
+    parameter C_QLUM_BASE = 44;
+    parameter C_QCHR_BASE = 44 + 69;
+    
+    reg [7:0] 	   hr_data = 0;
+    reg [9:0] 	   hr_waddr = 0;
+    wire [9:0] 	   hr_raddr = 0;
+    reg 	   hr_we = 1'b0;
+    wire [7:0] 	   hr_q = 0;
+    reg [2:0] 	   size_wr_cnt = 0;
+    reg 	   size_wr = 1'b0;
+    reg [9:0] 	   rd_cnt = 0;
+    reg 	   rd_en = 1'b0;
+    reg 	   rd_en_d1 = 1'b0;
+    reg [9:0] 	   rd_cnt_d1 = 0;
+    reg [9:0] 	   rd_cnt_d2 = 0;
+    reg [1:0] 	   eoi_cnt = 0;
+    reg 	   eoi_wr = 1'b0;
+    reg 	   eoi_wr_d1 = 1'b0;
+    
 
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//--------------------------------- ARCHITECTURE ------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-parameter C_SIZE_Y_H = 25;
-parameter C_SIZE_Y_L = 26;
-parameter C_SIZE_X_H = 27;
-parameter C_SIZE_X_L = 28;
-parameter C_EOI = 16'h FFD9;
-parameter C_QLUM_BASE = 44;
-parameter C_QCHR_BASE = 44 + 69;
-reg [7:0] hr_data = 0;
-reg [9:0] hr_waddr = 0;
-wire [9:0] hr_raddr = 0;
-reg hr_we = 1'b 0;
-wire [7:0] hr_q = 0;
-reg [2:0] size_wr_cnt = 0;
-reg size_wr = 1'b 0;
-reg [9:0] rd_cnt = 0;
-reg rd_en = 1'b 0;
-reg rd_en_d1 = 1'b 0;
-reg [9:0] rd_cnt_d1 = 0;
-reg [9:0] rd_cnt_d2 = 0;
-reg [1:0] eoi_cnt = 0;
-reg eoi_wr = 1'b 0;
-reg eoi_wr_d1 = 1'b 0;
-//-----------------------------------------------------------------------------
-// Architecture: begin
-//-----------------------------------------------------------------------------
-
-  //-----------------------------------------------------------------
-  // Header RAM
-  //-----------------------------------------------------------------
-  HeaderRam 
-    U_Header_RAM
-      (
-       .d(hr_data),
-       .waddr(hr_waddr),
-       .raddr(hr_raddr),
-       .we(hr_we),
-       .clk(CLK),
-       .q(hr_q));
-
-  assign hr_raddr = (rd_cnt);
-  //-----------------------------------------------------------------
-  // Host programming
-  //-----------------------------------------------------------------
-  always @(posedge CLK or posedge RST) begin
-    if(RST == 1'b 1) begin
-      size_wr_cnt <= {3{1'b0}};
-      size_wr <= 1'b 0;
-      hr_we <= 1'b 0;
-      hr_data <= {8{1'b0}};
-      hr_waddr <= {10{1'b0}};
-    end else begin
-      hr_we <= 1'b 0;
-      if(image_size_reg_wr == 1'b 1) begin
-        size_wr_cnt <= {3{1'b0}};
-        size_wr <= 1'b 1;
-      end
+    //-----------------------------------------------------------------
+    // Header RAM
+    //-----------------------------------------------------------------
+    HeaderRam 
+      U_Header_RAM
+	(
+	 .d(hr_data),
+	 .waddr(hr_waddr),
+	 .raddr(hr_raddr),
+	 .we(hr_we),
+	 .clk(CLK),
+	 .q(hr_q));
+    
+    assign hr_raddr = (rd_cnt);
+    
+    //-----------------------------------------------------------------
+    // Host programming
+    //-----------------------------------------------------------------
+    always @(posedge CLK or posedge RST) begin
+	if(RST == 1'b1) begin
+	    size_wr_cnt <= {3{1'b0}};
+       	    size_wr <= 1'b 0;
+	    hr_we <= 1'b 0;
+            hr_data <= {8{1'b0}};
+            hr_waddr <= {10{1'b0}};
+        end 
+	else begin
+	    hr_we <= 1'b 0;
+	    if(image_size_reg_wr == 1'b 1) begin
+		size_wr_cnt <= {3{1'b0}};
+                size_wr <= 1'b 1;
+	    end
       // write image size
       if(size_wr == 1'b 1) begin
         if(size_wr_cnt == 4) begin

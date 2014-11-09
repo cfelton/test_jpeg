@@ -141,8 +141,10 @@ module CtrlSM
     // @todo: manually fix
     //type T_ARR_SM_SETTINGS is array(NUM_STAGES+1 downto 1) of T_SM_SETTINGS;
     //signal Reg             : T_ARR_SM_SETTINGS;
-    reg [2:0] 	   main_state;
-    reg [NUM_STAGES + 1:1] start;
+    
+    reg  [2:0] 	   main_state;
+    
+    wire [NUM_STAGES + 1:1] start;
     wire [NUM_STAGES + 1:1] idle;
     wire [NUM_STAGES:1]     start_PB;
     wire [NUM_STAGES:1]     ready_PB;
@@ -182,72 +184,62 @@ module CtrlSM
     //---------------------------------------------------------------------------
     genvar gi;
     generate
-	for(gi=0; gi < NUM_STAGES; gi=gi+1) begin : G_CTRL_SM
+	for(gi=1; gi < NUM_STAGES+1; gi=gi+1) begin : G_CTRL_SM
 	    SingleSM
 	       U_S_CTRL_SM
-	       (.CLK          (CLK          ),
-		.RST          (RST          ),
+	       (.CLK          (CLK           ),
+		.RST          (RST           ),		
 		//-- from/to SM(m)   
-		.start_i      (start(gi)     ),      
-		.idle_o       (idle(gi)      ),
+		.start_i      (start[gi]     ),      
+		.idle_o       (idle[gi]      ),		
 		//-- from/to SM(m+1) 
 		.idle_i       (idle[gi+1]    ),      
-		.start_o      (start[gi+1]   ),
+		.start_o      (start[gi+1]   ),		
 		//-- from/to processing block
 		.pb_rdy_i     (ready_PB[gi]  ),     
-		.pb_start_o   (start_PB[gi]  ),
+		.pb_start_o   (start_PB[gi]  ),		
 		//-- state out
 		.fsm_o        (fsm[gi]       )
 		);	    
 	end
     endgenerate
-    
-    // @todo: manually convert
-    //G_S_CTRL_SM : for i in 1 to NUM_STAGES generate
-    //
-    //  -- CTRLSM 1..NUM_STAGES
-    //  U_S_CTRL_SM : entity work.SingleSM
-    //  port map
-    //  (
-    //      CLK          => CLK,
-    //      RST          => RST,      
-    //      -- from/to SM(m)   
-    //      start_i      => start(i),      
-    //      idle_o       => idle(i),
-    //      -- from/to SM(m+1) 
-    //      idle_i       => idle(i+1),      
-    //      start_o      => start(i+1),
-    //      -- from/to processing block
-    //      pb_rdy_i     => ready_PB(i),     
-    //      pb_start_o   => start_PB(i),
-    //      -- state out
-    //      fsm_o        => fsm(i)
-    //  );
-    //end generate G_S_CTRL_SM;
-    
+        
     assign idle[NUM_STAGES + 1] =  ~outif_almost_full;
+    
     //-----------------------------------------------------------------
     // Regs
     //-----------------------------------------------------------------
-    genvar 		    i;
-    generate for (i=1; i <= NUM_STAGES; i = i + 1) begin: G_REG_SM
-	always @(posedge CLK or posedge RST) begin
-	    if(RST == 1'b 1) begin
-		Reg[i] <= C_SM_SETTINGS;
-	    end else begin
-		if(start[i] == 1'b 1) begin
-		    // @todo: manually convert
-		    //if i = 1 then
-		    //  -- @todo: manually convert
-		    //  --Reg(i).x_cnt   <= RSM.x_cnt;
-		    //  --Reg(i).y_cnt   <= RSM.y_cnt;
-		    //  --Reg(i).cmp_idx <= RSM.cmp_idx;
-		    //else
-		    //  Reg(i) <= Reg(i-1);
-		    //end if;                  
-		end
-	    end
-	end	
+    reg [15:0] Reg_x_cnt;
+    reg [15:0] Reg_y_cnt;
+    reg [2:0]  Reg_cmp_idx;
+    /// @todo: fix, manual convert.  The following needs to be
+    ///    manually converted because the use fo recods    
+    genvar  gi;
+    generate for (gi=1; gi <= NUM_STAGES; gi = gi + 1) begin: G_REG_SM
+    	always @(posedge CLK or posedge RST) begin
+    	    if(RST == 1'b1) begin
+		Reg_x_cnt[gi] <= 0;
+		Reg_y_cnt[gi] <= 0;
+		Reg_cmp_idx[gi] <= 0;
+    	    end 
+	    else begin
+    		if(start[i] == 1'b 1) begin
+    		    // @todo: manually convert
+    		    if (gi == 1) begin
+    		    //  -- @todo: manually convert
+    		    //  --Reg(gi).x_cnt   <= RSM.x_cnt;
+    		    //  --Reg(gi).y_cnt   <= RSM.y_cnt;
+    		    //  --Reg(gi).cmp_idx <= RSM.cmp_idx;
+		    end
+    		    else begin
+    			//  Reg(i) <= Reg(i-1);
+			Reg_x_cnt[gi]   <= Reg_x_cnt[gi-1];
+			Reg_y_cnt[gi]   <= Reg_y_cnt[gi-1];
+			Reg_cmp_idx[gi] <= Reg_cmp_idx[gi-1];			
+    		    end                  
+    		end
+    	    end
+    	end	
     end
     endgenerate
     
@@ -269,7 +261,8 @@ module CtrlSM
 	    jfif_eoi <= 1'b 0;
 	    out_mux_ctrl <= 1'b 0;
 	    jfif_start <= 1'b 0;
-	end else begin
+	end 
+	else begin
 	    start[1] <= 1'b 0;
 	    start1_d <= start[1];
 	    jpeg_ready <= 1'b 0;

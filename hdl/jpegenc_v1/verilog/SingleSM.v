@@ -68,16 +68,17 @@
 // //////////////////////////////////////////////////////////////////////////////
 // no timescale needed
 
-module SingleSM(
-input wire CLK,
-input wire RST,
-input wire start_i,
-output reg idle_o,
-input wire idle_i,
-output reg start_o,
-input wire pb_rdy_i,
-output reg pb_start_o,
-output wire [1:0] fsm_o
+module SingleSM
+(
+ input  wire 	   CLK,
+ input  wire 	   RST,
+ input  wire 	   start_i,
+ output reg 	   idle_o,
+ input  wire 	   idle_i,
+ output reg 	   start_o,
+ input  wire 	   pb_rdy_i,
+ output reg 	   pb_start_o,
+ output wire [1:0] fsm_o
 );
 
 // from/to SM(m)
@@ -85,81 +86,68 @@ output wire [1:0] fsm_o
 // from/to processing block
 // state debug
 
-
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//--------------------------------- ARCHITECTURE ------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-// Architecture: Signal definition.
-//-----------------------------------------------------------------------------
-parameter [1:0]
-  IDLE = 0,
-  WAIT_FOR_BLK_RDY = 1,
-  WAIT_FOR_BLK_IDLE = 2;
-
-reg [1:0] state;  //-----------------------------------------------------------------------------
-// Architecture: begin
-//-----------------------------------------------------------------------------
-
-  assign fsm_o = state == IDLE ? 2'b 00 : state == WAIT_FOR_BLK_RDY ? 2'b 01 : state == WAIT_FOR_BLK_IDLE ? 2'b 10 : 2'b 11;
-  //----------------------------------------------------------------------------
-  // FSM
-  //----------------------------------------------------------------------------
-  always @(posedge CLK or posedge RST) begin
-    if(RST == 1'b 1) begin
-      idle_o <= 1'b 0;
-      start_o <= 1'b 0;
-      pb_start_o <= 1'b 0;
-      state <= IDLE;
-    end else begin
-      idle_o <= 1'b 0;
-      start_o <= 1'b 0;
-      pb_start_o <= 1'b 0;
-      case(state)
-      IDLE : begin
-        idle_o <= 1'b 1;
-        // this fsm is started
-        if(start_i == 1'b 1) begin
-          state <= WAIT_FOR_BLK_RDY;
-          // start processing block associated with this FSM
-          pb_start_o <= 1'b 1;
-          idle_o <= 1'b 0;
-        end
-      end
-      WAIT_FOR_BLK_RDY : begin
-        // wait until processing block completes
-        if(pb_rdy_i == 1'b 1) begin
-          // wait until next FSM is idle before starting it
-          if(idle_i == 1'b 1) begin
-            state <= IDLE;
-            start_o <= 1'b 1;
-          end
-          else begin
-            state <= WAIT_FOR_BLK_IDLE;
-          end
-        end
-      end
-      WAIT_FOR_BLK_IDLE : begin
-        if(idle_i == 1'b 1) begin
-          state <= IDLE;
-          start_o <= 1'b 1;
-        end
-      end
-      default : begin
-        idle_o <= 1'b 0;
-        start_o <= 1'b 0;
-        pb_start_o <= 1'b 0;
-        state <= IDLE;
-      end
-      endcase
+    parameter [1:0]
+      IDLE = 0,
+      WAIT_FOR_BLK_RDY = 1,
+      WAIT_FOR_BLK_IDLE = 2;
+    
+    reg [1:0] 	   state;  
+    
+    assign fsm_o = state == IDLE ? 2'b00 : state == WAIT_FOR_BLK_RDY ? 2'b01 : state == WAIT_FOR_BLK_IDLE ? 2'b10 : 2'b11;
+    
+    //----------------------------------------------------------------------------
+    // FSM
+    //----------------------------------------------------------------------------
+    always @(posedge CLK or posedge RST) begin
+	if(RST == 1'b1) begin
+	    idle_o <= 1'b 0;
+	    start_o <= 1'b 0;
+	    pb_start_o <= 1'b 0;
+	    state <= IDLE;
+	end 
+	else begin
+	    idle_o <= 1'b 0;
+	    start_o <= 1'b 0;
+	    pb_start_o <= 1'b 0;
+	    
+	    case(state)
+	      IDLE : begin
+		  idle_o <= 1'b 1;
+		  // this fsm is started
+		  if(start_i == 1'b 1) begin
+		      state <= WAIT_FOR_BLK_RDY;
+		      // start processing block associated with this FSM
+		      pb_start_o <= 1'b 1;
+		      idle_o <= 1'b 0;
+		  end
+	      end
+	      WAIT_FOR_BLK_RDY : begin
+		  // wait until processing block completes
+		  if(pb_rdy_i == 1'b 1) begin
+		      // wait until next FSM is idle before starting it
+		      if(idle_i == 1'b 1) begin
+			  state <= IDLE;
+			  start_o <= 1'b 1;
+		      end
+		      else begin
+			  state <= WAIT_FOR_BLK_IDLE;
+		      end
+		  end
+	      end
+	      WAIT_FOR_BLK_IDLE : begin
+		  if(idle_i == 1'b 1) begin
+		      state <= IDLE;
+		      start_o <= 1'b 1;
+		  end
+	      end
+	      default : begin
+		  idle_o <= 1'b 0;
+		  start_o <= 1'b 0;
+		  pb_start_o <= 1'b 0;
+		  state <= IDLE;
+	      end
+	    endcase
+	end
     end
-  end
-
-//-----------------------------------------------------------------------------
-// Architecture: end
-//-----------------------------------------------------------------------------
-
+    
 endmodule

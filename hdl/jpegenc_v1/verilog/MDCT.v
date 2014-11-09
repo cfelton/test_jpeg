@@ -73,6 +73,19 @@
 // no timescale needed
 
 module MDCT
+#(
+  parameter IP_W        = 8,  
+  parameter OP_W        = 12,
+  parameter N           = 8,
+  parameter COE_W       = 12,
+  parameter ROMDATA_W   = COE_W+2,
+  parameter ROMADDR_W   = 6,
+  parameter RAMDATA_W   = 10,  
+  parameter RAMADRR_W   = 6,
+  parameter LEVEL_SHIFT = 128,
+  parameter DA_W        = ROMDATA_W+IP_W
+
+)  
 (
  input wire 		   clk,
  input wire 		   rst,
