@@ -91,6 +91,11 @@ class JPEGEncV1(JPEGEnc):
                     self._bitstream.append(self.ram_byte)
                     ii += 1
 
+                # @todo: determine end of the jpeg bitstream
+                if ii > 10:
+                    print("V1: end of bitstream")
+                    yield self._outq.put(self._bitstream)
+
         return t_bus_out
 
                             

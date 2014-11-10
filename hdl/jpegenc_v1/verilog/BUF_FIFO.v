@@ -67,23 +67,7 @@
 // ///  * http://copyfree.org/licenses/mit/license.txt
 // ///
 // //////////////////////////////////////////////////////////////////////////////
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//--------------------------------- LIBRARY/PACKAGE ---------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-// generic packages/libraries:
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-// user packages/libraries:
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//--------------------------------- ENTITY ------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-// no timescale needed
+
 
 module BUF_FIFO
 #(
@@ -103,73 +87,57 @@ module BUF_FIFO
  output reg 			 fdct_fifo_hf_full
 );
 
-   /// @todo: better home??? 
-   parameter C_EXTRA_LINES = 8;
-   parameter C_MAX_LINE_WIDTH = 1280;
+    /// @todo: better home??? 
+    parameter C_EXTRA_LINES = 8;
+    parameter C_MAX_LINE_WIDTH = 1280;
+    
+    // HOST PROG
+    // HOST DATA
+    // FDCT
+    
+    parameter C_NUM_LINES = 8 + C_EXTRA_LINES;
+    
+    reg [15:0] 			 pixel_cnt = 0;
+    wire [15:0] line_cnt = 0;
+    wire [C_PIXEL_BITS - 1:0] ramq = 0;
+    reg [C_PIXEL_BITS - 1:0] ramd = 0;
+    reg [$clog2(C_MAX_LINE_WIDTH * C_NUM_LINES) - 1:0] ramwaddr = 0;
+    reg 					       ramenw = 1'b 0;
+    wire [$clog2(C_MAX_LINE_WIDTH * C_NUM_LINES) - 1:0] ramraddr = 0;
+    reg [3:0] 					       pix_inblk_cnt = 0;
+    reg [3:0] 				      pix_inblk_cnt_d1 = 0;
+    reg [2:0] 				      line_inblk_cnt = 0;
+    reg [12:0] 				      read_block_cnt = 0;
+    reg [12:0] 				      read_block_cnt_d1 = 0;
+    wire [12:0] 			      write_block_cnt = 0;
+    reg [16 + $clog2(C_NUM_LINES) 		      - 1:0] ramraddr_int = 0;
+    reg [16 + $clog2(C_NUM_LINES)		      - 1:0] raddr_base_line = 0;
+    reg [15:0] 						     raddr_tmp = 0;
+    reg [$clog2(C_MAX_LINE_WIDTH * C_NUM_LINES)  - 1:0] ramwaddr_d1 = 0;
+    wire [$clog2(C_NUM_LINES) 		      - 1:0] 	line_lock = 0;
+    reg [$clog2(C_NUM_LINES) 		      - 1:0] memwr_line_cnt = 0;
+    reg [$clog2(C_NUM_LINES) 		      - 1 + 1:0] memrd_offs_cnt = 0;
+    reg [$clog2(C_NUM_LINES) 		      - 1:0] 	 memrd_line = 0;
+    reg [15:0] 					     wr_line_idx = 0;
+    reg [15:0] 				      rd_line_idx = 0;
+    reg 				      image_write_end = 1'b 0;  
    
    
-   // HOST PROG
-   // HOST DATA
-   // FDCT
-   
-   
-   
-   //-----------------------------------------------------------------------------
-   //-----------------------------------------------------------------------------
-   //--------------------------------- ARCHITECTURE ------------------------------
-   //-----------------------------------------------------------------------------
-   //-----------------------------------------------------------------------------
-   parameter C_NUM_LINES = 8 + C_EXTRA_LINES;
-   reg  [15:0] pixel_cnt = 0;
-   wire [15:0] line_cnt = 0;
-   wire [C_PIXEL_BITS - 1:0] ramq = 0;
-   reg  [C_PIXEL_BITS - 1:0]  ramd = 0;
-   reg  [$clog2(C_MAX_LINE_WIDTH * C_NUM_LINES) - 1:0] ramwaddr = 0;
-   reg 					     ramenw = 1'b 0;
-   wire [$clog2(C_MAX_LINE_WIDTH * C_NUM_LINES) - 1:0] ramraddr = 0;
-   reg  [3:0] 				      pix_inblk_cnt = 0;
-   reg  [3:0] 				      pix_inblk_cnt_d1 = 0;
-   reg  [2:0] 				      line_inblk_cnt = 0;
-   reg  [12:0] 				      read_block_cnt = 0;
-   reg  [12:0] 				      read_block_cnt_d1 = 0;
-   wire [12:0] 				      write_block_cnt = 0;
-   reg  [16 + $clog2(C_NUM_LINES) 		      - 1:0] ramraddr_int = 0;
-   reg  [16 + $clog2(C_NUM_LINES)		      - 1:0] raddr_base_line = 0;
-   reg  [15:0] 				      raddr_tmp = 0;
-   reg  [$clog2(C_MAX_LINE_WIDTH * C_NUM_LINES)  - 1:0] ramwaddr_d1 = 0;
-   wire [$clog2(C_NUM_LINES) 		      - 1:0] line_lock = 0;
-   reg  [$clog2(C_NUM_LINES) 		      - 1:0] memwr_line_cnt = 0;
-   reg  [$clog2(C_NUM_LINES) 		      - 1 + 1:0] memrd_offs_cnt = 0;
-   reg  [$clog2(C_NUM_LINES) 		      - 1:0] memrd_line = 0;
-   reg  [15:0] 				      wr_line_idx = 0;
-   reg  [15:0] 				      rd_line_idx = 0;
-   reg 					      image_write_end = 1'b 0;  
-   
-   //-----------------------------------------------------------------------------
-   // Architecture: begin
-   //-----------------------------------------------------------------------------
-   
-   //-----------------------------------------------------------------
-   // RAM for SUB_FIFOs
-   //-----------------------------------------------------------------
-   // @todo : manually instantiate
-   //U_SUB_RAMZ : entity work.SUB_RAMZ
-   //generic map 
-   //(
-   //         RAMADDR_W => log2( C_MAX_LINE_WIDTH*C_NUM_LINES ),
-   //         RAMDATA_W => C_PIXEL_BITS        
-   //)   
-   //port map 
-   //(      
-   //      d            => ramd,               
-   //      waddr        => std_logic_vector(ramwaddr_d1),     
-   //      raddr        => std_logic_vector(ramraddr),     
-   //      we           => ramenw,     
-   //      clk          => clk,     
-   //      
-   //      q            => ramq     
-   //);
-   
+    //-----------------------------------------------------------------
+    // RAM for SUB_FIFOs
+    //-----------------------------------------------------------------
+    localparam RAMADDR_W = $clog2(C_MAX_LINE_WIDTH*C_NUM_LINES);
+    SUB_RAMZ
+      #(.RAMADDR_W(RAMADDR_W),
+       .RAMDATA_W(C_PIXEL_BITS))
+      U_SUB_RAMZ
+	(.d     (ramd),
+	 .waddr (ramwaddr_d1),
+	 .raddr (ramraddr),
+	 .clk   (CLK),
+	 .q     (ramq)
+	 );
+    
    //-----------------------------------------------------------------
    // register RAM data input
    //-----------------------------------------------------------------   

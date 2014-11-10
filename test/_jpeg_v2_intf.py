@@ -99,6 +99,7 @@ class JPEGEncV2(JPEGEnc):
 
                 #if ii > 10:
                 if self.eof_data_partial_ready:
+                    print("V2: end of bitstream")
                     yield self._outq.put(self._bitstream)
 
         return t_bus_out

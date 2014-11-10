@@ -63,10 +63,14 @@ def test_jpegenc(args):
             yield delay(100)
             while reset == reset.active:
                 yield delay(10)
+            yield delay(100)
+            yield clock.posedge
+
             img = Image.open(args.imgfn)
             yield jpgv1.put_image(img)
             bic = [None]
-            yield jpgv1.get_jpeg(bic)
+            # @todo: wait for end of bitstream
+            #yield jpgv1.get_jpeg(bic)
             
             while not jpgv1.done:
                 yield delay(1000)
@@ -80,6 +84,9 @@ def test_jpegenc(args):
             yield delay(100)
             while reset == reset.active:
                 yield delay(10)          
+            yield delay(100)
+            yield clock.posedge
+
             img = Image.open(args.imgfn)
             yield jpgv2.put_image(img)
             bic = [None]
