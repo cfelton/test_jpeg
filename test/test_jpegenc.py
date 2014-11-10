@@ -60,6 +60,9 @@ def test_jpegenc(args):
         # stimulate V1 (design1) 
         @instance
         def tbstimv1():
+            yield delay(100)
+            while reset == reset.active:
+                yield delay(10)
             img = Image.open(args.imgfn)
             yield jpgv1.put_image(img)
             bic = [None]
@@ -73,7 +76,10 @@ def test_jpegenc(args):
 
         # stimulate V2 (design2) 
         @instance
-        def tbstimv2():            
+        def tbstimv2():  
+            yield delay(100)
+            while reset == reset.active:
+                yield delay(10)          
             img = Image.open(args.imgfn)
             yield jpgv2.put_image(img)
             bic = [None]

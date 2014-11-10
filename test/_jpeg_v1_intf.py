@@ -45,15 +45,17 @@ class JPEGEncV1(JPEGEnc):
         (the encoder actually handles extracting the 12x8?).
         """
 
-
         @instance
         def t_bus_in():
             while True:
+                # get the an image to be streamed to the encoder
                 imglst = [None]
                 yield self._inq.get(imglst, block=True)
                 self.done.next = False
                 img = imglst[0]
                 nx,ny = img.size
+
+                # stream the image to the encoder
                 print("encode image %s %d x %d" % (str(img), nx, ny,))
                 for yy in xrange(0, ny):
                     for xx in xrange(0, nx):
