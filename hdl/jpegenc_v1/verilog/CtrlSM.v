@@ -89,48 +89,63 @@ module CtrlSM
 //#(
 //)  
 (
- input wire 	   CLK,
- input wire 	   RST,
- input wire 	   outif_almost_full,
- input wire 	   sof,
- input wire [15:0] img_size_x,
- input wire [15:0] img_size_y,
- output reg 	   jpeg_ready,
- output reg 	   jpeg_busy,
- output wire 	   fdct_start,
- input wire 	   fdct_ready,
- output wire 	   zig_start,
- input wire 	   zig_ready,
- output wire 	   qua_start,
- input wire 	   qua_ready,
- output wire 	   rle_start,
- input wire 	   rle_ready,
- output wire 	   huf_start,
- input wire 	   huf_ready,
- output wire 	   bs_start,
- input wire 	   bs_ready,
- output reg 	   jfif_start,
- input wire 	   jfif_ready,
- output reg 	   jfif_eoi,
- output reg 	   out_mux_ctrl
+ input wire 	    CLK,
+ input wire 	    RST,
+ input wire 	    outif_almost_full,
+ input wire 	    sof,
+ input wire [15:0]  img_size_x,
+ input wire [15:0]  img_size_y,
+ output reg 	    jpeg_ready,
+ output reg 	    jpeg_busy,
+ 
+ output wire 	    fdct_start,
+ input wire 	    fdct_ready,
+ output wire [15:0] fdct_sm_settings_x_cnt,
+ output wire [15:0] fdct_sm_settings_y_cnt,
+ output wire [2:0]  fdct_sm_settings_cmp_idx,
+ 
+ output wire 	    zig_start,
+ input wire 	    zig_ready,
+ output wire [15:0] zig_sm_settings_x_cnt,
+ output wire [15:0] zig_sm_settings_y_cnt,
+ output wire [2:0]  zig_sm_settings_cmp_idx,
+ 
+ 
+ output wire 	    qua_start,
+ input wire 	    qua_ready,
+ output wire [15:0] qua_sm_settings_x_cnt,
+ output wire [15:0] qua_sm_settings_y_cnt,
+ output wire [2:0]  qua_sm_settings_cmp_idx,
+ 
+ 
+ output wire 	    rle_start,
+ input wire 	    rle_ready,
+ output wire [15:0] rle_sm_settings_x_cnt,
+ output wire [15:0] rle_sm_settings_y_cnt,
+ output wire [2:0]  rle_sm_settings_cmp_idx,
+ 
+ 
+ output wire 	    huf_start,
+ input wire 	    huf_ready,
+ output wire [15:0] huf_sm_settings_x_cnt,
+ output wire [15:0] huf_sm_settings_y_cnt,
+ output wire [2:0]  huf_sm_settings_cmp_idx,
+ 
+ 
+ output wire 	    bs_start,
+ input wire 	    bs_ready,
+ output wire [15:0] bs_sm_settings_x_cnt,
+ output wire [15:0] bs_sm_settings_y_cnt,
+ output wire [2:0]  bs_sm_settings_cmp_idx,
+ 
+ 
+ output reg 	    jfif_start, 
+ input wire 	    jfif_ready,
+ output reg 	    jfif_eoi,
+ 
+ output reg 	    out_mux_ctrl
+ 
 );
-
-    // output IF
-    // HOST IF
-    // FDCT
-    //fdct_sm_settings   : out T_SM_SETTINGS;
-    // ZIGZAG
-    //zig_sm_settings    : out T_SM_SETTINGS;
-    // Quantizer
-    //qua_sm_settings    : out T_SM_SETTINGS;
-    // RLE
-    //rle_sm_settings    : out T_SM_SETTINGS;
-    // Huffman
-    //huf_sm_settings    : out T_SM_SETTINGS;
-    // ByteStuffdr
-    //bs_sm_settings     : out T_SM_SETTINGS;
-    // JFIF GEN
-    // OUT MUX
     
     // @todo: check, VHDL used global values from the package
     //    need to verify these are correct
@@ -146,46 +161,66 @@ module CtrlSM
       VERT  = 5,
       EOI   = 6;
     
-    // @todo: manually fix
-    //type T_ARR_SM_SETTINGS is array(NUM_STAGES+1 downto 1) of T_SM_SETTINGS;
-    //signal Reg             : T_ARR_SM_SETTINGS;
-    
+    reg [15:0] Reg_x_cnt   [0:NUM_STAGES+1];
+    reg [15:0] Reg_y_cnt   [0:NUM_STAGES+1];
+    reg [2:0]  Reg_cmp_idx [0:NUM_STAGES+1];
+       
     reg  [2:0] 	   main_state;
     
     wire [NUM_STAGES + 1:1] start;
     wire [NUM_STAGES + 1:1] idle;
+    reg 		    start1_d;    
+    
     wire [NUM_STAGES:1]     start_PB;
     wire [NUM_STAGES:1]     ready_PB;
     wire [1:0] 		    fsm[NUM_STAGES:1];
-    reg 		    start1_d;  
 
-    // @todo: manually fix
-    //signal RSM             : T_SM_SETTINGS;
+    reg [15:0] 		    RSM_x_cnt;
+    reg [15:0] 		    RSM_y_cnt;
+    reg [2:0] 		    RSM_cmp_idx;
     
     reg 		    out_mux_ctrl_s;
     reg 		    out_mux_ctrl_s2;  
+    
+    // settings from the host interface
+    assign fdct_sm_setting_x_cnt   = Reg_x_cnt[1];
+    assign fdct_sm_setting_y_cnt   = Reg_y_cnt[1];
+    assign fdct_sm_setting_cmp_idx = Reg_cmp_idx[1];
 
+    assign zig_sm_setting_x_cnt    = Reg_x_cnt[2];
+    assign zig_sm_setting_y_cnt    = Reg_y_cnt[2];
+    assign zig_sm_setting_cmp_idx  = Reg_cmp_idx[2];
+
+    assign qua_sm_setting_x_cnt    = Reg_x_cnt[3];
+    assign qua_sm_setting_y_cnt    = Reg_y_cnt[3];
+    assign qua_sm_setting_cmp_idx  = Reg_cmp_idx[3];
+
+    assign rle_sm_setting_x_cnt    = Reg_x_cnt[4];
+    assign rle_sm_setting_y_cnt    = Reg_y_cnt[4];
+    assign rle_sm_setting_cmp_idx  = Reg_cmp_idx[4];
+
+    assign huf_sm_setting_x_cnt    = Reg_x_cnt[5];
+    assign huf_sm_setting_y_cnt    = Reg_y_cnt[5];
+    assign huf_sm_setting_cmp_idx  = Reg_cmp_idx[5];
     
-    // @todo: fix, need to explicitly list record
-    //fdct_sm_settings <= Reg(1);
-    //zig_sm_settings  <= Reg(2);
-    //qua_sm_settings  <= Reg(3);
-    //rle_sm_settings  <= Reg(4);
-    //huf_sm_settings  <= Reg(5);
-    //bs_sm_settings   <= Reg(6);
-    
-    assign fdct_start = start_PB[1];
+    assign bs_sm_setting_x_cnt     = Reg_x_cnt[6];
+    assign bs_sm_setting_y_cnt     = Reg_y_cnt[6];
+    assign bs_sm_setting_cmp_idx   = Reg_cmp_idx[6];
+
+    //
+    assign fdct_start  = start_PB[1];
     assign ready_PB[1] = fdct_ready;
-    assign zig_start = start_PB[2];
+    assign zig_start   = start_PB[2];
     assign ready_PB[2] = zig_ready;
-    assign qua_start = start_PB[3];
+    assign qua_start   = start_PB[3];
     assign ready_PB[3] = qua_ready;
-    assign rle_start = start_PB[4];
+    assign rle_start   = start_PB[4];
     assign ready_PB[4] = rle_ready;
-    assign huf_start = start_PB[5];
+    assign huf_start   = start_PB[5];
     assign ready_PB[5] = huf_ready;
-    assign bs_start = start_PB[6];
+    assign bs_start    = start_PB[6];
     assign ready_PB[6] = bs_ready;
+    
     
     //---------------------------------------------------------------------------
     // CTRLSM 1..NUM_STAGES
@@ -217,12 +252,7 @@ module CtrlSM
     //-----------------------------------------------------------------
     // Regs
     //-----------------------------------------------------------------
-    reg [15:0] Reg_x_cnt [NUM_STAGES+1 : 1];
-    reg [15:0] Reg_y_cnt [NUM_STAGES+1 : 1];
-    reg [2:0]  Reg_cmp_idx [NUM_STAGES+1 : 1];
     
-    /// @todo: fix, manual convert.  The following needs to be
-    ///    manually converted because the use fo recods    
     genvar  gj;
     generate for (gj=1; gj <= NUM_STAGES; gj = gj + 1) begin: G_REG_SM
     	always @(posedge CLK or posedge RST) begin
@@ -233,15 +263,13 @@ module CtrlSM
     	    end 
 	    else begin
     		if(start[gj] == 1'b 1) begin
-    		    // @todo: manually convert
     		    if (gj == 1) begin
-    		    //  -- @todo: manually convert
-    		    //  --Reg(gi).x_cnt   <= RSM.x_cnt;
-    		    //  --Reg(gi).y_cnt   <= RSM.y_cnt;
-    		    //  --Reg(gi).cmp_idx <= RSM.cmp_idx;
+    			Reg_x_cnt[gj]    <= RSM_x_cnt;
+    			Reg_y_cnt[gj]    <= RSM_y_cnt;
+    			Reg_cmp_idx[gj]  <= RSM_cmp_idx;
 		    end
     		    else begin
-    			//  Reg(i) <= Reg(i-1);
+    			//  @og: Reg(i) <= Reg(i-1);
 			Reg_x_cnt[gj]   <= Reg_x_cnt[gj-1];
 			Reg_y_cnt[gj]   <= Reg_y_cnt[gj-1];
 			Reg_cmp_idx[gj] <= Reg_cmp_idx[gj-1];			
@@ -260,15 +288,13 @@ module CtrlSM
     always @(posedge CLK or posedge RST) begin
 	if(RST == 1'b1) begin
 	    main_state      <= IDLES;
-	    //start[1]        <= 1'b0;
 	    start_sm        <= 1'b0;
 	    start1_d        <= 1'b0;
 	    jpeg_ready      <= 1'b0;
 
-	    /// @todo: fixe RSM, record to Verilog
-	    //RSM.x_cnt       <= {1{1'b0}};
-	    //RSM.y_cnt       <= {1{1'b0}};
-	    //RSM.cmp_idx     <= {1{1'b0}};
+	    RSM_x_cnt       <= {1{1'b0}};
+	    RSM_y_cnt       <= {1{1'b0}};
+	    RSM_cmp_idx     <= {1{1'b0}};
 	    
 	    jpeg_busy       <= 1'b0;
 	    out_mux_ctrl_s  <= 1'b0;
@@ -278,8 +304,6 @@ module CtrlSM
 	    jfif_start      <= 1'b0;
 	end 
 	else begin
-	    //start[1] <= 1'b 0;
-	    //start1_d <= start[1];
 	    start_sm <= 1'b0;
 	    start1_d <= start_sm;
 	    
@@ -295,9 +319,8 @@ module CtrlSM
 	      
 	      IDLES : begin		  
 		  if(sof == 1'b1) begin
-		      /// @todo: fixe RSM, record to Verilog
-		      //RSM.x_cnt <= {1{1'b0}};
-		      //RSM.y_cnt <= {1{1'b0}};
+		      RSM_x_cnt <= {1{1'b0}};
+		      RSM_y_cnt <= {1{1'b0}};
 		      jfif_start <= 1'b 1;
 		      out_mux_ctrl_s <= 1'b 0;
 		      jfif_eoi <= 1'b 0;
@@ -320,31 +343,30 @@ module CtrlSM
 	      //-----------------------------
 	      
 	      HORIZ : begin
-		  /// @todo: fixe RSM, record to Verilog
-		  //if(RSM.x_cnt < ((img_size_x))) begin
-		  //    main_state <= COMP;
-		  //end
-		  //else begin
-		  //    RSM.x_cnt <= {1{1'b0}};
-		  //    main_state <= VERT;
-                  //end
+		  if(RSM_x_cnt < ((img_size_x))) begin
+		      main_state <= COMP;
+		  end
+		  else begin
+		      RSM_x_cnt <= {1{1'b0}};
+		      main_state <= VERT;
+                  end
 	      end
 
 	      //-----------------------------
 	      // COMP
 	      //-----------------------------	     
 	      COMP : begin
-		  if(idle[1] == 1'b 1 && start[1] == 1'b 0) begin
-		      /// @todo: fixe RSM, record to Verilog
-		      //if(RSM.cmp_idx < ((CMP_MAX))) begin
-		      //	  start[1] <= 1'b 1;
-		      //end
-		      //else begin
-		      //	  RSM.cmp_idx <= {1{1'b0}};
-		      //    RSM.x_cnt <= RSM.x_cnt + 16;
-		      //
-		      //main_state <= HORIZ;		      
-		      //end
+		  if(idle[1] == 1'b1 && start[1] == 1'b0) begin
+		      if(RSM_cmp_idx < ((CMP_MAX))) begin
+			  // 
+		      	  start_sm <= 1'b1;
+		      end
+		      else begin
+		      	  RSM_cmp_idx <= {1{1'b0}};
+		          RSM_x_cnt <= RSM_x_cnt + 16;
+		      
+		          main_state <= HORIZ;		      
+		      end
 		  end
 		  
 	      end
@@ -353,21 +375,19 @@ module CtrlSM
 	      // VERT
 	      //-----------------------------	      
 	      VERT : begin
-		  /// @todo: fixe RSM, record to Verilog
-		  //if(RSM.y_cnt < (((img_size_y)) - 8)) begin
-		  //    RSM.x_cnt <= {1{1'b0}};
-		  //    RSM.y_cnt <= RSM.y_cnt + 8;
-		  //    main_state <= HORIZ;
-                  //end
-		  //else begin
-		  //    // @todo: manually convert
-		  //    //if idle(NUM_STAGES+1 downto 1) = (NUM_STAGES+1 downto 1 => '1') then
-		  //    //  main_state     <= EOI;
-		  //    //  jfif_eoi       <= '1';
-		  //    //  out_mux_ctrl_s <= '0';
-		  //    //  jfif_start     <= '1';
-		  //    //end if;
-		  //end
+		  if(RSM_y_cnt < (((img_size_y)) - 8)) begin
+		      RSM_x_cnt <= {1{1'b0}};
+		      RSM_y_cnt <= RSM_y_cnt + 8;
+		      main_state <= HORIZ;
+                  end
+		  else begin
+		      if (idle[NUM_STAGES+1:1] == {(NUM_STAGES+1){1'b1}}) begin
+		        main_state     <= EOI;
+		        jfif_eoi       <= 1'b1;
+		        out_mux_ctrl_s <= 1'b0;
+		        jfif_start     <= 1'b1;
+		      end
+		  end
 	      end
 
 	      //-----------------------------
@@ -388,10 +408,9 @@ module CtrlSM
 	      end
 	    endcase
 
-	    /// @todo: fixe RSM, record to Verilog
-	    //if(start1_d == 1'b 1) begin
-	    //	RSM.cmp_idx <= RSM.cmp_idx + 1;
-	    //end
+	      if(start1_d == 1'b 1) begin
+	      	RSM_cmp_idx <= RSM_cmp_idx + 1;
+	      end
 	    
 	    if(main_state == IDLES) begin
 		jpeg_busy <= 1'b 0;

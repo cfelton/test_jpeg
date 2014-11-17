@@ -7,6 +7,7 @@ from PIL import Image
 from myhdl import *
 from _SignalQueue import SignalQueue
 
+from _opb import OPBBus
 from _jpeg_intf import JPEGEnc
 
 
@@ -30,7 +31,8 @@ class JPEGEncV1(JPEGEnc):
         self.ram_wraddr = Signal(intbv(0)[24:])           # output
         self.almost_full = Signal(bool(0))                # input
         self.frame_size = Signal(intbv(0)[24:])           # output
-
+        
+        self.opb = OPBBus(clock, reset)
 
         # set the encoder parameters 
         self.block_size = (16,8,)

@@ -87,7 +87,9 @@ module BUF_FIFO
  output reg 			 fdct_fifo_hf_full
 );
 
-    /// @todo: better home??? 
+    /// @todo: better home, these were in a global package in
+    ///    the VHDL version.  Might need to use a header file,
+    ///    don't believe the 
     parameter C_EXTRA_LINES = 8;
     parameter C_MAX_LINE_WIDTH = 1280;
     

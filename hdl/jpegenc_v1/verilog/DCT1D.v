@@ -76,7 +76,7 @@
 
 module DCT1D
 #(
-  /// @todo: these were constnats from MDCT_PKG, not sure if
+  /// @todo: these were constants from MDCT_PKG, not sure if
   ///    this should be repeated in each module or in a header
   ///    (ugh preprocessor) not sure if iverilog supports SV pkg.
   parameter IP_W        = 8,  
@@ -91,72 +91,86 @@ module DCT1D
   parameter DA_W        = ROMDATA_W+IP_W
 )
 (
- input  wire 		     clk,
- input  wire 		     rst,
- input  wire [IP_W-1:0]      dcti,
- input  wire 		     idv,
+ input wire 		     clk,
+ input wire 		     rst,
+ input wire [IP_W-1:0] 	     dcti,
+ input wire 		     idv,
+
+ // the original VHDL passed 2D arrays, Verilog doesn't support
+ // 2D arrays as ports (systemverilog does).  The 2D arrays are
+ // passed a flat ports and reconstructed as 2D array
+ //input wire [8:0][ROMDATA_W-1:0] romedatao,
+ //input wire [8:0][ROMDATA_W-1:0] romodatao,
+ //output wire [ROMADDR_W-1:0] romeaddro [0:8],
+ //output wire [ROMADDR_W-1:0] romoaddro [0:8],
+
+ 
  output wire 		     odv,
  output wire [OP_W-1:0]      dcto,
+  
  output wire [RAMADRR_W-1:0] ramwaddro,
  output wire [RAMDATA_W-1:0] ramdatai,
  output wire 		     ramwe,
  output wire 		     wmemsel
 );
 
-    // @todo: fix, manually convert
-    //romedatao    : in T_ROM1DATAO;
-    //romodatao    : in T_ROM1DATAO;
+    reg [IP_W:0] databuf_reg  [N - 1:0];
+    reg [IP_W:0] latchbuf_reg [N - 1:0];
     
-    // @todo: fix, manually convert
-    //romeaddro    : out T_ROM1ADDRO;
-    //romoaddro    : out T_ROM1ADDRO;
-
-
-
-    // @todo: manually convert
-    reg [IP_W:0] databuf_reg[N - 1:0];
-    reg [IP_W:0] latchbuf_reg[N - 1:0];
+    reg  [(RAMADRR_W/2) - 1:0] col_reg         = 0;
+    reg  [(RAMADRR_W/2) - 1:0] row_reg         = 0;
+    wire [(RAMADRR_W/2) - 1:0] rowr_reg        = 0;
+    reg  [(RAMADRR_W/2) - 1:0] inpcnt_reg      = 0;
     
-    reg  [(RAMADRR_W/2) - 1:0] col_reg = 0;
-    reg  [(RAMADRR_W/2) - 1:0] row_reg = 0;
-    wire [(RAMADRR_W/2) - 1:0] rowr_reg = 0;
-    reg  [(RAMADRR_W/2) - 1:0] inpcnt_reg = 0;
+    reg 		       ramwe_s         = 1'b0;
+    reg 		       wmemsel_reg     = 1'b0;
+    reg 		       stage2_reg      = 1'b0;
+    reg [RAMADRR_W - 1 :0]     stage2_cnt_reg  = 1;
     
-    reg 		       ramwe_s = 1'b0;
-    reg 		       wmemsel_reg = 1'b0;
-    reg 		       stage2_reg = 1'b0;
-    reg [RAMADRR_W - 1 :0]     stage2_cnt_reg = 1;
+    reg [(RAMADRR_W/2) - 1 :0] col_2_reg       = 0;
+    reg [RAMADRR_W - 1 :0]     ramwaddro_s     = 0;
     
-    reg [(RAMADRR_W/2) - 1 :0] col_2_reg = 0;
-    reg [RAMADRR_W - 1 :0]     ramwaddro_s = 0;
-    
-    reg 		       even_not_odd = 1'b0;
+    reg 		       even_not_odd    = 1'b0;
     reg 		       even_not_odd_d1 = 1'b0;
     reg 		       even_not_odd_d2 = 1'b0;
     reg 		       even_not_odd_d3 = 1'b0;
     
-    reg 		       ramwe_d1 = 1'b0;
-    reg 		       ramwe_d2 = 1'b0;
-    reg 		       ramwe_d3 = 1'b0;
-    reg 		       ramwe_d4 = 1'b0;
+    reg 		       ramwe_d1        = 1'b0;
+    reg 		       ramwe_d2        = 1'b0;
+    reg 		       ramwe_d3        = 1'b0;
+    reg 		       ramwe_d4        = 1'b0;
     
-    reg [RAMADRR_W - 1:0]      ramwaddro_d1 = 0;
-    reg [RAMADRR_W - 1:0]      ramwaddro_d2 = 0;
-    reg [RAMADRR_W - 1:0]      ramwaddro_d3 = 0;
-    reg [RAMADRR_W - 1:0]      ramwaddro_d4 = 0;
+    reg [RAMADRR_W - 1:0]      ramwaddro_d1    = 0;
+    reg [RAMADRR_W - 1:0]      ramwaddro_d2    = 0;
+    reg [RAMADRR_W - 1:0]      ramwaddro_d3    = 0;
+    reg [RAMADRR_W - 1:0]      ramwaddro_d4    = 0;
     
-    reg 		       wmemsel_d1 = 1'b0;
-    reg 		       wmemsel_d2 = 1'b0;
-    reg 		       wmemsel_d3 = 1'b0;
-    reg 		       wmemsel_d4 = 1'b0;  
+    reg 		       wmemsel_d1      = 1'b0;
+    reg 		       wmemsel_d2      = 1'b0;
+    reg 		       wmemsel_d3      = 1'b0;
+    reg 		       wmemsel_d4      = 1'b0;
 
-    // @todo: fix, manually convert
-    //signal romedatao_d1    : T_ROM1DATAO;
-    //signal romodatao_d1    : T_ROM1DATAO;
-    //signal romedatao_d2    : T_ROM1DATAO;
-    //signal romodatao_d2    : T_ROM1DATAO;
-    //signal romedatao_d3    : T_ROM1DATAO;
-    //signal romodatao_d3    : T_ROM1DATAO;
+    wire [ROMDATA_W-1:0]  romedatao [0:8];
+    wire [ROMDATA_W-1:0]  romodatao [0:8];
+    wire [ROMADDR_W-1:0]  romeaddro [0:8];
+    wire [ROMADDR_W-1:0]  romoaddro [0:8];
+
+    genvar gi;
+    generate
+	for(gi=0; gi<9; gi=gi+1) begin
+
+	end
+    endgenerate
+
+
+    reg [ROMDATA_W-1:0]        romedatao_d1 [0:8];
+    reg [ROMDATA_W-1:0]        romedatao_d2 [0:8];
+    reg [ROMDATA_W-1:0]        romedatao_d3 [0:8];
+
+    reg [ROMDATA_W-1:0]        romodatao_d1 [0:8];
+    reg [ROMDATA_W-1:0]        romodatao_d2 [0:8];
+    reg [ROMDATA_W-1:0]        romodatao_d3 [0:8];
+
     
     reg [DA_W - 1:0] 	       dcto_1 = 0;
     reg [DA_W - 1:0] 	       dcto_2 = 0;
@@ -168,13 +182,12 @@ module DCT1D
     assign ramdatai = dcto_4[DA_W - 1:12];
     assign wmemsel = wmemsel_d4;
 
-    integer ii;
+    integer ii, jj;
+    
     always @(posedge clk or posedge rst) begin
 	if(rst == 1'b 1) begin
-	    inpcnt_reg  <= 0; //{(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
+	    inpcnt_reg  <= 0; 
 	    
-	    //latchbuf_reg    <= (others => (others => '0')); 
-            //databuf_reg     <= (others => (others => '0'));
 	    for(ii=0; ii<IP_W; ii=ii+1) begin
 		latchbuf_reg[ii] <= 0;
 		databuf_reg[ii]  <= 0;
@@ -184,11 +197,11 @@ module DCT1D
             stage2_cnt_reg <= {(((RAMADRR_W - 1))-((0))+1){1'b1}};
 	    
             ramwe_s        <= 1'b0;
-            ramwaddro_s    <= 0; //{(((RAMADRR_W - 1))-((0))+1){1'b0}};
-            col_reg        <= 0; //{(((RAMADRR_W/2 - 1))-((0))+1){1'b0}};
-            row_reg        <= 0; //{(((RAMADRR_W/2 - 1))-((0))+1){1'b0}};
+            ramwaddro_s    <= 0; 
+            col_reg        <= 0; 
+            row_reg        <= 0; 
             wmemsel_reg    <= 1'b0;
-            col_2_reg      <= 0;  //{(((RAMADRR_W/2 - 1))-((0))+1){1'b0}};
+            col_2_reg      <= 0;  
 	end 
 	else begin
 	    stage2_reg <= 1'b 0;
@@ -200,20 +213,21 @@ module DCT1D
 	    if(idv == 1'b 1) begin
 		inpcnt_reg <= inpcnt_reg + 1;
 
-		/// @todo: manual conversion / fix.  latchbuf is a 2D array
-		///    need to verify latchbuf_reg is supposed to be a 2D
-		///    and what the following is trying to actually achive
-		// right shift input data
-		//latchbuf_reg[N - 2:0] <= latchbuf_reg[N - 1:1];
+		// the following loop achieves the same as the
+		// VHDL array slice
+		//   latchbuf_reg[N - 2:0] <= latchbuf_reg[N - 1:1];
+		for(jj=0; jj<N-1; jj=jj+1) begin
+		    latchbuf_reg[jj] <= latchbuf_reg[jj+1];
+		end
 		
 		latchbuf_reg[N - 1] <= ({1'b0,dcti}) - LEVEL_SHIFT;
 		if(inpcnt_reg == (N - 1)) begin
 		    // after this sum databuf_reg is in range of -256 to 254 (min to max) 
-		    databuf_reg[0] <= latchbuf_reg[1] + ((({1'b 0,dcti}) - LEVEL_SHIFT));
+		    databuf_reg[0] <= latchbuf_reg[1] + ((({1'b0,dcti}) - LEVEL_SHIFT));
 		    databuf_reg[1] <= latchbuf_reg[2] + latchbuf_reg[7];
 		    databuf_reg[2] <= latchbuf_reg[3] + latchbuf_reg[6];
 		    databuf_reg[3] <= latchbuf_reg[4] + latchbuf_reg[5];
-		    databuf_reg[4] <= latchbuf_reg[1] - ((({1'b 0,dcti}) - LEVEL_SHIFT));	    
+		    databuf_reg[4] <= latchbuf_reg[1] - ((({1'b0,dcti}) - LEVEL_SHIFT));	    
 		    databuf_reg[5] <= latchbuf_reg[2] - latchbuf_reg[7];
 		    databuf_reg[6] <= latchbuf_reg[3] - latchbuf_reg[6];
 		    databuf_reg[7] <= latchbuf_reg[4] - latchbuf_reg[5];
@@ -256,14 +270,14 @@ module DCT1D
     // output data pipeline
     always @(posedge clk or posedge rst) begin
 	if(rst == 1'b1) begin
-	    even_not_odd <= 1'b 0;
-	    even_not_odd_d1 <= 1'b 0;
-	    even_not_odd_d2 <= 1'b 0;
-	    even_not_odd_d3 <= 1'b 0;
-	    ramwe_d1 <= 1'b 0;
-	    ramwe_d2 <= 1'b 0;
-	    ramwe_d3 <= 1'b 0;
-	    ramwe_d4 <= 1'b 0;
+	    even_not_odd <= 1'b0;
+	    even_not_odd_d1 <= 1'b0;
+	    even_not_odd_d2 <= 1'b0;
+	    even_not_odd_d3 <= 1'b0;
+	    ramwe_d1 <= 1'b0;
+	    ramwe_d2 <= 1'b0;
+	    ramwe_d3 <= 1'b0;
+	    ramwe_d4 <= 1'b0;
 	    
 	    /// @todo: manually fix, concat expression fails
 	    //ramwaddro_d1 <= {(((RAMADRR_W - 1))-((0))+1){1'b0}};
@@ -271,10 +285,10 @@ module DCT1D
 	    //ramwaddro_d3 <= {(((RAMADRR_W - 1))-((0))+1){1'b0}};
 	    //ramwaddro_d4 <= {(((RAMADRR_W - 1))-((0))+1){1'b0}};
      
-	    wmemsel_d1 <= 1'b 0;
-	    wmemsel_d2 <= 1'b 0;
-	    wmemsel_d3 <= 1'b 0;
-	    wmemsel_d4 <= 1'b 0;
+	    wmemsel_d1 <= 1'b0;
+	    wmemsel_d2 <= 1'b0;
+	    wmemsel_d3 <= 1'b0;
+	    wmemsel_d4 <= 1'b0;
 	    
 	    dcto_1 <= {(((DA_W - 1))-((0))+1){1'b0}};
 	    dcto_2 <= {(((DA_W - 1))-((0))+1){1'b0}};
@@ -282,18 +296,21 @@ module DCT1D
 	    dcto_4 <= {(((DA_W - 1))-((0))+1){1'b0}};
 	    
 	end else begin
-	    even_not_odd <= stage2_cnt_reg[0];
+	    even_not_odd    <= stage2_cnt_reg[0];
 	    even_not_odd_d1 <= even_not_odd;
 	    even_not_odd_d2 <= even_not_odd_d1;
 	    even_not_odd_d3 <= even_not_odd_d2;
+	    
 	    ramwe_d1 <= ramwe_s;
 	    ramwe_d2 <= ramwe_d1;
 	    ramwe_d3 <= ramwe_d2;
 	    ramwe_d4 <= ramwe_d3;
+	    
 	    ramwaddro_d1 <= ramwaddro_s;
 	    ramwaddro_d2 <= ramwaddro_d1;
 	    ramwaddro_d3 <= ramwaddro_d2;
 	    ramwaddro_d4 <= ramwaddro_d3;
+	    
 	    wmemsel_d1 <= wmemsel_reg;
 	    wmemsel_d2 <= wmemsel_d1;
 	    wmemsel_d3 <= wmemsel_d2;
