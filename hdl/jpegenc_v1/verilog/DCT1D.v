@@ -171,8 +171,8 @@ module DCT1D
 	    assign romedatao[gi] = romedatao_flat[ROMDATA_W*gi +: ROMDATA_W];
 	    assign romodatao[gi] = romodatao_flat[ROMDATA_W*gi +: ROMDATA_W];
 	    
-	    assign romeaddro_flat[ROMADDR_W*gi += ROMADDR_W] = romeaddro[gi];
-	    assign romoaddro_flat[ROMADDR_W*gi += ROMADDR_W] = romoaddro[gi];
+	    assign romeaddro_flat[ROMADDR_W*gi +: ROMADDR_W] = romeaddro[gi];
+	    assign romoaddro_flat[ROMADDR_W*gi +: ROMADDR_W] = romoaddro[gi];
 	end
     endgenerate
 
