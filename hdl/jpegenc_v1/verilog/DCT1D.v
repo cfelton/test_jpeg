@@ -91,10 +91,10 @@ module DCT1D
   parameter DA_W        = ROMDATA_W+IP_W
 )
 (
- input wire 		     clk,
- input wire 		     rst,
- input wire [IP_W-1:0] 	     dcti,
- input wire 		     idv,
+ input wire 		       clk,
+ input wire 		       rst,
+ input wire [IP_W-1:0] 	       dcti,
+ input wire 		       idv,
 
  // the original VHDL passed 2D arrays, Verilog doesn't support
  // 2D arrays as ports (systemverilog does).  The 2D arrays are
@@ -104,14 +104,18 @@ module DCT1D
  //output wire [ROMADDR_W-1:0] romeaddro [0:8],
  //output wire [ROMADDR_W-1:0] romoaddro [0:8],
 
+ input wire [ROMDATA_W*9-1:0]  romedatao_flat,
+ input wire [ROMDATA_W*9-1:0]  romodatao_flat,
+ output wire [ROMADDR_W*9-1:0] romeaddro_flat,
+ output wire [ROMADDR_W*9-1:0] romoaddro_flat,
  
- output wire 		     odv,
- output wire [OP_W-1:0]      dcto,
+ output wire 		       odv,
+ output wire [OP_W-1:0]        dcto,
   
- output wire [RAMADRR_W-1:0] ramwaddro,
- output wire [RAMDATA_W-1:0] ramdatai,
- output wire 		     ramwe,
- output wire 		     wmemsel
+ output wire [RAMADRR_W-1:0]   ramwaddro,
+ output wire [RAMDATA_W-1:0]   ramdatai,
+ output wire 		       ramwe,
+ output wire 		       wmemsel
 );
 
     reg [IP_W:0] databuf_reg  [N - 1:0];
@@ -155,10 +159,20 @@ module DCT1D
     wire [ROMADDR_W-1:0]  romeaddro [0:8];
     wire [ROMADDR_W-1:0]  romoaddro [0:8];
 
+    /**
+     * conversion note, in Verilog (not SV) 2D arrays cannot be
+     * passed as ports.  The 2D arrays need to be flatten to a 
+     * port and unflattened from a port.
+     */
     genvar gi;
     generate
 	for(gi=0; gi<9; gi=gi+1) begin
-
+	    // select [RDW-1:0](0+8:0), [2*RDW-1:RDW](RDW+8:0), ...
+	    assign romedatao[gi] = romedatao_flat[ROMDATA_W*gi +: ROMDATA_W];
+	    assign romodatao[gi] = romodatao_flat[ROMDATA_W*gi +: ROMDATA_W];
+	    
+	    assign romeaddro_flat[ROMADDR_W*gi += ROMADDR_W] = romeaddro[gi];
+	    assign romoaddro_flat[ROMADDR_W*gi += ROMADDR_W] = romoaddro[gi];
 	end
     endgenerate
 

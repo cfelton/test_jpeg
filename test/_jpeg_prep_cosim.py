@@ -27,7 +27,7 @@ def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
     os.system(cmd)
 
     files = ['tb_jpegenc.v']
-    cmd = "iverilog -o jpegenc %s %s tb_jpegenc.v" % \
+    cmd = "iverilog -g2005 -o jpegenc %s %s tb_jpegenc.v" % \
     ( 
         " ".join(filelist_v1), 
         " ".join(filelist_v2),
