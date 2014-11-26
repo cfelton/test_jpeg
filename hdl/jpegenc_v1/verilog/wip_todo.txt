@@ -57,50 +57,6 @@ DCT2D.v-	    end
 DCT2D.v-	    else begin
 DCT2D.v-		dcto_1 <= romodatao[0] + (romodatao[1] << 1) + (romodatao[2] << 2);
 --
-DoubleFifo.v:  // @todo: manually instantiate
-DoubleFifo.v-  //U_FIFO_1 : entity work.FIFO   
-DoubleFifo.v-  //generic map
-DoubleFifo.v-  //(
-DoubleFifo.v-  //      DATA_WIDTH        => 8,
-DoubleFifo.v-  //      ADDR_WIDTH        => 7
-DoubleFifo.v-  //)
-DoubleFifo.v-  //port map 
---
-DoubleFifo.v:  // @todo: manually instantiate
-DoubleFifo.v-  //U_FIFO_2 : entity work.FIFO   
-DoubleFifo.v-  //generic map
-DoubleFifo.v-  //(
-DoubleFifo.v-  //      DATA_WIDTH        => 8,
-DoubleFifo.v-  //      ADDR_WIDTH        => 7
-DoubleFifo.v-  //)
-DoubleFifo.v-  //port map 
---
-FDCT.v:    // @todo: fix, manaully fix record usage
-FDCT.v-    //fdct_sm_settings   : in  T_SM_SETTINGS;
-FDCT.v-    // BUF_FIFO
-FDCT.v-    // ZIG ZAG
-FDCT.v-    // HOST
-FDCT.v-    
-FDCT.v-    
-FDCT.v-    
-FDCT.v:    // @todo: fix, manually convert ??
-FDCT.v-    //constant C_Y_1       : signed(14 downto 0) := to_signed(4899,  15);
-FDCT.v-    //constant C_Y_2       : signed(14 downto 0) := to_signed(9617,  15);
-FDCT.v-    //constant C_Y_3       : signed(14 downto 0) := to_signed(1868,  15);
-FDCT.v-    //constant C_Cb_1      : signed(14 downto 0) := to_signed(-2764, 15);
-FDCT.v-    //constant C_Cb_2      : signed(14 downto 0) := to_signed(-5428, 15);
-FDCT.v-    //constant C_Cb_3      : signed(14 downto 0) := to_signed(8192,  15);
-FDCT.v-    //constant C_Cr_1      : signed(14 downto 0) := to_signed(8192,  15);
---
-FDCT.v:  // @todo: fix, manually convert (instantiate)
-FDCT.v-  //U_FRAM1 : entity work.RAMZ
-FDCT.v-  //generic map
-FDCT.v-  //( 
-FDCT.v-  //    RAMADDR_W     => 7,
-FDCT.v-  //    RAMDATA_W     => 24
-FDCT.v-  //)
-FDCT.v-  //port map
---
 FDCT.v:			      /// @todo verify this is correct
 FDCT.v-			      fram1_raddr <= {1'b0, fram1_line_cnt_p1, 3'b000};
 FDCT.v-			  end
@@ -110,104 +66,14 @@ FDCT.v-			  fram1_raddr <= (((fram1_raddr)) + 2);
 FDCT.v-		      end
 FDCT.v-		  end
 --
-FDCT.v:  // @todo: fix, manually convert (instantiate)
-FDCT.v-  //U_MDCT : entity work.MDCT
-FDCT.v-  //      port map
-FDCT.v-  //(	  
-FDCT.v-  //      	clk          => CLK,
-FDCT.v-  //      	rst          => RST,
-FDCT.v-  //  dcti         => mdct_data_in,
-FDCT.v-  //  idv          => mdct_idval,
---
-FDCT.v:  // @todo: fix, manually convert (instantiate)
-FDCT.v-  //U_FIFO1 : entity work.FIFO   
-FDCT.v-  //generic map
-FDCT.v-  //(
-FDCT.v-  //      DATA_WIDTH        => 12,
-FDCT.v-  //      ADDR_WIDTH        => 9
-FDCT.v-  //)
-FDCT.v-  //port map 
---
-FDCT.v:      // @todo: fix, manually convert
-FDCT.v-      //Cb_Reg <= Cb_Reg_1 + Cb_Reg_2 + Cb_Reg_3 + to_signed(128*16384, Cb_Reg'length);
-FDCT.v-      //Cr_Reg <= Cr_Reg_1 + Cr_Reg_2 + Cr_Reg_3 + to_signed(128*16384, Cr_Reg'length);
-FDCT.v-    end
-FDCT.v-  end
-FDCT.v-
-FDCT.v-  assign Y_8bit = (Y_Reg[21:14]);
-FDCT.v-  assign Cb_8bit = (Cb_Reg[21:14]);
---
-FDCT.v:  // @todo: fix, manually convert (instantiate)  
-FDCT.v-  //U_RAMZ : entity work.RAMZ
-FDCT.v-  //generic map
-FDCT.v-  //( 
-FDCT.v-  //    RAMADDR_W     => 7,
-FDCT.v-  //    RAMDATA_W     => 12
-FDCT.v-  //)
-FDCT.v-  //port map
---
-FIFO.v:      // @todo: manual convert the following 
-FIFO.v-      //if count_reg = 2**ADDR_WIDTH or
-FIFO.v-      //  (count_reg = 2**ADDR_WIDTH-1 and wr_en_reg = '1' and rd_en_reg = '0') then 
-FIFO.v-      //  full_reg        <= '1';
-FIFO.v-      //else
-FIFO.v-      //  full_reg        <= '0';
-FIFO.v-      //end if;  
-FIFO.v-    end
---
 HostIF.v:    // @todo: verify these constants, some converted funky?
-HostIF.v-    parameter C_ENC_START_REG        = 36'h 0000_0000;
-HostIF.v-    parameter C_IMAGE_SIZE_REG       = 36'h 0000_0004;
-HostIF.v-    parameter C_IMAGE_RAM_ACCESS_REG = 36'h 0000_0008;
-HostIF.v-    parameter C_ENC_STS_REG          = 36'h 0000_000C;
-HostIF.v-    parameter C_COD_DATA_ADDR_REG    = 36'h 0000_0010;
-HostIF.v-    parameter C_ENC_LENGTH_REG       = 36'h 0000_0014;
-HostIF.v-    parameter C_QUANTIZER_RAM_LUM    = {28'h 0000_01, 8'b0};
---
-HostIF.v:          // @todo: fix, manually convert
-HostIF.v-          //if std_match(OPB_ABus, C_QUANTIZER_RAM_LUM) then
-HostIF.v-          //  qdata      <= OPB_DBus_in(qdata'range);
-HostIF.v-          //  qaddr      <= '0' & OPB_ABus(qaddr'high+2-1 downto 2);
-HostIF.v-          //  qwren      <= '1';
-HostIF.v-          //  write_done <= '1';
-HostIF.v-          //end if;
-HostIF.v-          //
---
-Huffman.v:// @todo: fix, doesn't convert
-Huffman.v-    parameter [1:0]
-Huffman.v-      IDLE    = 0,
-Huffman.v-      RUN_VLC = 1,
-Huffman.v-      RUN_VLI = 2,
-Huffman.v-      PAD     = 3;
-Huffman.v-
-Huffman.v-    parameter C_M = 23;
---
-Huffman.v:    // @todo: fix, manually instantiate, converter 
-Huffman.v-    //U_DC_ROM : entity work.DC_ROM
-Huffman.v-    //port map
-Huffman.v-    //(
-Huffman.v-    //      CLK                => CLK,
-Huffman.v-    //      RST                => RST,
-Huffman.v-    //      VLI_size           => VLI_size,
-Huffman.v-    //                         
---
-Huffman.v:    // @todo: fix, manually instantiate, converter   
-Huffman.v-    //U_AC_ROM : entity work.AC_ROM
-Huffman.v-    //port map
-Huffman.v-    //(
-Huffman.v-    //      CLK                => CLK,
-Huffman.v-    //      RST                => RST,
-Huffman.v-    //      runlength          => runlength,
-Huffman.v-    //      VLI_size           => VLI_size,
---
-Huffman.v:    // @todo: fix, manually instantiate, converter   
-Huffman.v-    //U_DC_CR_ROM : entity work.DC_CR_ROM
-Huffman.v-    //port map
-Huffman.v-    //(
-Huffman.v-    //      CLK                => CLK,
-Huffman.v-    //      RST                => RST,
-Huffman.v-    //      VLI_size           => VLI_size,
-Huffman.v-    //                         
+HostIF.v-    parameter C_ENC_START_REG        = 36'h0000_0000;
+HostIF.v-    parameter C_IMAGE_SIZE_REG       = 36'h0000_0004;
+HostIF.v-    parameter C_IMAGE_RAM_ACCESS_REG = 36'h0000_0008;
+HostIF.v-    parameter C_ENC_STS_REG          = 36'h0000_000C;
+HostIF.v-    parameter C_COD_DATA_ADDR_REG    = 36'h0000_0010;
+HostIF.v-    parameter C_ENC_LENGTH_REG       = 36'h0000_0014;
+HostIF.v-    parameter C_QUANTIZER_RAM_LUM    = {28'h0000_01, 8'b0};
 --
 Huffman.v:    // @todo: fix, manually instantiate, converter   
 Huffman.v-    //U_AC_CR_ROM : entity work.AC_CR_ROM
@@ -217,24 +83,6 @@ Huffman.v-    //      CLK                => CLK,
 Huffman.v-    //      RST                => RST,
 Huffman.v-    //      runlength          => runlength,
 Huffman.v-    //      VLI_size           => VLI_size,
---
-Huffman.v:    // @todo: fix, manually instantiate, converter   
-Huffman.v-    //U_DoubleFifo : entity work.DoubleFifo
-Huffman.v-    //port map
-Huffman.v-    //(
-Huffman.v-    //      CLK                => CLK,
-Huffman.v-    //      RST                => RST,
-Huffman.v-    //      -- HUFFMAN
-Huffman.v-    //      data_in            => fifo_wbyte,
---
-Huffman.v:    // @todo: fix, manually instantiate, converter
-Huffman.v-    
-Huffman.v-    always @(posedge CLK or posedge RST) begin
-Huffman.v-	if(RST == 1'b 1) begin
-Huffman.v-	    rle_buf_sel_s <= 1'b 0;
-Huffman.v-	end 
-Huffman.v-	else begin
-Huffman.v-	    if(start_pb == 1'b 1) begin
 --
 Huffman.v:		      // @todo: fix no convert
 Huffman.v-		      //word_reg <= shift_left(word_reg, to_integer(num_fifo_wrs & "000"));
@@ -309,49 +157,40 @@ JpegEnc.v-	 .huf_runlength      (huf_runlength     ),
 JpegEnc.v-	 .huf_size           (huf_size 	        ),
 --
 JpegEnc.v:  // @todo: fix, manually instantiate, converter doesn't handle  
-JpegEnc.v-  //U_RLE_TOP : entity work.RLE_TOP
-JpegEnc.v-  //port map
-JpegEnc.v-  //(
-JpegEnc.v-  //      CLK                => CLK,
-JpegEnc.v-  //      RST                => RST,
-JpegEnc.v-  //      -- CTRL
-JpegEnc.v-  //      start_pb           => rle_start,
---
-JpegEnc.v:  // @todo: fix, manually instantiate, converter doesn't handle  
 JpegEnc.v-  //U_Huffman : entity work.Huffman
-JpegEnc.v-  //port map
-JpegEnc.v-  //(
-JpegEnc.v-  //      CLK                => CLK,
-JpegEnc.v-  //      RST                => RST,
-JpegEnc.v-  //      -- CTRL
-JpegEnc.v-  //      start_pb           => huf_start,
+JpegEnc.v-    Huffman
+JpegEnc.v-      U_Huffman
+JpegEnc.v-  (
+JpegEnc.v-   .CLK                (CLK              ),
+JpegEnc.v-   .RST                (RST		 ),
+JpegEnc.v-   //-- CTRL	       			 ),
 --
 JpegEnc.v:  // @todo: fix, manually instantiate, converter doesn't handle  
 JpegEnc.v-  //U_ByteStuffer : entity work.ByteStuffer
 JpegEnc.v-  //port map
-JpegEnc.v-  //(
-JpegEnc.v-  //      CLK                => CLK,
-JpegEnc.v-  //      RST                => RST,
-JpegEnc.v-  //      -- CTRL
-JpegEnc.v-  //      start_pb           => bs_start,
+JpegEnc.v-    ByteStuffer
+JpegEnc.v-      U_ByteStuffer
+JpegEnc.v-	(
+JpegEnc.v-         .CLK                (CLK               ),
+JpegEnc.v-         .RST                (RST	       ),
 --
 JpegEnc.v:  // @todo: fix, manually instantiate, converter doesn't handle  
 JpegEnc.v-  //U_JFIFGen : entity work.JFIFGen
 JpegEnc.v-  //port map
-JpegEnc.v-  //(
-JpegEnc.v-  //      CLK                => CLK,
-JpegEnc.v-  //      RST                => RST,
-JpegEnc.v-  //      -- CTRL
-JpegEnc.v-  //      start              => jfif_start,
+JpegEnc.v-    JFIFGen
+JpegEnc.v-      U_JFIFGen	
+JpegEnc.v-  (
+JpegEnc.v-        .CLK                (CLK             ),
+JpegEnc.v-        .RST                (RST	     ),
 --
 JpegEnc.v:  // @todo: fix, manually instantiate, converter doesn't handle  
 JpegEnc.v-  //U_OutMux : entity work.OutMux
 JpegEnc.v-  //port map
-JpegEnc.v-  //(
-JpegEnc.v-  //      CLK                => CLK,
-JpegEnc.v-  //      RST                => RST,
-JpegEnc.v-  //      -- CTRL
-JpegEnc.v-  //      out_mux_ctrl       => out_mux_ctrl,
+JpegEnc.v-    OutMux
+JpegEnc.v-      U_OutMux
+JpegEnc.v-  (
+JpegEnc.v-        .CLK                (CLK               ),
+JpegEnc.v-        .RST                (RST	       ),
 --
 MDCT.v:    // @todo: fix, converter doesn't handle user defined types
 MDCT.v-    
