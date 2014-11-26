@@ -45,10 +45,11 @@ def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
     print("cosimulation setup ...")
     cmd = "vvp -m ./myhdl.vpi jpegenc"
 
-    gcosim = Cosimulation(cmd,
+    gcosim = Cosimulation(
+        cmd,
         clock = clock,
         reset = reset,
-
+        
         # encoder 1 (V1, design1)
         j1_iram_wdata      = jpgv1.iram_wdata,
         j1_iram_wren       = jpgv1.iram_wren,
@@ -58,6 +59,9 @@ def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
         j1_ram_wraddr      = jpgv1.ram_wraddr,
         j1_almost_full     = jpgv1.almost_full,
         j1_frame_size      = jpgv1.frame_size,
+        # -- j1 OPB interface
+        j1_opb_abus        = jpgv1.opb.ABus,
+        jp_opb_be          = jpgv1.opb.BE
 
         # encoder 2 (V2, design2)
         j2_eof        = jpgv2.end_of_file_signal,

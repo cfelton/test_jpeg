@@ -56,7 +56,8 @@ def test_jpegenc(args):
 
             print("end simulation")
             raise StopSimulation
-
+            
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # stimulate V1 (design1) 
         @instance
         def tbstimv1():
@@ -66,6 +67,7 @@ def test_jpegenc(args):
             yield delay(100)
             yield clock.posedge
 
+            # the V1 jpegenc needs to be configured.
             img = Image.open(args.imgfn)
             yield jpgv1.put_image(img)
             bic = [None]
@@ -78,6 +80,7 @@ def test_jpegenc(args):
 
             finished[0].next = True
 
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~            
         # stimulate V2 (design2) 
         @instance
         def tbstimv2():  
