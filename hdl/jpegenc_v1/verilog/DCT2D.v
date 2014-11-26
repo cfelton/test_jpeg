@@ -209,10 +209,11 @@ module DCT2D
 	    // read DCT 1D to barrel shifer
 	    //--------------------------------
 	    if(stage1_reg == 1'b 1) begin
-		// @todo: fix, manually convert
-		// -- right shift input data
-		// latchbuf_reg(N-2 downto 0) <= latchbuf_reg(N-1 downto 1);
-		// latchbuf_reg(N-1)          <= RESIZE(SIGNED(ramdatao),RAMDATA_W+1);       
+		latchbuf_reg[N-1] <= ramdatao;
+		for(ii=0; ii<N-1; ii=ii+1) begin
+		    latchbuf_reg[ii] <= latchbuf_reg[ii+1];
+		end
+		
 		colram_reg <= colram_reg + 1;
 		colr_reg <= colr_reg + 1;
 		if(colram_reg == (N - 2)) begin
@@ -311,104 +312,37 @@ module DCT2D
 	    /// @todo see if these need to be cast to signed ($signed)
 	    ///    both DCT1D and DCT2D
 	    
-	    // @todo: fix, manually convert
-	    //if even_not_odd = '0' then
-	    //  dcto_1 <= STD_LOGIC_VECTOR(RESIZE
-	    //    (RESIZE(SIGNED(romedatao(0)),DA2_W) + 
-	    //    (RESIZE(SIGNED(romedatao(1)),DA2_W-1) & '0') +
-	    //    (RESIZE(SIGNED(romedatao(2)),DA2_W-2) & "00"),
-	    //    DA2_W));
 	    if (1'b0 == even_not_odd) begin
 		dcto_1 <= romedatao[0] + (romedatao[1] << 1) + (romedatao[2] << 2);
 	    end
-	    //else
-	    //  dcto_1 <= STD_LOGIC_VECTOR(RESIZE
-	    //    (RESIZE(SIGNED(romodatao(0)),DA2_W) + 
-	    //    (RESIZE(SIGNED(romodatao(1)),DA2_W-1) & '0') +
-	    //    (RESIZE(SIGNED(romodatao(2)),DA2_W-2) & "00"),
-	    //    DA2_W));
-	    //end if;
 	    else begin
 		dcto_1 <= romodatao[0] + (romodatao[1] << 1) + (romodatao[2] << 2);
 	    end
 	    
-	    //if even_not_odd_d1 = '0' then
-	    //  dcto_2 <= STD_LOGIC_VECTOR(RESIZE
-	    //    (signed(dcto_1) + 
-	    //    (RESIZE(SIGNED(romedatao_d1(3)),DA2_W-3) & "000") +
-	    //    (RESIZE(SIGNED(romedatao_d1(4)),DA2_W-4) & "0000"),
-	    //    DA2_W));
 	    if (1'b0 == even_not_odd_d1) begin
 		dcto_2 <= dcto_1 + (romedatao_d1[3] << 3) + (romedatao_d1[4] << 4);
 	    end
-	    //else
-	    //  dcto_2 <= STD_LOGIC_VECTOR(RESIZE
-	    //    (signed(dcto_1) + 
-	    //    (RESIZE(SIGNED(romodatao_d1(3)),DA2_W-3) & "000") +
-	    //    (RESIZE(SIGNED(romodatao_d1(4)),DA2_W-4) & "0000"),
-	    //    DA2_W)); 
-	    //end if;
 	    else begin
 		dcto_2 <= dcto_1 + (romodatao_d1[3] << 3) + (romodatao_d1[4] << 4);
 	    end
-	    //
-	    //if even_not_odd_d2 = '0' then
-	    //  dcto_3 <= STD_LOGIC_VECTOR(RESIZE
-	    //    (signed(dcto_2) + 
-	    //    (RESIZE(SIGNED(romedatao_d2(5)),DA2_W-5) & "00000") +
-	    //    (RESIZE(SIGNED(romedatao_d2(6)),DA2_W-6) & "000000"),
-	    //    DA2_W));
+
 	    if (1'b0 == even_not_odd_d2) begin
 		dcto_3 <= dcto_2 + (romedatao_d2[5] << 5) + (romedatao_d2[6] << 6);
 	    end
-	    //else
-	    //  dcto_3 <= STD_LOGIC_VECTOR(RESIZE
-	    //    (signed(dcto_2) + 
-	    //    (RESIZE(SIGNED(romodatao_d2(5)),DA2_W-5) & "00000") +
-	    //    (RESIZE(SIGNED(romodatao_d2(6)),DA2_W-6) & "000000"),
-	    //    DA2_W)); 
-	    //end if;
 	    else begin
 		dcto_3 <= dcto_2 + (romodatao_d2[5] << 5) + (romodatao_d2[6] << 6);
 	    end
 	    	    
-	    //if even_not_odd_d3 = '0' then
-	    //  dcto_4 <= STD_LOGIC_VECTOR(RESIZE
-	    //    (signed(dcto_3) +
-	    //    (RESIZE(SIGNED(romedatao_d3(7)),DA2_W-7) & "0000000") +
-	    //    (RESIZE(SIGNED(romedatao_d3(8)),DA2_W-8) & "00000000"),
-	    //    DA2_W));
 	    if (1'b0 == even_not_odd_d3) begin
 		dcto_4 <= dcto_3 + (romedatao_d3[7] << 7) + (romedatao_d3[8] << 8);
 	    end
-	    //else
-	    //  dcto_4 <= STD_LOGIC_VECTOR(RESIZE
-	    //    (signed(dcto_3) + 
-	    //    (RESIZE(SIGNED(romodatao_d3(7)),DA2_W-7) & "0000000") +
-	    //    (RESIZE(SIGNED(romodatao_d3(8)),DA2_W-8) & "00000000"),
-	    //    DA2_W)); 
-	    //end if;
 	    else begin
 		dcto_4 <= dcto_3 + (romodatao_d3[7] << 7) + (romodatao_d3[8] << 8);
 	    end
-	    
-	    
-	    //if even_not_odd_d4 = '0' then
-	    //  dcto_5 <= STD_LOGIC_VECTOR(RESIZE
-	    //    (signed(dcto_4) +
-	    //    (RESIZE(SIGNED(romedatao_d4(9)),DA2_W-9) & "000000000") -
-	    //    (RESIZE(SIGNED(romedatao_d4(10)),DA2_W-10) & "0000000000"),
-	    //    DA2_W));
+	    	    
 	    if (1'b0 == even_not_odd_d4) begin
 		dcto_5 <= dcto_4 + (romedatao_d4[9] << 9) + (romedatao_d4[10] << 10);
 	    end
-	    //else
-	    //  dcto_5 <= STD_LOGIC_VECTOR(RESIZE
-	    //    (signed(dcto_4) + 
-	    //    (RESIZE(SIGNED(romodatao_d4(9)),DA2_W-9) & "000000000") -
-	    //    (RESIZE(SIGNED(romodatao_d4(10)),DA2_W-10) & "0000000000"),
-	    //    DA2_W)); 
-	    //end if;
 	    else begin
 		dcto_5 <= dcto_4 + (romodatao_d4[9] << 9) + (romodatao_d4[10] << 10);
 	    end
@@ -418,29 +352,6 @@ module DCT2D
     assign dcto = dcto_5[DA2_W - 1:12];
     assign odv = odv_d5;
     
-    // @todo: fix, manually convert
-    //p_romaddr : process(CLK, RST)
-    //begin
-    //  if RST = '1' then
-    //    romeaddro   <= (others => (others => '0')); 
-    //    romoaddro   <= (others => (others => '0')); 
-    //  elsif CLK'event and CLK = '1' then
-    //    for i in 0 to 10 loop
-    //      -- read precomputed MAC results from LUT
-    //      romeaddro(i) <= STD_LOGIC_VECTOR(col_reg(RAMADRR_W/2-1 downto 1)) & 
-    //               databuf_reg(0)(i) & 
-    //               databuf_reg(1)(i) &
-    //               databuf_reg(2)(i) &
-    //               databuf_reg(3)(i);
-    //      -- odd
-    //      romoaddro(i) <= STD_LOGIC_VECTOR(col_reg(RAMADRR_W/2-1 downto 1)) & 
-    //               databuf_reg(4)(i) & 
-    //               databuf_reg(5)(i) &
-    //               databuf_reg(6)(i) &
-    //               databuf_reg(7)(i);
-    //    end loop;
-    //  end if;
-    //end process;
     integer jj;
     always @(posedge clk or posedge rst) begin
 	if (1'b1 == rst) begin
@@ -466,30 +377,7 @@ module DCT2D
 	    end
 	end
     end
-    //
-    //p_romdatao_dly : process(CLK, RST)
-    //begin
-    //  if RST = '1' then
-    //    romedatao_d1    <= (others => (others => '0'));       
-    //    romodatao_d1    <= (others => (others => '0'));
-    //    romedatao_d2    <= (others => (others => '0'));       
-    //    romodatao_d2    <= (others => (others => '0'));
-    //    romedatao_d3    <= (others => (others => '0'));       
-    //    romodatao_d3    <= (others => (others => '0'));
-    //    romedatao_d4    <= (others => (others => '0'));       
-    //    romodatao_d4    <= (others => (others => '0'));
-    //  elsif CLK'event and CLK = '1' then
-    //    romedatao_d1   <= romedatao;
-    //    romodatao_d1   <= romodatao;
-    //    romedatao_d2   <= romedatao_d1;
-    //    romodatao_d2   <= romodatao_d1;
-    //    romedatao_d3   <= romedatao_d2;
-    //    romodatao_d3   <= romodatao_d2;
-    //    romedatao_d4   <= romedatao_d3;
-    //    romodatao_d4   <= romodatao_d3;
-    //  end if;
-    //end process;
-    // end manual conversion
+
     always @(posedge clk or posedge rst) begin
 	if(1'b1 == rst) begin
 	    for(jj=0; jj<11; jj=11+1) begin
