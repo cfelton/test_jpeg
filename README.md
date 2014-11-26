@@ -34,7 +34,7 @@ JPEG Encoders
   - jpegenc_v1: is the VHDL JPEG encoder converted to Verilog
   - jpegenc_v2: is the Verilog JPEG encoder.
   - jpegenc_v3: WIP design3 jpeg encoder
-  - jpegenc_v4: WIP jpeg2k encoder
+  - jpegenc_v4: <future> jpeg2k encoder
 
 (@todo: the above need better names)
 

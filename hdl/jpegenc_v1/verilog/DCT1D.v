@@ -76,7 +76,7 @@
 
 module DCT1D
 #(
-  /// @todo: these were constnats from MDCT_PKG, not sure if
+  /// @todo: these were constants from MDCT_PKG, not sure if
   ///    this should be repeated in each module or in a header
   ///    (ugh preprocessor) not sure if iverilog supports SV pkg.
   parameter IP_W        = 8,  
@@ -91,72 +91,100 @@ module DCT1D
   parameter DA_W        = ROMDATA_W+IP_W
 )
 (
- input  wire 		     clk,
- input  wire 		     rst,
- input  wire [IP_W-1:0]      dcti,
- input  wire 		     idv,
- output wire 		     odv,
- output wire [OP_W-1:0]      dcto,
- output wire [RAMADRR_W-1:0] ramwaddro,
- output wire [RAMDATA_W-1:0] ramdatai,
- output wire 		     ramwe,
- output wire 		     wmemsel
+ input wire 		       clk,
+ input wire 		       rst,
+ input wire [IP_W-1:0] 	       dcti,
+ input wire 		       idv,
+
+ // the original VHDL passed 2D arrays, Verilog doesn't support
+ // 2D arrays as ports (systemverilog does).  The 2D arrays are
+ // passed as flat ports and reconstructed as 2D array
+ //input wire [8:0][ROMDATA_W-1:0] romedatao,
+ //input wire [8:0][ROMDATA_W-1:0] romodatao,
+ //output wire [ROMADDR_W-1:0] romeaddro [0:8],
+ //output wire [ROMADDR_W-1:0] romoaddro [0:8],
+
+ input wire [ROMDATA_W*9-1:0]  romedatao_flat,
+ input wire [ROMDATA_W*9-1:0]  romodatao_flat,
+ output wire [ROMADDR_W*9-1:0] romeaddro_flat,
+ output wire [ROMADDR_W*9-1:0] romoaddro_flat,
+ 
+ output wire 		       odv,
+ output wire [OP_W-1:0]        dcto,
+  
+ output wire [RAMADRR_W-1:0]   ramwaddro,
+ output wire [RAMDATA_W-1:0]   ramdatai,
+ output wire 		       ramwe,
+ output wire 		       wmemsel
 );
 
-    // @todo: fix, manually convert
-    //romedatao    : in T_ROM1DATAO;
-    //romodatao    : in T_ROM1DATAO;
+    reg [IP_W:0] databuf_reg  [N - 1:0];
+    reg [IP_W:0] latchbuf_reg [N - 1:0];
     
-    // @todo: fix, manually convert
-    //romeaddro    : out T_ROM1ADDRO;
-    //romoaddro    : out T_ROM1ADDRO;
-
-
-
-    // @todo: manually convert
-    reg [IP_W:0] databuf_reg[N - 1:0];
-    reg [IP_W:0] latchbuf_reg[N - 1:0];
+    reg  [(RAMADRR_W/2) - 1:0] col_reg         = 0;
+    reg  [(RAMADRR_W/2) - 1:0] row_reg         = 0;
+    wire [(RAMADRR_W/2) - 1:0] rowr_reg        = 0;
+    reg  [(RAMADRR_W/2) - 1:0] inpcnt_reg      = 0;
     
-    reg  [(RAMADRR_W/2) - 1:0] col_reg = 0;
-    reg  [(RAMADRR_W/2) - 1:0] row_reg = 0;
-    wire [(RAMADRR_W/2) - 1:0] rowr_reg = 0;
-    reg  [(RAMADRR_W/2) - 1:0] inpcnt_reg = 0;
+    reg 		       ramwe_s         = 1'b0;
+    reg 		       wmemsel_reg     = 1'b0;
+    reg 		       stage2_reg      = 1'b0;
+    reg [RAMADRR_W - 1 :0]     stage2_cnt_reg  = 1;
     
-    reg 		       ramwe_s = 1'b0;
-    reg 		       wmemsel_reg = 1'b0;
-    reg 		       stage2_reg = 1'b0;
-    reg [RAMADRR_W - 1 :0]     stage2_cnt_reg = 1;
+    reg [(RAMADRR_W/2) - 1 :0] col_2_reg       = 0;
+    reg [RAMADRR_W - 1 :0]     ramwaddro_s     = 0;
     
-    reg [(RAMADRR_W/2) - 1 :0] col_2_reg = 0;
-    reg [RAMADRR_W - 1 :0]     ramwaddro_s = 0;
-    
-    reg 		       even_not_odd = 1'b0;
+    reg 		       even_not_odd    = 1'b0;
     reg 		       even_not_odd_d1 = 1'b0;
     reg 		       even_not_odd_d2 = 1'b0;
     reg 		       even_not_odd_d3 = 1'b0;
     
-    reg 		       ramwe_d1 = 1'b0;
-    reg 		       ramwe_d2 = 1'b0;
-    reg 		       ramwe_d3 = 1'b0;
-    reg 		       ramwe_d4 = 1'b0;
+    reg 		       ramwe_d1        = 1'b0;
+    reg 		       ramwe_d2        = 1'b0;
+    reg 		       ramwe_d3        = 1'b0;
+    reg 		       ramwe_d4        = 1'b0;
     
-    reg [RAMADRR_W - 1:0]      ramwaddro_d1 = 0;
-    reg [RAMADRR_W - 1:0]      ramwaddro_d2 = 0;
-    reg [RAMADRR_W - 1:0]      ramwaddro_d3 = 0;
-    reg [RAMADRR_W - 1:0]      ramwaddro_d4 = 0;
+    reg [RAMADRR_W - 1:0]      ramwaddro_d1    = 0;
+    reg [RAMADRR_W - 1:0]      ramwaddro_d2    = 0;
+    reg [RAMADRR_W - 1:0]      ramwaddro_d3    = 0;
+    reg [RAMADRR_W - 1:0]      ramwaddro_d4    = 0;
     
-    reg 		       wmemsel_d1 = 1'b0;
-    reg 		       wmemsel_d2 = 1'b0;
-    reg 		       wmemsel_d3 = 1'b0;
-    reg 		       wmemsel_d4 = 1'b0;  
+    reg 		       wmemsel_d1      = 1'b0;
+    reg 		       wmemsel_d2      = 1'b0;
+    reg 		       wmemsel_d3      = 1'b0;
+    reg 		       wmemsel_d4      = 1'b0;
 
-    // @todo: fix, manually convert
-    //signal romedatao_d1    : T_ROM1DATAO;
-    //signal romodatao_d1    : T_ROM1DATAO;
-    //signal romedatao_d2    : T_ROM1DATAO;
-    //signal romodatao_d2    : T_ROM1DATAO;
-    //signal romedatao_d3    : T_ROM1DATAO;
-    //signal romodatao_d3    : T_ROM1DATAO;
+    wire [ROMDATA_W-1:0]  romedatao [0:8];
+    wire [ROMDATA_W-1:0]  romodatao [0:8];
+    reg [ROMADDR_W-1:0]  romeaddro [0:8];
+    reg [ROMADDR_W-1:0]  romoaddro [0:8];
+
+    /**
+     * conversion note, in Verilog (not SV) 2D arrays cannot be
+     * passed as ports.  The 2D arrays need to be flatten to a 
+     * port and unflattened from a port.
+     */
+    genvar gi;
+    generate
+	for(gi=0; gi<9; gi=gi+1) begin
+	    // select [RDW-1:0](0+8:0), [2*RDW-1:RDW](RDW+8:0), ...
+	    assign romedatao[gi] = romedatao_flat[ROMDATA_W*gi +: ROMDATA_W];
+	    assign romodatao[gi] = romodatao_flat[ROMDATA_W*gi +: ROMDATA_W];
+	    
+	    assign romeaddro_flat[ROMADDR_W*gi +: ROMADDR_W] = romeaddro[gi];
+	    assign romoaddro_flat[ROMADDR_W*gi +: ROMADDR_W] = romoaddro[gi];
+	end
+    endgenerate
+
+
+    reg [ROMDATA_W-1:0]        romedatao_d1 [0:8];
+    reg [ROMDATA_W-1:0]        romedatao_d2 [0:8];
+    reg [ROMDATA_W-1:0]        romedatao_d3 [0:8];
+
+    reg [ROMDATA_W-1:0]        romodatao_d1 [0:8];
+    reg [ROMDATA_W-1:0]        romodatao_d2 [0:8];
+    reg [ROMDATA_W-1:0]        romodatao_d3 [0:8];
+
     
     reg [DA_W - 1:0] 	       dcto_1 = 0;
     reg [DA_W - 1:0] 	       dcto_2 = 0;
@@ -168,13 +196,12 @@ module DCT1D
     assign ramdatai = dcto_4[DA_W - 1:12];
     assign wmemsel = wmemsel_d4;
 
-    integer ii;
+    integer ii, jj;
+    
     always @(posedge clk or posedge rst) begin
 	if(rst == 1'b 1) begin
-	    inpcnt_reg  <= 0; //{(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
+	    inpcnt_reg  <= 0; 
 	    
-	    //latchbuf_reg    <= (others => (others => '0')); 
-            //databuf_reg     <= (others => (others => '0'));
 	    for(ii=0; ii<IP_W; ii=ii+1) begin
 		latchbuf_reg[ii] <= 0;
 		databuf_reg[ii]  <= 0;
@@ -184,11 +211,11 @@ module DCT1D
             stage2_cnt_reg <= {(((RAMADRR_W - 1))-((0))+1){1'b1}};
 	    
             ramwe_s        <= 1'b0;
-            ramwaddro_s    <= 0; //{(((RAMADRR_W - 1))-((0))+1){1'b0}};
-            col_reg        <= 0; //{(((RAMADRR_W/2 - 1))-((0))+1){1'b0}};
-            row_reg        <= 0; //{(((RAMADRR_W/2 - 1))-((0))+1){1'b0}};
+            ramwaddro_s    <= 0; 
+            col_reg        <= 0; 
+            row_reg        <= 0; 
             wmemsel_reg    <= 1'b0;
-            col_2_reg      <= 0;  //{(((RAMADRR_W/2 - 1))-((0))+1){1'b0}};
+            col_2_reg      <= 0;  
 	end 
 	else begin
 	    stage2_reg <= 1'b 0;
@@ -200,20 +227,21 @@ module DCT1D
 	    if(idv == 1'b 1) begin
 		inpcnt_reg <= inpcnt_reg + 1;
 
-		/// @todo: manual conversion / fix.  latchbuf is a 2D array
-		///    need to verify latchbuf_reg is supposed to be a 2D
-		///    and what the following is trying to actually achive
-		// right shift input data
-		//latchbuf_reg[N - 2:0] <= latchbuf_reg[N - 1:1];
+		// the following loop achieves the same as the
+		// VHDL array slice
+		//   latchbuf_reg[N - 2:0] <= latchbuf_reg[N - 1:1];
+		for(jj=0; jj<N-1; jj=jj+1) begin
+		    latchbuf_reg[jj] <= latchbuf_reg[jj+1];
+		end
 		
 		latchbuf_reg[N - 1] <= ({1'b0,dcti}) - LEVEL_SHIFT;
 		if(inpcnt_reg == (N - 1)) begin
 		    // after this sum databuf_reg is in range of -256 to 254 (min to max) 
-		    databuf_reg[0] <= latchbuf_reg[1] + ((({1'b 0,dcti}) - LEVEL_SHIFT));
+		    databuf_reg[0] <= latchbuf_reg[1] + ((({1'b0,dcti}) - LEVEL_SHIFT));
 		    databuf_reg[1] <= latchbuf_reg[2] + latchbuf_reg[7];
 		    databuf_reg[2] <= latchbuf_reg[3] + latchbuf_reg[6];
 		    databuf_reg[3] <= latchbuf_reg[4] + latchbuf_reg[5];
-		    databuf_reg[4] <= latchbuf_reg[1] - ((({1'b 0,dcti}) - LEVEL_SHIFT));	    
+		    databuf_reg[4] <= latchbuf_reg[1] - ((({1'b0,dcti}) - LEVEL_SHIFT));	    
 		    databuf_reg[5] <= latchbuf_reg[2] - latchbuf_reg[7];
 		    databuf_reg[6] <= latchbuf_reg[3] - latchbuf_reg[6];
 		    databuf_reg[7] <= latchbuf_reg[4] - latchbuf_reg[5];
@@ -256,25 +284,24 @@ module DCT1D
     // output data pipeline
     always @(posedge clk or posedge rst) begin
 	if(rst == 1'b1) begin
-	    even_not_odd <= 1'b 0;
-	    even_not_odd_d1 <= 1'b 0;
-	    even_not_odd_d2 <= 1'b 0;
-	    even_not_odd_d3 <= 1'b 0;
-	    ramwe_d1 <= 1'b 0;
-	    ramwe_d2 <= 1'b 0;
-	    ramwe_d3 <= 1'b 0;
-	    ramwe_d4 <= 1'b 0;
+	    even_not_odd <= 1'b0;
+	    even_not_odd_d1 <= 1'b0;
+	    even_not_odd_d2 <= 1'b0;
+	    even_not_odd_d3 <= 1'b0;
+	    ramwe_d1 <= 1'b0;
+	    ramwe_d2 <= 1'b0;
+	    ramwe_d3 <= 1'b0;
+	    ramwe_d4 <= 1'b0;
 	    
-	    /// @todo: manually fix, concat expression fails
-	    //ramwaddro_d1 <= {(((RAMADRR_W - 1))-((0))+1){1'b0}};
-	    //ramwaddro_d2 <= {(((RAMADRR_W - 1))-((0))+1){1'b0}};
-	    //ramwaddro_d3 <= {(((RAMADRR_W - 1))-((0))+1){1'b0}};
-	    //ramwaddro_d4 <= {(((RAMADRR_W - 1))-((0))+1){1'b0}};
+	    ramwaddro_d1 <= 0;
+	    ramwaddro_d2 <= 0;
+	    ramwaddro_d3 <= 0;
+	    ramwaddro_d4 <= 0;
      
-	    wmemsel_d1 <= 1'b 0;
-	    wmemsel_d2 <= 1'b 0;
-	    wmemsel_d3 <= 1'b 0;
-	    wmemsel_d4 <= 1'b 0;
+	    wmemsel_d1 <= 1'b0;
+	    wmemsel_d2 <= 1'b0;
+	    wmemsel_d3 <= 1'b0;
+	    wmemsel_d4 <= 1'b0;
 	    
 	    dcto_1 <= {(((DA_W - 1))-((0))+1){1'b0}};
 	    dcto_2 <= {(((DA_W - 1))-((0))+1){1'b0}};
@@ -282,127 +309,100 @@ module DCT1D
 	    dcto_4 <= {(((DA_W - 1))-((0))+1){1'b0}};
 	    
 	end else begin
-	    even_not_odd <= stage2_cnt_reg[0];
+	    even_not_odd    <= stage2_cnt_reg[0];
 	    even_not_odd_d1 <= even_not_odd;
 	    even_not_odd_d2 <= even_not_odd_d1;
 	    even_not_odd_d3 <= even_not_odd_d2;
+	    
 	    ramwe_d1 <= ramwe_s;
 	    ramwe_d2 <= ramwe_d1;
 	    ramwe_d3 <= ramwe_d2;
 	    ramwe_d4 <= ramwe_d3;
+	    
 	    ramwaddro_d1 <= ramwaddro_s;
 	    ramwaddro_d2 <= ramwaddro_d1;
 	    ramwaddro_d3 <= ramwaddro_d2;
 	    ramwaddro_d4 <= ramwaddro_d3;
+	    
 	    wmemsel_d1 <= wmemsel_reg;
 	    wmemsel_d2 <= wmemsel_d1;
 	    wmemsel_d3 <= wmemsel_d2;
 	    wmemsel_d4 <= wmemsel_d3;
 	    
-	    // @todo: fix, manually convert
-	    //if even_not_odd = '0' then
-	    //  -- @todo: fix, manually convert
-	    //  dcto_1 <= STD_LOGIC_VECTOR(RESIZE
-	    //    (RESIZE(SIGNED(romedatao(0)),DA_W) + 
-	    //    (RESIZE(SIGNED(romedatao(1)),DA_W-1) & '0') +
-	    //    (RESIZE(SIGNED(romedatao(2)),DA_W-2) & "00"),
-	    //    DA_W));
-	    //else
-	    //  dcto_1 <= STD_LOGIC_VECTOR(RESIZE
-	    //    (RESIZE(SIGNED(romodatao(0)),DA_W) + 
-	    //    (RESIZE(SIGNED(romodatao(1)),DA_W-1) & '0') +
-	    //    (RESIZE(SIGNED(romodatao(2)),DA_W-2) & "00"),
-	    //    DA_W));
-	    //end if;
-	    //
-	    //if even_not_odd_d1 = '0' then
-	    //  dcto_2 <= STD_LOGIC_VECTOR(RESIZE
-	    //    (signed(dcto_1) +
-	    //    (RESIZE(SIGNED(romedatao_d1(3)),DA_W-3) & "000") +
-	    //    (RESIZE(SIGNED(romedatao_d1(4)),DA_W-4) & "0000"),
-	    //    DA_W));
-	    //else
-	    //  dcto_2 <= STD_LOGIC_VECTOR(RESIZE
-	    //    (signed(dcto_1) + 
-	    //    (RESIZE(SIGNED(romodatao_d1(3)),DA_W-3) & "000") +
-	    //    (RESIZE(SIGNED(romodatao_d1(4)),DA_W-4) & "0000"),
-	    //    DA_W));
-	    //end if;
-	    //
-	    //if even_not_odd_d2 = '0' then
-	    //  dcto_3 <= STD_LOGIC_VECTOR(RESIZE
-	    //    (signed(dcto_2) +
-	    //    (RESIZE(SIGNED(romedatao_d2(5)),DA_W-5) & "00000") +
-	    //    (RESIZE(SIGNED(romedatao_d2(6)),DA_W-6) & "000000"),
-	    //    DA_W));
-	    //else
-	    //  dcto_3 <= STD_LOGIC_VECTOR(RESIZE
-	    //    (signed(dcto_2) + 
-	    //    (RESIZE(SIGNED(romodatao_d2(5)),DA_W-5) & "00000") +
-	    //    (RESIZE(SIGNED(romodatao_d2(6)),DA_W-6) & "000000"),
-	    //    DA_W));
-	    //end if;
-	    //
-	    //if even_not_odd_d3 = '0' then
-	    //  dcto_4 <= STD_LOGIC_VECTOR(RESIZE
-	    //    (signed(dcto_3) +
-	    //    (RESIZE(SIGNED(romedatao_d3(7)),DA_W-7) & "0000000") -
-	    //    (RESIZE(SIGNED(romedatao_d3(8)),DA_W-8) & "00000000"),
-	    //    DA_W));
-	    //else
-	    //  dcto_4 <= STD_LOGIC_VECTOR(RESIZE
-	    //    (signed(dcto_3) + 
-	    //    (RESIZE(SIGNED(romodatao_d3(7)),DA_W-7) & "0000000") -
-	    //    (RESIZE(SIGNED(romodatao_d3(8)),DA_W-8) & "00000000"),
-	    //    DA_W));
-	    //end if;
+	    if (1'b0 == even_not_odd) begin
+		dcto_1 <= romedatao[0] + (romedatao[1] << 1) + (romedatao[2] << 2);
+	    end
+	    else begin
+		dcto_1 <= romodatao[0] + (romodatao[1] << 1) + (romodatao[2] <<2);
+	    end
+	    if (1'b0 == even_not_odd_d1) begin
+		dcto_2 <= dcto_1 + (romedatao_d1[3] << 3) + (romedatao_d1[4] << 4);
+	    end
+	    else begin
+		dcto_2 <= dcto_1 + (romodatao_d1[3] << 3) + (romodatao_d1[4] << 4);
+	    end
+	    if (1'b0 == even_not_odd_d2) begin
+		dcto_3 <= dcto_2 + (romedatao_d2[5] << 5) + (romedatao_d2[6] << 6);
+	    end
+	    else begin
+		dcto_3 <= dcto_2 + (romodatao_d2[5] << 5) + (romodatao_d2[6] << 6);
+	    end
+	    if (1'b0 == even_not_odd_d3) begin
+		dcto_4 <= dcto_3 + (romedatao_d3[7] << 7) + (romedatao_d3[8] << 8);
+	    end	    
+	    else begin
+		dcto_4 <= dcto_3 + (romodatao_d3[7] << 7) + (romodatao_d3[8] << 8);
+	    end
 	end
     end
 
-    // @todo: fix, manually convert
-    // read precomputed MAC results from LUT
-    //p_romaddr : process(CLK, RST)
-    //begin
-    //  if RST = '1' then
-    //    romeaddro   <= (others => (others => '0')); 
-    //    romoaddro   <= (others => (others => '0')); 
-    //  elsif CLK'event and CLK = '1' then
-    //    for i in 0 to 8 loop
-    //      -- even
-    //      romeaddro(i) <= STD_LOGIC_VECTOR(col_reg(RAMADRR_W/2-1 downto 1)) & 
-    //               databuf_reg(0)(i) & 
-    //               databuf_reg(1)(i) &
-    //               databuf_reg(2)(i) &
-    //               databuf_reg(3)(i);
-    //      -- odd
-    //      romoaddro(i) <= STD_LOGIC_VECTOR(col_reg(RAMADRR_W/2-1 downto 1)) & 
-    //               databuf_reg(4)(i) & 
-    //               databuf_reg(5)(i) &
-    //               databuf_reg(6)(i) &
-    //               databuf_reg(7)(i);
-    //    end loop;
-    //  end if;
-    //end process; 
-    //
-    //p_romdatao_d1 : process(CLK, RST)
-    //begin
-    //  if RST = '1' then
-    //    romedatao_d1    <= (others => (others => '0'));
-    //    romodatao_d1    <= (others => (others => '0'));
-    //    romedatao_d2    <= (others => (others => '0'));
-    //    romodatao_d2    <= (others => (others => '0'));
-    //    romedatao_d3    <= (others => (others => '0'));
-    //    romodatao_d3    <= (others => (others => '0'));
-    //  elsif CLK'event and CLK = '1' then
-    //    romedatao_d1   <= romedatao;
-    //    romodatao_d1   <= romodatao;
-    //    romedatao_d2   <= romedatao_d1;
-    //    romodatao_d2   <= romodatao_d1;
-    //    romedatao_d3   <= romedatao_d2;
-    //    romodatao_d3   <= romodatao_d2;
-    //  end if;
-    //end process;
+    integer kk;
+    always @(posedge clk or posedge rst) begin
+	if (rst == 1'b1) begin
+	    for(kk=0; kk<8; kk=kk+1) begin
+		romeaddro[kk] <= 0;
+		romoaddro[kk] <= 0;
+	    end
+	end
+	else begin
+	    for(kk=0; kk<8; kk=kk+1) begin
+		romeaddro[kk] <= {col_reg[RAMADRR_W/2-1:1], 
+				  databuf_reg[0][kk], 
+				  databuf_reg[1][kk],
+				  databuf_reg[2][kk], 
+				  databuf_reg[3][kk]};
+		romoaddro[kk] <= {col_reg[RAMADRR_W/2-1:1], 
+				  databuf_reg[4][kk], 
+				  databuf_reg[5][kk],
+				  databuf_reg[6][kk], 
+				  databuf_reg[7][kk]};
+	    end
+	end
+    end
+
+    always @(posedge clk or posedge rst) begin
+	if (1'b1 == rst) begin
+	    for (kk=0; kk<8; kk=kk+1) begin
+		romedatao_d1[kk] <= 0;
+		romodatao_d1[kk] <= 0;
+		romedatao_d2[kk] <= 0;
+		romodatao_d2[kk] <= 0;
+		romedatao_d3[kk] <= 0;
+		romodatao_d3[kk] <= 0;		
+	    end
+	end
+	else begin
+	    for (kk=0; kk<8; kk=kk+1) begin
+		romedatao_d1[kk] <= romedatao[kk];
+		romodatao_d1[kk] <= romodatao[kk];
+		romedatao_d2[kk] <= romedatao_d1[kk];
+		romodatao_d2[kk] <= romodatao_d1[kk];
+		romedatao_d3[kk] <= romedatao_d2[kk];
+		romodatao_d3[kk] <= romodatao_d2[kk];
+
+	    end
+	end
+    end
     
-    //------------------------------------------------------------------------------
     
 endmodule

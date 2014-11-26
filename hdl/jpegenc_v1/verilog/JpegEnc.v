@@ -151,13 +151,30 @@ module JpegEnc
     wire 			 huf_fifo_empty;    
     wire 			 zz_rden;  
 
-    // @todo: fix, 
-    //signal fdct_sm_settings   : T_SM_SETTINGS;
-    //signal zig_sm_settings    : T_SM_SETTINGS;
-    //signal qua_sm_settings    : T_SM_SETTINGS;
-    //signal rle_sm_settings    : T_SM_SETTINGS;
-    //signal huf_sm_settings    : T_SM_SETTINGS;
-    //signal bs_sm_settings     : T_SM_SETTINGS;
+    wire [15:0] 		 fdct_sm_settings_x_cnt;
+    wire [15:0] 		 fdct_sm_settings_y_cnt;
+    wire [2:0] 			 fdct_sm_settings_cmp_idx;
+
+    wire [15:0] 		 zig_sm_settings_x_cnt;
+    wire [15:0] 		 zig_sm_settings_y_cnt;
+    wire [2:0] 			 zig_sm_settings_cmp_idx;
+
+    wire [15:0] 		 qua_sm_settings_x_cnt;
+    wire [15:0] 		 qua_sm_settings_y_cnt;
+    wire [2:0] 			 qua_sm_settings_cmp_idx;
+
+    wire [15:0] 		 rle_sm_settings_x_cnt;
+    wire [15:0] 		 rle_sm_settings_y_cnt;
+    wire [2:0] 			 rle_sm_settings_cmp_idx;
+
+    wire [15:0] 		 huf_sm_settings_x_cnt;
+    wire [15:0] 		 huf_sm_settings_y_cnt;
+    wire [2:0] 			 huf_sm_settings_cmp_idx;
+
+    wire [15:0] 		 bs_sm_settings_x_cnt;
+    wire [15:0] 		 bs_sm_settings_y_cnt;
+    wire [2:0] 			 bs_sm_settings_cmp_idx;
+    				 
     
     wire [31:0] image_size_reg;
     wire [7:0] 	jfif_ram_byte;
@@ -260,39 +277,45 @@ module JpegEnc
        //-- FDCT 
        .fdct_start         (fdct_start          ),
        .fdct_ready         (fdct_ready          ),
-       //-- @todo: fix
-       //--fdct_sm_settings   => fdct_sm_settings,
+       .fdct_sm_settings_x_cnt (fdct_sm_settings_x_cnt),
+       .fdct_sm_settings_y_cnt (fdct_sm_settings_y_cnt),
+       .fdct_sm_settings_cmp_idx (fdct_sm_settings_cmp_idx),
        
        //-- ZIGZAG
        .zig_start          (zig_start           ),
        .zig_ready          (zig_ready           ),
-       //-- @todo: fix
-       //--zig_sm_settings    => zig_sm_settings,
-       
+       .zig_sm_settings_x_cnt   (zig_sm_settings_x_cnt),
+       .zig_sm_settings_y_cnt   (zig_sm_settings_y_cnt),
+       .zig_sm_settings_cmp_idx (zig_sm_settings_cmp_idx),
+              
        //-- Quantizer
        .qua_start          (qua_start           ),
        .qua_ready          (qua_ready           ),
-       //-- @todo: fix
-       //--qua_sm_settings    => qua_sm_settings,
+       .qua_sm_settings_x_cnt   (qua_sm_settings_x_cnt),
+       .qua_sm_settings_y_cnt   (qua_sm_settings_y_cnt),
+       .qua_sm_settings_cmp_idx (qua_sm_settings_cmp_idx),
        
        //-- RLE
        .rle_start          (rle_start           ),
        .rle_ready          (rle_ready           ),
-       //-- @todo: fix
-       //--rle_sm_settings    => rle_sm_settings,
+       .rle_sm_settings_x_cnt   (rle_sm_settings_x_cnt),
+       .rle_sm_settings_y_cnt   (rle_sm_settings_y_cnt),
+       .rle_sm_settings_cmp_idx (rle_sm_settings_cmp_idx),
        
        //-- Huffman
        .huf_start          (huf_start           ),
        .huf_ready          (huf_ready           ),
-       //-- @todo: fix
-       //--huf_sm_settings    => huf_sm_settings,
+       .huf_sm_settings_x_cnt   (huf_sm_settings_x_cnt),
+       .huf_sm_settings_y_cnt   (huf_sm_settings_y_cnt),
+       .huf_sm_settings_cmp_idx (huf_sm_settings_cmp_idx),
        
        //-- ByteStuffdr
        .bs_start           (bs_start            ),
        .bs_ready           (bs_ready            ),
-       //-- @todo: fix
-       //--bs_sm_settings     => bs_sm_settings,
-       
+       .bs_sm_settings_x_cnt   (bs_sm_settings_x_cnt),
+       .bs_sm_settings_y_cnt   (bs_sm_settings_y_cnt),
+       .bs_sm_settings_cmp_idx (bs_sm_settings_cmp_idx),
+              
        //-- JFIF GEN
        .jfif_start         (jfif_start         ),
        .jfif_ready         (jfif_ready         ),

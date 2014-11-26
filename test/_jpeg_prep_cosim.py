@@ -15,19 +15,19 @@ def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
     #    Verilog, for now just build
     if not args.build_skip_v1:
         # @todo: save std* and create log
-        cmd = "iverilog -o jpegenc_v1 %s" % (" ".join(filelist_v1))
+        cmd = "iverilog -g2005 -o jpegenc_v1 %s" % (" ".join(filelist_v1))
         print("compiling v1 ...")
         os.system(cmd)
 
     # build the second JPEG encoder
     # @todo: use subprocess, check the return and the "log"
     #   to verify it build correctly.
-    cmd = "iverilog -o jpegenc_v2 %s " % (" ".join(filelist_v2))
+    cmd = "iverilog -g2005 -o jpegenc_v2 %s " % (" ".join(filelist_v2))
     print("compiling v2 ...")
     os.system(cmd)
 
     files = ['tb_jpegenc.v']
-    cmd = "iverilog -o jpegenc %s %s tb_jpegenc.v" % \
+    cmd = "iverilog -g2005 -o jpegenc %s %s tb_jpegenc.v" % \
     ( 
         " ".join(filelist_v1), 
         " ".join(filelist_v2),
