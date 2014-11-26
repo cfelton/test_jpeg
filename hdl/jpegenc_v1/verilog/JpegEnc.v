@@ -450,69 +450,39 @@ module JpegEnc
 	 .sof                (sof               )
 	 );
     
-  // @todo: fix, manually instantiate, converter doesn't handle  
-  //U_RLE_TOP : entity work.RLE_TOP
-  //port map
-  //(
-  //      CLK                => CLK,
-  //      RST                => RST,
-  //      -- CTRL
-  //      start_pb           => rle_start,
-  //      ready_pb           => rle_ready,
-  //      rle_sm_settings    => rle_sm_settings,
-  //
-  //      -- HUFFMAN
-  //      huf_buf_sel        => huf_buf_sel,
-  //      huf_rden           => huf_rden,
-  //      huf_runlength      => huf_runlength,
-  //      huf_size           => huf_size,
-  //      huf_amplitude      => huf_amplitude,
-  //      huf_dval           => huf_dval,
-  //      huf_fifo_empty     => huf_fifo_empty,
-  //
-  //      -- Quantizer
-  //      qua_buf_sel        => rle_buf_sel,
-  //      qua_rd_addr        => rle_rdaddr,
-  //      qua_data           => rle_data,
-  //      
-  //      -- HostIF
-  //      sof                => sof
-  //  );
     
   //-----------------------------------------------------------------
   // Huffman Encoder
   //-----------------------------------------------------------------
   // @todo: fix, manually instantiate, converter doesn't handle  
   //U_Huffman : entity work.Huffman
-  //port map
-  //(
-  //      CLK                => CLK,
-  //      RST                => RST,
-  //      -- CTRL
-  //      start_pb           => huf_start,
-  //      ready_pb           => huf_ready,
-  //      huf_sm_settings    => huf_sm_settings,
-  //
-  //      -- HOST IF
-  //      sof                => sof,
-  //      img_size_x         => img_size_x,
-  //      img_size_y         => img_size_y,
-  //
-  //      -- RLE
-  //      rle_buf_sel        => huf_buf_sel,
-  //      rd_en              => huf_rden,
-  //      runlength          => huf_runlength,
-  //      VLI_size           => huf_size,
-  //      VLI                => huf_amplitude,
-  //      d_val              => huf_dval,
-  //      rle_fifo_empty     => huf_fifo_empty,
-  //      
-  //      -- Byte Stuffer
-  //      bs_buf_sel         => bs_buf_sel,
-  //      bs_fifo_empty      => bs_fifo_empty,
-  //      bs_rd_req          => bs_rd_req,
-  //      bs_packed_byte     => bs_packed_byte      
-  //  );
+    Huffman
+      U_Huffman
+  (
+   .CLK                (CLK              ),
+   .RST                (RST		 ),
+   //-- CTRL	       			 ),
+   .start_pb           (huf_start	 ),
+   .ready_pb           (huf_ready	 ),
+   //.huf_sm_settings    (huf_sm_settings	 ),
+   //-- HOST IF	       			 ),
+   .sof                (sof		 ),
+   .img_size_x         (img_size_x	 ),
+   .img_size_y         (img_size_y	 ),
+   //-- RLE	       			 ),
+   .rle_buf_sel        (huf_buf_sel	 ),
+   .rd_en              (huf_rden	 ),
+   .runlength          (huf_runlength	 ),
+   .VLI_size           (huf_size	 ),
+   .VLI                (huf_amplitude	 ),
+   .d_val              (huf_dval	 ),
+   .rle_fifo_empty     (huf_fifo_empty	 ),
+   //-- Byte Stuffer   			 ),
+   .bs_buf_sel         (bs_buf_sel	 ),
+   .bs_fifo_empty      (bs_fifo_empty	 ),
+   .bs_rd_req          (bs_rd_req	 ),
+   .bs_packed_byte     (bs_packed_byte   )  
+   );
     
   //-----------------------------------------------------------------
   // Byte Stuffer
@@ -520,29 +490,29 @@ module JpegEnc
   // @todo: fix, manually instantiate, converter doesn't handle  
   //U_ByteStuffer : entity work.ByteStuffer
   //port map
-  //(
-  //      CLK                => CLK,
-  //      RST                => RST,
-  //      -- CTRL
-  //      start_pb           => bs_start,
-  //      ready_pb           => bs_ready,
-  //
-  //      -- HOST IF
-  //      sof                => sof,
-  //      num_enc_bytes      => num_enc_bytes,
-  //      outram_base_addr   => outram_base_addr,
-  //
-  //      -- Huffman
-  //      huf_buf_sel        => bs_buf_sel,
-  //      huf_fifo_empty     => bs_fifo_empty,
-  //      huf_rd_req         => bs_rd_req,
-  //      huf_packed_byte    => bs_packed_byte,
-  //
-  //      -- OUT RAM
-  //      ram_byte           => bs_ram_byte,
-  //      ram_wren           => bs_ram_wren,
-  //      ram_wraddr         => bs_ram_wraddr
-  //  );
+    ByteStuffer
+      U_ByteStuffer
+	(
+         .CLK                (CLK               ),
+         .RST                (RST	       ),
+         //-- CTRL	    		       
+         .start_pb           (bs_start	       ),
+         .ready_pb           (bs_ready	       ),
+         //-- HOST IF	    		      
+         .sof                (sof	       ),
+         .num_enc_bytes      (num_enc_bytes     ),
+         .outram_base_addr   (outram_base_addr  ),
+         //-- Huffman	    		       
+         .huf_buf_sel        (bs_buf_sel	       ),
+         .huf_fifo_empty     (bs_fifo_empty     ),
+         .huf_rd_req         (bs_rd_req	       ),
+         .huf_packed_byte    (bs_packed_byte    ),
+         //-- OUT RAM	    		       
+         .ram_byte           (bs_ram_byte       ),
+         .ram_wren           (bs_ram_wren       ),
+         .ram_wraddr         (bs_ram_wraddr     )   
+	 );
+    
   //debug signal
   assign frame_size = num_enc_bytes;
     
@@ -552,29 +522,29 @@ module JpegEnc
   // @todo: fix, manually instantiate, converter doesn't handle  
   //U_JFIFGen : entity work.JFIFGen
   //port map
-  //(
-  //      CLK                => CLK,
-  //      RST                => RST,
-  //      -- CTRL
-  //      start              => jfif_start,
-  //      ready              => jfif_ready,
-  //      eoi                => jfif_eoi,
-  //      
-  //      -- ByteStuffer
-  //      num_enc_bytes         => num_enc_bytes,
-  //
-  //      -- HOST IF
-  //      qwren              => qwren,
-  //      qwaddr             => qaddr,
-  //      qwdata             => qdata,
-  //      image_size_reg     => image_size_reg,
-  //      image_size_reg_wr  => img_size_wr,
-  //
-  //      -- OUT RAM
-  //      ram_byte           => jfif_ram_byte,
-  //      ram_wren           => jfif_ram_wren,
-  //      ram_wraddr         => jfif_ram_wraddr
-  //  );
+    JFIFGen
+      U_JFIFGen	
+  (
+        .CLK                (CLK             ),
+        .RST                (RST	     ),
+        //-- CTRL	    		     
+        .start              (jfif_start	     ),
+        .ready              (jfif_ready	     ),
+        .eoi                (jfif_eoi        ),
+        //-- ByteStuffer    		     
+        .num_enc_bytes      (num_enc_bytes   ),
+        //-- HOST IF	    		     
+        .qwren              (qwren	     ),
+        .qwaddr             (qaddr	     ),
+        .qwdata             (qdata	     ),
+        .image_size_reg     (image_size_reg  ),
+        .image_size_reg_wr  (img_size_wr     ),	
+        //-- OUT RAM	    		      
+        .ram_byte           (jfif_ram_byte   ),
+        .ram_wren           (jfif_ram_wren   ),
+        .ram_wraddr         (jfif_ram_wraddr )  
+    );
+    
   assign image_size_reg = {img_size_x,img_size_y};
     
   //-----------------------------------------------------------------
@@ -583,25 +553,25 @@ module JpegEnc
   // @todo: fix, manually instantiate, converter doesn't handle  
   //U_OutMux : entity work.OutMux
   //port map
-  //(
-  //      CLK                => CLK,
-  //      RST                => RST,
-  //      -- CTRL
-  //      out_mux_ctrl       => out_mux_ctrl,
-  //
-  //      -- ByteStuffer
-  //      bs_ram_byte        => bs_ram_byte,
-  //      bs_ram_wren        => bs_ram_wren,
-  //      bs_ram_wraddr      => bs_ram_wraddr,
-  //      -- ByteStuffer
-  //      jfif_ram_byte      => jfif_ram_byte,
-  //      jfif_ram_wren      => jfif_ram_wren,
-  //      jfif_ram_wraddr    => jfif_ram_wraddr,
-  //
-  //      -- OUT RAM
-  //      ram_byte           => ram_byte,
-  //      ram_wren           => ram_wren,
-  //      ram_wraddr         => ram_wraddr
-  //  );
+    OutMux
+      U_OutMux
+  (
+        .CLK                (CLK               ),
+        .RST                (RST	       ),
+        //-- CTRL	    		       
+        .out_mux_ctrl       (out_mux_ctrl      ),
+        //-- ByteStuffer    		       
+        .bs_ram_byte        (bs_ram_byte       ),
+        .bs_ram_wren        (bs_ram_wren       ),
+        .bs_ram_wraddr      (bs_ram_wraddr     ),
+        //-- ByteStuffer    		       
+        .jfif_ram_byte      (jfif_ram_byte     ),
+        .jfif_ram_wren      (jfif_ram_wren     ),
+        .jfif_ram_wraddr    (jfif_ram_wraddr   ),
+        //-- OUT RAM	    		       
+        .ram_byte           (ram_byte	       ),
+        .ram_wren           (ram_wren	       ),
+        .ram_wraddr         (ram_wraddr        )  
+    );
 
 endmodule

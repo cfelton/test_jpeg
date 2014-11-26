@@ -91,26 +91,20 @@ module Huffman
  output wire [7:0] bs_packed_byte
 );
 
-    // CTRL
-    //huf_sm_settings    : in  T_SM_SETTINGS;
-    // HOST IF
-    // RLE
-    // Byte Stuffer
     
 
-// @todo: fix, doesn't convert
     parameter [1:0]
       IDLE    = 0,
       RUN_VLC = 1,
       RUN_VLI = 2,
       PAD     = 3;
-
+    
     parameter C_M = 23;
     parameter BLK_SIZE = 64;
     
-    reg [1:0] 	  state;  //signal state : unsigned(7 downto 0);
-    reg 	  rle_buf_sel_s = 1'b0;
-    reg 	  first_rle_word = 1'b0;
+    reg [1:0] 	   state;  //signal state : unsigned(7 downto 0);
+    reg 	   rle_buf_sel_s = 1'b0;
+    reg 	   first_rle_word = 1'b0;
     reg [C_M - 1:0] word_reg = 0;
     reg [4:0] 	    bit_ptr = 0;
     wire [1:0] 	    num_fifo_wrs = 0;
@@ -152,7 +146,7 @@ module Huffman
     reg 	    start_pb_d1 = 1'b0;  
 
     // loop index
-    integer  i;
+    integer 	    i;
     
     assign rle_buf_sel = rle_buf_sel_s;
     assign rd_en = rd_en_s;
@@ -177,48 +171,39 @@ module Huffman
     //-----------------------------------------------------------------
     // DC_ROM Luminance
     //-----------------------------------------------------------------
-    // @todo: fix, manually instantiate, converter 
-    //U_DC_ROM : entity work.DC_ROM
-    //port map
-    //(
-    //      CLK                => CLK,
-    //      RST                => RST,
-    //      VLI_size           => VLI_size,
-    //                         
-    //      VLC_DC_size        => VLC_DC_size,
-    //      VLC_DC             => VLC_DC
-    //);
+    DC_ROM
+      U_DC_ROM
+	(.CLK         (CLK),
+	 .RST         (RST),
+	 .VLI_size    (VLI_size),
+	 .VLC_DC_size (VLC_DC_size),
+	 .VLC_DC      (VLC_DC)
+	 );
     
     //-----------------------------------------------------------------
     // AC_ROM Luminance
     //-----------------------------------------------------------------
-    // @todo: fix, manually instantiate, converter   
-    //U_AC_ROM : entity work.AC_ROM
-    //port map
-    //(
-    //      CLK                => CLK,
-    //      RST                => RST,
-    //      runlength          => runlength,
-    //      VLI_size           => VLI_size,
-    //                         
-    //      VLC_AC_size        => VLC_AC_size,
-    //      VLC_AC             => VLC_AC
-    //  );
+    AC_ROM
+      U_AC_ROM
+	(.CLK         (CLK),
+	 .RST         (RST),
+	 .runlength   (runlength),
+	 .VLI_size    (VLI_size),
+	 .VLC_AC_size (VLC_AC_size),
+	 .VLC_AC      (VLC_AC)
+	 );
     
     //-----------------------------------------------------------------
     // DC_ROM Chrominance
     //-----------------------------------------------------------------
-    // @todo: fix, manually instantiate, converter   
-    //U_DC_CR_ROM : entity work.DC_CR_ROM
-    //port map
-    //(
-    //      CLK                => CLK,
-    //      RST                => RST,
-    //      VLI_size           => VLI_size,
-    //                         
-    //      VLC_DC_size        => VLC_CR_DC_size,
-    //      VLC_DC             => VLC_CR_DC
-    //);
+    DC_CR_ROM
+      U_DC_CR_ROM
+	(.CLK         (CLK),
+	 .RST         (RST),
+	 .VLI_size    (VLI_size),
+	 .VLC_DC_size (VLC_CR_DC_size),
+	 .VLC_DC      (VLC_CR_DC)
+	 );
     
     //-----------------------------------------------------------------
     // AC_ROM Chrominance
@@ -235,31 +220,37 @@ module Huffman
     //      VLC_AC_size        => VLC_CR_AC_size,
     //      VLC_AC             => VLC_CR_AC
     //  );
+    AC_CR_ROM
+      U_AC_CR_ROM
+	(.CLK         (CLK),
+	 .RST         (RST),
+	 .runlength   (runlength),
+	 .VLI_size    (VLI_size),
+	 .VLC_AC_size (VLC_CR_AC_size),
+	 .VLC_AC      (VLC_CR_AC)
+	 );
     
     //-----------------------------------------------------------------
     // Double Fifo
     //-----------------------------------------------------------------
-    // @todo: fix, manually instantiate, converter   
-    //U_DoubleFifo : entity work.DoubleFifo
-    //port map
-    //(
-    //      CLK                => CLK,
-    //      RST                => RST,
-    //      -- HUFFMAN
-    //      data_in            => fifo_wbyte,
-    //      wren               => fifo_wren,
-    //      -- BYTE STUFFER
-    //      buf_sel            => bs_buf_sel,
-    //      rd_req             => bs_rd_req,
-    //      fifo_empty         => bs_fifo_empty,
-    //      data_out           => bs_packed_byte
-    //  );
+    DoubleFifo
+      U_DoubleFifo
+	(
+         .CLK                (CLK            ),
+         .RST                (RST	      ),
+         //-- HUFFMAN	      		      
+         .data_in            (fifo_wbyte     ),
+         .wren               (fifo_wren      ),
+         //-- BYTE STUFFER   		      
+         .buf_sel            (bs_buf_sel     ),
+         .rd_req             (bs_rd_req      ),
+         .fifo_empty         (bs_fifo_empty  ),
+         .data_out           (bs_packed_byte )
+	 );
     
     //-----------------------------------------------------------------
     // RLE buf_sel
     //-----------------------------------------------------------------
-    // @todo: fix, manually instantiate, converter
-    
     always @(posedge CLK or posedge RST) begin
 	if(RST == 1'b 1) begin
 	    rle_buf_sel_s <= 1'b 0;
@@ -277,8 +268,8 @@ module Huffman
     always @(posedge CLK or posedge RST) begin
 	if(RST == 1'b1) begin
 	    VLC_size <= {5{1'b0}};
-	    VLC <= {16{1'b0}};
-    end 
+            VLC <= {16{1'b0}};
+        end 
 	else begin
 	    // DC
 	    if(first_rle_word == 1'b 1) begin

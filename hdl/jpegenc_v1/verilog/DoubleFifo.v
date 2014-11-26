@@ -67,151 +67,117 @@
 // ///  * http://copyfree.org/licenses/mit/license.txt
 // ///
 // //////////////////////////////////////////////////////////////////////////////
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//--------------------------------- LIBRARY/PACKAGE ---------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-// generic packages/libraries:
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-// user packages/libraries:
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//--------------------------------- ENTITY ------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-// no timescale needed
 
-module DoubleFifo(
-input wire CLK,
-input wire RST,
-input wire [7:0] data_in,
-input wire wren,
-input wire buf_sel,
-input wire rd_req,
-output reg fifo_empty,
-output reg [7:0] data_out
+
+module DoubleFifo
+(
+ input wire 	  CLK,
+ input wire 	  RST,
+ input wire [7:0] data_in,
+ input wire 	  wren,
+ input wire 	  buf_sel,
+ input wire 	  rd_req,
+ output reg 	  fifo_empty,
+ output reg [7:0] data_out
 );
 
 // HUFFMAN
 // BYTE STUFFER
 
 
+    reg 	  fifo1_rd;
+    reg 	  fifo1_wr;
+    wire [7:0] 	  fifo1_q;
+    wire 	  fifo1_full;
+    wire 	  fifo1_empty;
+    wire [7:0] 	  fifo1_count;
+    reg 	  fifo2_rd;
+    reg 	  fifo2_wr;
+    wire [7:0] 	  fifo2_q;
+    wire 	  fifo2_full;
+    wire 	  fifo2_empty;
+    wire [7:0] 	  fifo2_count;
+    reg [7:0] 	  fifo_data_in;  
+    
+    
+    //-----------------------------------------------------------------
+    // FIFO 1
+    //-----------------------------------------------------------------
+    FIFO 
+      #(.DATA_WIDTH(8), .ADDR_WIDTH(7))
+    U_FIFO_1
+      (.rst(RST),
+       .clk(CLK),
+       .rinc(fifo1_rd),
+       .winc(fifo1_wr),
+       .datai(fifo_data_in),
+       .datao(fifo1_q),
+       .fullo(fifo1_full),
+       .emptyo(fifo1_empty),
+       .count(fifo1_count)
+       );
+    
+    //-----------------------------------------------------------------
+    // FIFO 2
+    //-----------------------------------------------------------------
+    FIFO 
+      #(.DATA_WIDTH(8), .ADDR_WIDTH(7))
+    U_FIFO_2
+      (.rst(RST),
+       .clk(CLK),
+       .rinc(fifo2_rd),
+       .winc(fifo2_wr),
+       .datai(fifo_data_in),
+       .datao(fifo2_q),
+       .fullo(fifo2_full),
+       .emptyo(fifo2_empty),
+       .count(fifo2_count)
+       );
 
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//--------------------------------- ARCHITECTURE ------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-reg fifo1_rd;
-reg fifo1_wr;
-wire [7:0] fifo1_q;
-wire fifo1_full;
-wire fifo1_empty;
-wire [7:0] fifo1_count;
-reg fifo2_rd;
-reg fifo2_wr;
-wire [7:0] fifo2_q;
-wire fifo2_full;
-wire fifo2_empty;
-wire [7:0] fifo2_count;
-reg [7:0] fifo_data_in;  //-----------------------------------------------------------------------------
-// Architecture: begin
-//-----------------------------------------------------------------------------
-
-  //-----------------------------------------------------------------
-  // FIFO 1
-  //-----------------------------------------------------------------
-  // @todo: manually instantiate
-  //U_FIFO_1 : entity work.FIFO   
-  //generic map
-  //(
-  //      DATA_WIDTH        => 8,
-  //      ADDR_WIDTH        => 7
-  //)
-  //port map 
-  //(        
-  //      rst               => RST,
-  //      clk               => CLK,
-  //      rinc              => fifo1_rd,
-  //      winc              => fifo1_wr,
-  //      datai             => fifo_data_in,
-  //
-  //      datao             => fifo1_q,
-  //      fullo             => fifo1_full,
-  //      emptyo            => fifo1_empty,
-  //      count             => fifo1_count
-  //);
-  //-----------------------------------------------------------------
-  // FIFO 2
-  //-----------------------------------------------------------------
-  // @todo: manually instantiate
-  //U_FIFO_2 : entity work.FIFO   
-  //generic map
-  //(
-  //      DATA_WIDTH        => 8,
-  //      ADDR_WIDTH        => 7
-  //)
-  //port map 
-  //(        
-  //      rst               => RST,
-  //      clk               => CLK,
-  //      rinc              => fifo2_rd,
-  //      winc              => fifo2_wr,
-  //      datai             => fifo_data_in,
-  //
-  //      datao             => fifo2_q,
-  //      fullo             => fifo2_full,
-  //      emptyo            => fifo2_empty,
-  //      count             => fifo2_count
-  //);
-  //-----------------------------------------------------------------
-  // mux2
-  //-----------------------------------------------------------------
-  always @(posedge CLK or posedge RST) begin
-    if(RST == 1'b 1) begin
-      fifo1_wr <= 1'b 0;
-      fifo2_wr <= 1'b 0;
-      fifo_data_in <= {8{1'b0}};
-    end else begin
-      if(buf_sel == 1'b 0) begin
-        fifo1_wr <= wren;
-      end
-      else begin
-        fifo2_wr <= wren;
-      end
-      fifo_data_in <= data_in;
+    
+    //-----------------------------------------------------------------
+    // mux2
+    //-----------------------------------------------------------------
+    always @(posedge CLK or posedge RST) begin
+	if(RST == 1'b 1) begin
+	    fifo1_wr <= 1'b 0;
+	    fifo2_wr <= 1'b 0;
+	    fifo_data_in <= {8{1'b0}};
+	end 
+	else begin
+	    if(buf_sel == 1'b 0) begin
+		fifo1_wr <= wren;
+	    end
+	    else begin
+		fifo2_wr <= wren;
+	    end
+	    fifo_data_in <= data_in;
+	end
     end
-  end
-
-  //-----------------------------------------------------------------
-  // mux3
-  //-----------------------------------------------------------------
-  always @(posedge CLK or posedge RST) begin
-    if(RST == 1'b 1) begin
-      data_out <= {8{1'b0}};
-      fifo1_rd <= 1'b 0;
-      fifo2_rd <= 1'b 0;
-      fifo_empty <= 1'b 0;
-    end else begin
-      if(buf_sel == 1'b 1) begin
-        data_out <= fifo1_q;
-        fifo1_rd <= rd_req;
-        fifo_empty <= fifo1_empty;
-      end
-      else begin
-        data_out <= fifo2_q;
-        fifo2_rd <= rd_req;
-        fifo_empty <= fifo2_empty;
-      end
+    
+    //-----------------------------------------------------------------
+    // mux3
+    //-----------------------------------------------------------------
+    always @(posedge CLK or posedge RST) begin
+	if(RST == 1'b 1) begin
+	    data_out <= {8{1'b0}};
+	    fifo1_rd <= 1'b 0;
+	    fifo2_rd <= 1'b 0;
+	    fifo_empty <= 1'b 0;
+        end 
+	else begin
+	    if(buf_sel == 1'b 1) begin
+		data_out <= fifo1_q;
+		fifo1_rd <= rd_req;
+		fifo_empty <= fifo1_empty;
+	    end
+	    else begin
+		data_out <= fifo2_q;
+		fifo2_rd <= rd_req;
+		fifo_empty <= fifo2_empty;
+	    end
+	end
     end
-  end
-
-//-----------------------------------------------------------------------------
-// Architecture: end
-//-----------------------------------------------------------------------------
+    
 
 endmodule
