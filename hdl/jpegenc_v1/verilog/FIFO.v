@@ -50,39 +50,24 @@
 // //////////////////////////////////////////////////////////////////////////////
 // no timescale needed
 
-module FIFO(
-rst,
-clk,
-rinc,
-winc,
-datai,
-datao,
-fullo,
-emptyo,
-count
+module FIFO
+#(
+  parameter [31:0] DATA_WIDTH=12,
+  parameter [31:0] ADDR_WIDTH=2
+
+)  
+(
+ input  wire rst,
+ input  wire clk,
+ input  wire rinc,
+ input  wire winc,
+ input  wire [DATA_WIDTH - 1:0] datai,
+ output wire [DATA_WIDTH - 1:0] datao,
+ output wire fullo,
+ output wire emptyo,
+ output wire [ADDR_WIDTH:0] count
+
 );
-
-parameter [31:0] DATA_WIDTH=12;
-parameter [31:0] ADDR_WIDTH=2;
-input rst;
-input clk;
-input rinc;
-input winc;
-input [DATA_WIDTH - 1:0] datai;
-output [DATA_WIDTH - 1:0] datao;
-output fullo;
-output emptyo;
-output [ADDR_WIDTH:0] count;
-
-wire rst;
-wire clk;
-wire rinc;
-wire winc;
-wire [DATA_WIDTH - 1:0] datai;
-wire [DATA_WIDTH - 1:0] datao;
-wire fullo;
-wire emptyo;
-wire [ADDR_WIDTH:0] count;
 
 
 reg [ADDR_WIDTH - 1:0] raddr_reg;
@@ -140,20 +125,21 @@ parameter ONES_C = 1;
     end
   end
 
-  always @(posedge clk) begin
-    if(rst == 1'b 1) begin
-      full_reg <= 1'b 0;
+    always @(posedge clk) begin
+	if(rst == 1'b 1) begin
+	    full_reg <= 1'b 0;
+	end
+	else begin
+	    if  (count_reg == 2**ADDR_WIDTH   ||
+		 (count_reg == (2**ADDR_WIDTH)-1 &&
+		  1'b1 == wr_en_reg && 1'b0 == rd_en_reg)) begin
+		full_reg <= 1'b1;
+	    end
+	    else begin
+		full_reg <= 1'b0;
+	    end	      
+	end
     end
-    else begin
-      // @todo: manual convert the following 
-      //if count_reg = 2**ADDR_WIDTH or
-      //  (count_reg = 2**ADDR_WIDTH-1 and wr_en_reg = '1' and rd_en_reg = '0') then 
-      //  full_reg        <= '1';
-      //else
-      //  full_reg        <= '0';
-      //end if;  
-    end
-  end
 
   always @(posedge clk) begin
     if(rst == 1'b 1) begin

@@ -85,26 +85,7 @@ module FDCT
  input wire [15:0]  img_size_y,
  input wire 	    sof
 );
-
-    // CTRL
-    // @todo: fix, manaully fix record usage
-    //fdct_sm_settings   : in  T_SM_SETTINGS;
-    // BUF_FIFO
-    // ZIG ZAG
-    // HOST
-    
-    
-    
-    // @todo: fix, manually convert ??
-    //constant C_Y_1       : signed(14 downto 0) := to_signed(4899,  15);
-    //constant C_Y_2       : signed(14 downto 0) := to_signed(9617,  15);
-    //constant C_Y_3       : signed(14 downto 0) := to_signed(1868,  15);
-    //constant C_Cb_1      : signed(14 downto 0) := to_signed(-2764, 15);
-    //constant C_Cb_2      : signed(14 downto 0) := to_signed(-5428, 15);
-    //constant C_Cb_3      : signed(14 downto 0) := to_signed(8192,  15);
-    //constant C_Cr_1      : signed(14 downto 0) := to_signed(8192,  15);
-    //constant C_Cr_2      : signed(14 downto 0) := to_signed(-6860, 15);
-    //constant C_Cr_3      : signed(14 downto 0) := to_signed(-1332, 15);
+        
     localparam C_Y_1   = 4899  ;   
     localparam C_Y_2   = 9617  ;
     localparam C_Y_3   = 1868  ;
@@ -165,7 +146,7 @@ module FDCT
     wire [8:0] 		    G_s = 0;
     wire [8:0] 		    B_s = 0;
     
-wire [7:0] 		    Y_8bit = 0;
+    wire [7:0] 		    Y_8bit = 0;
     wire [7:0] 		    Cb_8bit = 0;
     wire [7:0] 		    Cr_8bit = 0;
     reg [2:0] 		    cmp_idx = 0;
@@ -211,27 +192,20 @@ wire [7:0] 		    Y_8bit = 0;
     assign zz_data = dbuf_q;
     assign bf_fifo_rd = bf_fifo_rd_s;
     
-  //-----------------------------------------------------------------
-  // FRAM1
-  //-----------------------------------------------------------------
-  // @todo: fix, manually convert (instantiate)
-  //U_FRAM1 : entity work.RAMZ
-  //generic map
-  //( 
-  //    RAMADDR_W     => 7,
-  //    RAMDATA_W     => 24
-  //)
-  //port map
-  //(      
-  //      d           => fram1_data,
-  //      waddr       => fram1_waddr,
-  //      raddr       => fram1_raddr,
-  //      we          => fram1_we,
-  //      clk         => CLK,
-  //                  
-  //      q           => fram1_q
-  //);
-    
+    //-----------------------------------------------------------------
+    // FRAM1
+    //-----------------------------------------------------------------
+    RAMZ
+      #(.RAMADDR_W(7), .RAMDATA_W(24))
+    U_FRAM1
+      (.d     (fram1_data),
+       .waddr (fram1_waddr),
+       .raddr (fram1_raddr),
+       .we    (fram1_we),
+       .clk   (CLK),
+       .q     (fram1_q)
+       );
+       
     assign fram1_we = bf_dval;
     assign fram1_data = bf_fifo_q;
     assign fram1_q_vld = fram1_rd_d[5];
@@ -434,29 +408,28 @@ wire [7:0] 		    Y_8bit = 0;
 	end
     end
     
-  //-----------------------------------------------------------------
-  // FDCT with input level shift
-  //-----------------------------------------------------------------
-  // @todo: fix, manually convert (instantiate)
-  //U_MDCT : entity work.MDCT
-  //      port map
-  //(	  
-  //      	clk          => CLK,
-  //      	rst          => RST,
-  //  dcti         => mdct_data_in,
-  //  idv          => mdct_idval,
-  //  odv          => mdct_odval,
-  //  dcto         => mdct_data_out,
-  //  odv1         => odv1,
-  //  dcto1        => dcto1
-  //); 
-  assign mdct_idval = fram1_rd_d[8];
-  assign R_s = {1'b 0,fram1_q[7:0]};
-  assign G_s = {1'b 0,fram1_q[15:8]};
-  assign B_s = {1'b 0,fram1_q[23:16]};
-  //-----------------------------------------------------------------
-  // Mux1
-  //-----------------------------------------------------------------
+    //-----------------------------------------------------------------
+    // FDCT with input level shift
+    //-----------------------------------------------------------------
+    MDCT U_MDCT
+      (.clk     (CLK),
+       .rst     (RST),
+       .dcti    (mdct_data_in),
+       .idv     (mdct_idval),
+       .odv     (mdct_odval),
+       .dcto    (mdct_data_out),
+       .odv1    (odv1),
+       .dcto1   (dcto1)
+       );
+    
+    assign mdct_idval = fram1_rd_d[8];
+    assign R_s = {1'b 0,fram1_q[7:0]};
+    assign G_s = {1'b 0,fram1_q[15:8]};
+    assign B_s = {1'b 0,fram1_q[23:16]};
+    
+    //-----------------------------------------------------------------
+    // Mux1
+    //-----------------------------------------------------------------
   always @(posedge CLK or posedge RST) begin
     if(RST == 1'b 1) begin
       mdct_data_in <= {8{1'b0}};
@@ -477,31 +450,26 @@ wire [7:0] 		    Y_8bit = 0;
     end
   end
 
-  //-----------------------------------------------------------------
-  // FIFO1
-  //-----------------------------------------------------------------
-  // @todo: fix, manually convert (instantiate)
-  //U_FIFO1 : entity work.FIFO   
-  //generic map
-  //(
-  //      DATA_WIDTH        => 12,
-  //      ADDR_WIDTH        => 9
-  //)
-  //port map 
-  //(        
-  //      rst               => RST,
-  //      clk               => CLK,
-  //      rinc              => fifo1_rd,
-  //      winc              => fifo1_wr,
-  //      datai             => fifo_data_in,
-  //
-  //      datao             => fifo1_q,
-  //      fullo             => fifo1_full,
-  //      emptyo            => fifo1_empty,
-  //      count             => fifo1_count
-  //);
+    //-----------------------------------------------------------------
+    // FIFO1
+    //-----------------------------------------------------------------
+    FIFO
+      #(.DATA_WIDTH(12), .ADDR_WIDTH(9))
+    U_FIFO1      
+      (.rst      (RST           ),
+       .clk      (CLK	    ),
+       .rinc     (fifo1_rd      ),
+       .winc     (fifo1_wr      ),
+       .datai    (fifo_data_in  ),   
+       .datao    (fifo1_q       ),
+       .fullo    (fifo1_full    ),
+       .emptyo   (fifo1_empty   ),
+       .count    (fifo1_count   )
+       );
+    
   assign fifo1_wr = mdct_odval;
   assign fifo_data_in = mdct_data_out;
+    
   //-----------------------------------------------------------------
   // FIFO1 rd controller
   //-----------------------------------------------------------------
@@ -580,7 +548,7 @@ wire [7:0] 		    Y_8bit = 0;
 	    
 	    Y_Reg_1 <= {1{1'b0}};
 	    Y_Reg_2 <= {1{1'b0}};
-      Y_Reg_3 <= {1{1'b0}};
+	Y_Reg_3 <= {1{1'b0}};
       Cb_Reg_1 <= {1{1'b0}};
       Cb_Reg_2 <= {1{1'b0}};
       Cb_Reg_3 <= {1{1'b0}};
@@ -601,41 +569,36 @@ wire [7:0] 		    Y_8bit = 0;
       Cr_Reg_2 <= G_s * C_Cr_2;
       Cr_Reg_3 <= B_s * C_Cr_3;
       Y_Reg <= Y_Reg_1 + Y_Reg_2 + Y_Reg_3;
-      // @todo: fix, manually convert
+	
       //Cb_Reg <= Cb_Reg_1 + Cb_Reg_2 + Cb_Reg_3 + to_signed(128*16384, Cb_Reg'length);
+	Cb_Reg <= Cb_Reg_1 + Cb_Reg_2 + Cb_Reg_3 + (128*16384);
       //Cr_Reg <= Cr_Reg_1 + Cr_Reg_2 + Cr_Reg_3 + to_signed(128*16384, Cr_Reg'length);
+	Cr_Reg <= Cr_Reg_1 + Cr_Reg_2 + Cr_Reg_3 + (128*16384);
     end
   end
 
   assign Y_8bit = (Y_Reg[21:14]);
   assign Cb_8bit = (Cb_Reg[21:14]);
   assign Cr_8bit = (Cr_Reg[21:14]);
-  //-----------------------------------------------------------------
-  // DBUF
-  //-----------------------------------------------------------------
-  // @todo: fix, manually convert (instantiate)  
-  //U_RAMZ : entity work.RAMZ
-  //generic map
-  //( 
-  //    RAMADDR_W     => 7,
-  //    RAMDATA_W     => 12
-  //)
-  //port map
-  //(      
-  //      d           => dbuf_data,
-  //      waddr       => dbuf_waddr,
-  //      raddr       => dbuf_raddr,
-  //      we          => dbuf_we,
-  //      clk         => CLK,
-  //                  
-  //      q           => dbuf_q
-  //);
+    
+    //-----------------------------------------------------------------
+    // DBUF
+    //-----------------------------------------------------------------
+    RAMZ
+      #(.RAMADDR_W(7), .RAMDATA_W(12))
+    U_RAMZ
+      (.d      (dbuf_data  ),
+       .waddr  (dbuf_waddr ),
+       .raddr  (dbuf_raddr ),
+       .we     (dbuf_we	   ),
+       .clk    (CLK        ),         
+       .q      (dbuf_q     ) 
+       );
+    
   assign dbuf_data = fifo1_q;
   assign dbuf_we = fifo1_q_dval;
   assign dbuf_waddr = {( ~zz_buf_sel),{yw_cnt,xw_cnt}};
   assign dbuf_raddr = {zz_buf_sel,zz_rd_addr};
-//-----------------------------------------------------------------------------
-// Architecture: end
-//-----------------------------------------------------------------------------
+    
 
 endmodule

@@ -73,6 +73,7 @@ module HostIF
 (
  input wire 	    CLK,
  input wire 	    RST,
+ 
  input wire [31:0]  OPB_ABus,
  input wire [3:0]   OPB_BE,
  input wire [31:0]  OPB_DBus_in,
@@ -87,10 +88,10 @@ module HostIF
  output reg [7:0]   qdata,
  output reg [6:0]   qaddr,
  output reg 	    qwren,
- input  wire 	    jpeg_ready,
- input  wire 	    jpeg_busy,
+ input wire 	    jpeg_ready,
+ input wire 	    jpeg_busy,
  output wire [9:0]  outram_base_addr,
- input  wire [23:0] num_enc_bytes,
+ input wire [23:0]  num_enc_bytes,
  output wire [15:0] img_size_x,
  output wire [15:0] img_size_y,
  output reg 	    img_size_wr,
@@ -104,15 +105,15 @@ module HostIF
     // others        
 
     // @todo: verify these constants, some converted funky?
-    parameter C_ENC_START_REG        = 36'h 0000_0000;
-    parameter C_IMAGE_SIZE_REG       = 36'h 0000_0004;
-    parameter C_IMAGE_RAM_ACCESS_REG = 36'h 0000_0008;
-    parameter C_ENC_STS_REG          = 36'h 0000_000C;
-    parameter C_COD_DATA_ADDR_REG    = 36'h 0000_0010;
-    parameter C_ENC_LENGTH_REG       = 36'h 0000_0014;
-    parameter C_QUANTIZER_RAM_LUM    = {28'h 0000_01, 8'b0};
-    parameter C_QUANTIZER_RAM_CHR    = {28'h 0000_02, 8'b0};
-    parameter C_IMAGE_RAM            = {12'h1,20'b0};
+    parameter C_ENC_START_REG        = 36'h0000_0000;
+    parameter C_IMAGE_SIZE_REG       = 36'h0000_0004;
+    parameter C_IMAGE_RAM_ACCESS_REG = 36'h0000_0008;
+    parameter C_ENC_STS_REG          = 36'h0000_000C;
+    parameter C_COD_DATA_ADDR_REG    = 36'h0000_0010;
+    parameter C_ENC_LENGTH_REG       = 36'h0000_0014;
+    parameter C_QUANTIZER_RAM_LUM    = {28'h0000_01, 8'b0};
+    parameter C_QUANTIZER_RAM_CHR    = {28'h0000_02, 8'b0};
+    parameter C_IMAGE_RAM            = {12'h1, 20'b0};
     parameter C_IMAGE_RAM_BASE       = 36'h0010_0000;
     
     reg [31:0] enc_start_reg;
@@ -143,148 +144,147 @@ module HostIF
     always @(posedge CLK or posedge RST) begin
 	if(RST == 1'b 1) begin
 	    OPB_DBus_out <= {32{1'b0}};
-	rd_dval <= 1'b 0;
-	data_read <= {32{1'b0}};
+	    rd_dval <= 1'b 0;
+	    data_read <= {32{1'b0}};
         end 
 	else begin
 	    rd_dval <= 1'b 0;
 	    OPB_DBus_out <= data_read;
 	    if(OPB_select == 1'b 1 && OPB_select_d == 1'b 0) begin
-        // only double word transactions are be supported
-        if(OPB_RNW == 1'b 1 && OPB_BE == 4'h F) begin
-          case(OPB_ABus)
-          C_ENC_START_REG : begin
-            data_read <= enc_start_reg;
-            rd_dval <= 1'b 1;
-          end
-          C_IMAGE_SIZE_REG : begin
-            data_read <= image_size_reg;
-            rd_dval <= 1'b 1;
-          end
-          C_IMAGE_RAM_ACCESS_REG : begin
-            data_read <= image_ram_access_reg;
-            rd_dval <= 1'b 1;
-          end
-          C_ENC_STS_REG : begin
-            data_read <= enc_sts_reg;
-            rd_dval <= 1'b 1;
-          end
-          C_COD_DATA_ADDR_REG : begin
-            data_read <= cod_data_addr_reg;
-            rd_dval <= 1'b 1;
-          end
-          C_ENC_LENGTH_REG : begin
-            data_read <= enc_length_reg;
-            rd_dval <= 1'b 1;
-          end
-          default : begin
-            data_read <= {32{1'b0}};
-          end
-          endcase
-        end
-      end
+		// only double word transactions are be supported
+		if(OPB_RNW == 1'b 1 && OPB_BE == 4'h F) begin
+		    case(OPB_ABus)
+		      C_ENC_START_REG : begin
+			  data_read <= enc_start_reg;
+			  rd_dval <= 1'b 1;
+		      end
+		      C_IMAGE_SIZE_REG : begin
+			  data_read <= image_size_reg;
+			  rd_dval <= 1'b 1;
+		      end
+		      C_IMAGE_RAM_ACCESS_REG : begin
+			  data_read <= image_ram_access_reg;
+			  rd_dval <= 1'b 1;
+		      end
+		      C_ENC_STS_REG : begin
+			  data_read <= enc_sts_reg;
+			  rd_dval <= 1'b 1;
+		      end
+		      C_COD_DATA_ADDR_REG : begin
+			  data_read <= cod_data_addr_reg;
+			  rd_dval <= 1'b 1;
+		      end
+		      C_ENC_LENGTH_REG : begin
+			  data_read <= enc_length_reg;
+			  rd_dval <= 1'b 1;
+		      end
+		      default : begin
+			  data_read <= {32{1'b0}};
+		      end
+		    endcase
+		end
+	    end
+	end
     end
-  end
+    
+    //-----------------------------------------------------------------
+    // OPB write
+    //-----------------------------------------------------------------
+    always @(posedge CLK or posedge RST) begin
+	if(RST == 1'b 1) begin
+	    qwren <= 1'b 0;
+	    write_done <= 1'b 0;
+	    enc_start_reg <= {32{1'b0}};
+	    image_size_reg <= {32{1'b0}};
+	    image_ram_access_reg <= {32{1'b0}};
+	    enc_sts_reg <= {32{1'b0}};
+	    cod_data_addr_reg <= {32{1'b0}};
+	    enc_length_reg <= {32{1'b0}};
+	    qdata <= {8{1'b0}};
+	    qaddr <= {7{1'b0}};
+	    OPB_select_d <= 1'b 0;
+	    sof <= 1'b 0;
+	    img_size_wr <= 1'b 0;
+	end 
+	else begin
+	    qwren <= 1'b 0;
+	    write_done <= 1'b 0;
+	    sof <= 1'b 0;
+	    img_size_wr <= 1'b 0;
+	    OPB_select_d <= OPB_select;
+	    if(OPB_select == 1'b 1 && OPB_select_d == 1'b 0) begin
+		// only double word transactions are be supported
+		if(OPB_RNW == 1'b 0 && OPB_BE == 4'h F) begin
+		    case(OPB_ABus)
+		      C_ENC_START_REG : begin
+			  enc_start_reg <= OPB_DBus_in;
+			  write_done <= 1'b 1;
+			  if(OPB_DBus_in[0] == 1'b 1) begin
+			      sof <= 1'b 1;
+			  end
+		      end
+		      C_IMAGE_SIZE_REG : begin
+			  image_size_reg <= OPB_DBus_in;
+			  img_size_wr <= 1'b 1;
+			  write_done <= 1'b 1;
+		      end
+		      C_IMAGE_RAM_ACCESS_REG : begin
+			  image_ram_access_reg <= OPB_DBus_in;
+			  write_done <= 1'b 1;
+		      end
+		      C_ENC_STS_REG : begin
+			  enc_sts_reg <= {32{1'b0}};
+			  write_done <= 1'b 1;
+		      end
+		      C_COD_DATA_ADDR_REG : begin
+			  cod_data_addr_reg <= OPB_DBus_in;
+			  write_done <= 1'b 1;
+		      end
+		      C_ENC_LENGTH_REG : begin
+			  //enc_length_reg <= OPB_DBus_in;
+			  write_done <= 1'b 1;
+		      end
+		      default : begin
+		      end
+		    endcase
+		    
+		    if (OPB_ABus == C_QUANTIZER_RAM_LUM) begin
+			qdata <= OPB_DBus_in;
+			qaddr <= {1'b0, OPB_ABus[7:2]};
+			qwren <= 1'b1;
+			write_done <= 1'b1;
+		    end
 
-  //-----------------------------------------------------------------
-  // OPB write
-  //-----------------------------------------------------------------
-  always @(posedge CLK or posedge RST) begin
-    if(RST == 1'b 1) begin
-      qwren <= 1'b 0;
-      write_done <= 1'b 0;
-      enc_start_reg <= {32{1'b0}};
-      image_size_reg <= {32{1'b0}};
-      image_ram_access_reg <= {32{1'b0}};
-      enc_sts_reg <= {32{1'b0}};
-      cod_data_addr_reg <= {32{1'b0}};
-      enc_length_reg <= {32{1'b0}};
-      qdata <= {8{1'b0}};
-      qaddr <= {7{1'b0}};
-      OPB_select_d <= 1'b 0;
-      sof <= 1'b 0;
-      img_size_wr <= 1'b 0;
-    end else begin
-      qwren <= 1'b 0;
-      write_done <= 1'b 0;
-      sof <= 1'b 0;
-      img_size_wr <= 1'b 0;
-      OPB_select_d <= OPB_select;
-      if(OPB_select == 1'b 1 && OPB_select_d == 1'b 0) begin
-        // only double word transactions are be supported
-        if(OPB_RNW == 1'b 0 && OPB_BE == 4'h F) begin
-          case(OPB_ABus)
-          C_ENC_START_REG : begin
-            enc_start_reg <= OPB_DBus_in;
-            write_done <= 1'b 1;
-            if(OPB_DBus_in[0] == 1'b 1) begin
-              sof <= 1'b 1;
-            end
-          end
-          C_IMAGE_SIZE_REG : begin
-            image_size_reg <= OPB_DBus_in;
-            img_size_wr <= 1'b 1;
-            write_done <= 1'b 1;
-          end
-          C_IMAGE_RAM_ACCESS_REG : begin
-            image_ram_access_reg <= OPB_DBus_in;
-            write_done <= 1'b 1;
-          end
-          C_ENC_STS_REG : begin
-            enc_sts_reg <= {32{1'b0}};
-            write_done <= 1'b 1;
-          end
-          C_COD_DATA_ADDR_REG : begin
-            cod_data_addr_reg <= OPB_DBus_in;
-            write_done <= 1'b 1;
-          end
-          C_ENC_LENGTH_REG : begin
-            //enc_length_reg <= OPB_DBus_in;
-            write_done <= 1'b 1;
-          end
-          default : begin
-          end
-          endcase
-          // @todo: fix, manually convert
-          //if std_match(OPB_ABus, C_QUANTIZER_RAM_LUM) then
-          //  qdata      <= OPB_DBus_in(qdata'range);
-          //  qaddr      <= '0' & OPB_ABus(qaddr'high+2-1 downto 2);
-          //  qwren      <= '1';
-          //  write_done <= '1';
-          //end if;
-          //
-          //if std_match(OPB_ABus, C_QUANTIZER_RAM_CHR) then
-          //  qdata      <= OPB_DBus_in(qdata'range);
-          //  qaddr      <= '1' & OPB_ABus(qaddr'high+2-1 downto 2);
-          //  qwren      <= '1';
-          //  write_done <= '1';
-          //end if;
-        end
-      end
-      // special handling of status reg
-      if(jpeg_ready == 1'b 1) begin
-        // set jpeg done flag
-        enc_sts_reg[1] <= 1'b 1;
-      end
-      enc_sts_reg[0] <= jpeg_busy;
-      enc_length_reg <= {32{1'b0}};
-      enc_length_reg[23:0] <= num_enc_bytes;
+		    if (OPB_ABus == C_QUANTIZER_RAM_CHR) begin
+			qdata <= OPB_DBus_in;
+			qaddr <= {1'b1, OPB_ABus[7:2]};
+			qwren <= 1'b1;
+			write_done <= 1'b1;
+		    end
+		end
+	    end
+	    // special handling of status reg
+	    if(jpeg_ready == 1'b 1) begin
+		// set jpeg done flag
+		enc_sts_reg[1] <= 1'b 1;
+	    end
+	    enc_sts_reg[0] <= jpeg_busy;
+	    enc_length_reg <= {32{1'b0}};
+	    enc_length_reg[23:0] <= num_enc_bytes;
+	end
     end
-  end
-
-  //-----------------------------------------------------------------
-  // transfer ACK
-  //-----------------------------------------------------------------
-  always @(posedge CLK or posedge RST) begin
-    if(RST == 1'b 1) begin
-      OPB_XferAck <= 1'b 0;
-    end else begin
-      OPB_XferAck <= rd_dval | write_done;
+    
+    //-----------------------------------------------------------------
+    // transfer ACK
+    //-----------------------------------------------------------------
+    always @(posedge CLK or posedge RST) begin
+	if(RST == 1'b 1) begin
+	    OPB_XferAck <= 1'b 0;
+	end 
+	else begin
+	    OPB_XferAck <= rd_dval | write_done;
+	end
     end
-  end
-
-//-----------------------------------------------------------------------------
-// Architecture: end
-//-----------------------------------------------------------------------------
+    
 
 endmodule
