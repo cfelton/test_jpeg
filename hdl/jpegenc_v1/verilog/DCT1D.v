@@ -98,7 +98,7 @@ module DCT1D
 
  // the original VHDL passed 2D arrays, Verilog doesn't support
  // 2D arrays as ports (systemverilog does).  The 2D arrays are
- // passed a flat ports and reconstructed as 2D array
+ // passed as flat ports and reconstructed as 2D array
  //input wire [8:0][ROMDATA_W-1:0] romedatao,
  //input wire [8:0][ROMDATA_W-1:0] romodatao,
  //output wire [ROMADDR_W-1:0] romeaddro [0:8],
