@@ -156,8 +156,8 @@ module DCT1D
 
     wire [ROMDATA_W-1:0]  romedatao [0:8];
     wire [ROMDATA_W-1:0]  romodatao [0:8];
-    wire [ROMADDR_W-1:0]  romeaddro [0:8];
-    wire [ROMADDR_W-1:0]  romoaddro [0:8];
+    reg [ROMADDR_W-1:0]  romeaddro [0:8];
+    reg [ROMADDR_W-1:0]  romoaddro [0:8];
 
     /**
      * conversion note, in Verilog (not SV) 2D arrays cannot be
@@ -293,11 +293,10 @@ module DCT1D
 	    ramwe_d3 <= 1'b0;
 	    ramwe_d4 <= 1'b0;
 	    
-	    /// @todo: manually fix, concat expression fails
-	    //ramwaddro_d1 <= {(((RAMADRR_W - 1))-((0))+1){1'b0}};
-	    //ramwaddro_d2 <= {(((RAMADRR_W - 1))-((0))+1){1'b0}};
-	    //ramwaddro_d3 <= {(((RAMADRR_W - 1))-((0))+1){1'b0}};
-	    //ramwaddro_d4 <= {(((RAMADRR_W - 1))-((0))+1){1'b0}};
+	    ramwaddro_d1 <= 0;
+	    ramwaddro_d2 <= 0;
+	    ramwaddro_d3 <= 0;
+	    ramwaddro_d4 <= 0;
      
 	    wmemsel_d1 <= 1'b0;
 	    wmemsel_d2 <= 1'b0;
@@ -338,6 +337,9 @@ module DCT1D
 	    //    (RESIZE(SIGNED(romedatao(1)),DA_W-1) & '0') +
 	    //    (RESIZE(SIGNED(romedatao(2)),DA_W-2) & "00"),
 	    //    DA_W));
+	    if (1'b0 == even_not_odd) begin
+		dcto_1 <= romedatao[0] + (romedatao[1] << 1) + (romedatao[2] << 2);
+	    end
 	    //else
 	    //  dcto_1 <= STD_LOGIC_VECTOR(RESIZE
 	    //    (RESIZE(SIGNED(romodatao(0)),DA_W) + 
@@ -345,6 +347,9 @@ module DCT1D
 	    //    (RESIZE(SIGNED(romodatao(2)),DA_W-2) & "00"),
 	    //    DA_W));
 	    //end if;
+	    else begin
+		dcto_1 <= romodatao[0] + (romodatao[1] << 1) + (romodatao[2] <<2);
+	    end
 	    //
 	    //if even_not_odd_d1 = '0' then
 	    //  dcto_2 <= STD_LOGIC_VECTOR(RESIZE
@@ -352,6 +357,9 @@ module DCT1D
 	    //    (RESIZE(SIGNED(romedatao_d1(3)),DA_W-3) & "000") +
 	    //    (RESIZE(SIGNED(romedatao_d1(4)),DA_W-4) & "0000"),
 	    //    DA_W));
+	    if (1'b0 == even_not_odd_d1) begin
+		dcto_2 <= dcto_1 + (romedatao_d1[3] << 3) + (romedatao_d1[4] << 4);
+	    end
 	    //else
 	    //  dcto_2 <= STD_LOGIC_VECTOR(RESIZE
 	    //    (signed(dcto_1) + 
@@ -359,6 +367,9 @@ module DCT1D
 	    //    (RESIZE(SIGNED(romodatao_d1(4)),DA_W-4) & "0000"),
 	    //    DA_W));
 	    //end if;
+	    else begin
+		dcto_2 <= dcto_1 + (romodatao_d1[3] << 3) + (romodatao_d1[4] << 4);
+	    end
 	    //
 	    //if even_not_odd_d2 = '0' then
 	    //  dcto_3 <= STD_LOGIC_VECTOR(RESIZE
@@ -366,6 +377,9 @@ module DCT1D
 	    //    (RESIZE(SIGNED(romedatao_d2(5)),DA_W-5) & "00000") +
 	    //    (RESIZE(SIGNED(romedatao_d2(6)),DA_W-6) & "000000"),
 	    //    DA_W));
+	    if (1'b0 == even_not_odd_d2) begin
+		dcto_3 <= dcto_2 + (romedatao_d2[5] << 5) + (romedatao_d2[6] << 6);
+	    end
 	    //else
 	    //  dcto_3 <= STD_LOGIC_VECTOR(RESIZE
 	    //    (signed(dcto_2) + 
@@ -373,6 +387,9 @@ module DCT1D
 	    //    (RESIZE(SIGNED(romodatao_d2(6)),DA_W-6) & "000000"),
 	    //    DA_W));
 	    //end if;
+	    else begin
+		dcto_3 <= dcto_2 + (romodatao_d2[5] << 5) + (romodatao_d2[6] << 6);
+	    end
 	    //
 	    //if even_not_odd_d3 = '0' then
 	    //  dcto_4 <= STD_LOGIC_VECTOR(RESIZE
@@ -380,6 +397,9 @@ module DCT1D
 	    //    (RESIZE(SIGNED(romedatao_d3(7)),DA_W-7) & "0000000") -
 	    //    (RESIZE(SIGNED(romedatao_d3(8)),DA_W-8) & "00000000"),
 	    //    DA_W));
+	    if (1'b0 == even_not_odd_d3) begin
+		dcto_4 <= dcto_3 + (romedatao_d3[7] << 7) + (romedatao_d3[8] << 8);
+	    end	    
 	    //else
 	    //  dcto_4 <= STD_LOGIC_VECTOR(RESIZE
 	    //    (signed(dcto_3) + 
@@ -387,6 +407,9 @@ module DCT1D
 	    //    (RESIZE(SIGNED(romodatao_d3(8)),DA_W-8) & "00000000"),
 	    //    DA_W));
 	    //end if;
+	    else begin
+		dcto_4 <= dcto_3 + (romodatao_d3[7] << 7) + (romodatao_d3[8] << 8);
+	    end
 	end
     end
 
@@ -413,7 +436,30 @@ module DCT1D
     //               databuf_reg(7)(i);
     //    end loop;
     //  end if;
-    //end process; 
+    //end process;
+    integer kk;
+    always @(posedge clk or posedge rst) begin
+	if (rst == 1'b1) begin
+	    for(kk=0; kk<8; kk=kk+1) begin
+		romeaddro[kk] <= 0;
+		romoaddro[kk] <= 0;
+	    end
+	end
+	else begin
+	    for(kk=0; kk<8; kk=kk+1) begin
+		romeaddro[kk] <= {col_reg[RAMADRR_W/2-1:1], 
+				  databuf_reg[0][kk], 
+				  databuf_reg[1][kk],
+				  databuf_reg[2][kk], 
+				  databuf_reg[3][kk]};
+		romoaddro[kk] <= {col_reg[RAMADRR_W/2-1:1], 
+				  databuf_reg[4][kk], 
+				  databuf_reg[5][kk],
+				  databuf_reg[6][kk], 
+				  databuf_reg[7][kk]};
+	    end
+	end
+    end
     //
     //p_romdatao_d1 : process(CLK, RST)
     //begin
@@ -433,6 +479,29 @@ module DCT1D
     //    romodatao_d3   <= romodatao_d2;
     //  end if;
     //end process;
+    always @(posedge clk or posedge rst) begin
+	if (1'b1 == rst) begin
+	    for (kk=0; kk<8; kk=kk+1) begin
+		romedatao_d1[kk] <= 0;
+		romodatao_d1[kk] <= 0;
+		romedatao_d2[kk] <= 0;
+		romodatao_d2[kk] <= 0;
+		romedatao_d3[kk] <= 0;
+		romodatao_d3[kk] <= 0;		
+	    end
+	end
+	else begin
+	    for (kk=0; kk<8; kk=kk+1) begin
+		romedatao_d1[kk] <= romedatao[kk];
+		romodatao_d1[kk] <= romodatao[kk];
+		romedatao_d2[kk] <= romedatao_d1[kk];
+		romodatao_d2[kk] <= romodatao_d1[kk];
+		romedatao_d3[kk] <= romedatao_d2[kk];
+		romodatao_d3[kk] <= romodatao_d2[kk];
+
+	    end
+	end
+    end
     
     //------------------------------------------------------------------------------
     
