@@ -3,6 +3,7 @@ from __future__ import print_function
 
 import sys
 import os
+import random
 import argparse
 from argparse import Namespace
 
@@ -22,6 +23,7 @@ def test_jpegenc(args):
     jpgv1 = JPEGEncV1(clock, reset, args=args)
     jpgv2 = JPEGEncV2(clock, reset, args=args)
 
+    # prepare the cosimulation
     tbdut = prep_cosim(clock, reset, jpgv1, jpgv2, args=args)    
 
     @always(delay(10))
@@ -29,6 +31,7 @@ def test_jpegenc(args):
         clock.next = not clock
 
     def _test():
+        # get the bus adapters to the encoders
         tbintf = (jpgv1.get_gens(), jpgv2.get_gens(),)
         finished = [Signal(bool(0)) for _ in range(2)]
 
@@ -44,6 +47,7 @@ def test_jpegenc(args):
         def tbstim():
             print("start simulation ...")
             yield _pulse_reset()
+
             wait = True
             while wait:
                 if False in finished:
@@ -56,7 +60,8 @@ def test_jpegenc(args):
 
             print("end simulation")
             raise StopSimulation
-
+            
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # stimulate V1 (design1) 
         @instance
         def tbstimv1():
@@ -65,12 +70,14 @@ def test_jpegenc(args):
                 yield delay(10)
             yield delay(100)
             yield clock.posedge
+            # initialize the JPEG encoder
+            yield jpgv1.initialize()
 
+            # send and image to be encoded
             img = Image.open(args.imgfn)
             yield jpgv1.put_image(img)
             bic = [None]
-            # @todo: wait for end of bitstream
-            #yield jpgv1.get_jpeg(bic)
+            yield jpgv1.get_jpeg(bic)
             
             while not jpgv1.done:
                 yield delay(1000)
@@ -78,6 +85,7 @@ def test_jpegenc(args):
 
             finished[0].next = True
 
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # stimulate V2 (design2) 
         @instance
         def tbstimv2():  
@@ -116,11 +124,20 @@ def test_jpegenc(args):
 
 
 if __name__ == '__main__':
+
+    # randomly select a test image
+    ipth = "./test_images/color/"
+    ifn = random.choice(os.listdir(ipth))
+    ipth = os.path.join(ipth, ifn)
+
+    # setup arguments for the test (future capture from CLI)
     args = Namespace(
-        trace=False,
-        imgfn='smb.jpg',
-        build_only=False,
-        build_skip_v1=False
+        trace=False,          # enable tracing (debug)
+        imgfn=ipth,           # image to test compression
+        build_only=False,     # compile the V* only, not test
+        build_skip_v1=False   # skip the V1 encoder compile
     )
+
+    # run the JPEG encoder test
     test_jpegenc(args)
 

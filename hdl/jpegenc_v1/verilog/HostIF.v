@@ -105,16 +105,16 @@ module HostIF
     // others        
 
     // @todo: verify these constants, some converted funky?
-    parameter C_ENC_START_REG        = 36'h0000_0000;
-    parameter C_IMAGE_SIZE_REG       = 36'h0000_0004;
-    parameter C_IMAGE_RAM_ACCESS_REG = 36'h0000_0008;
-    parameter C_ENC_STS_REG          = 36'h0000_000C;
-    parameter C_COD_DATA_ADDR_REG    = 36'h0000_0010;
-    parameter C_ENC_LENGTH_REG       = 36'h0000_0014;
-    parameter C_QUANTIZER_RAM_LUM    = {28'h0000_01, 8'b0};
-    parameter C_QUANTIZER_RAM_CHR    = {28'h0000_02, 8'b0};
-    parameter C_IMAGE_RAM            = {12'h1, 20'b0};
-    parameter C_IMAGE_RAM_BASE       = 36'h0010_0000;
+    parameter C_ENC_START_REG        = 32'h0000_0000;
+    parameter C_IMAGE_SIZE_REG       = 32'h0000_0004;
+    parameter C_IMAGE_RAM_ACCESS_REG = 32'h0000_0008;
+    parameter C_ENC_STS_REG          = 32'h0000_000C;
+    parameter C_COD_DATA_ADDR_REG    = 32'h0000_0010;
+    parameter C_ENC_LENGTH_REG       = 32'h0000_0014;
+    parameter C_QUANTIZER_RAM_LUM    = 32'h0000_0100; 
+    parameter C_QUANTIZER_RAM_CHR    = 32'h0000_0200; 
+    //parameter C_IMAGE_RAM            = 32'h0010_0000; 
+    parameter C_IMAGE_RAM_BASE       = 32'h0010_0000;
     
     reg [31:0] enc_start_reg;
     reg [31:0] image_size_reg;
@@ -248,14 +248,14 @@ module HostIF
 		      end
 		    endcase
 		    
-		    if (OPB_ABus == C_QUANTIZER_RAM_LUM) begin
+		    if ((OPB_ABus & C_QUANTIZER_RAM_LUM) == C_QUANTIZER_RAM_LUM) begin
 			qdata <= OPB_DBus_in;
 			qaddr <= {1'b0, OPB_ABus[7:2]};
 			qwren <= 1'b1;
 			write_done <= 1'b1;
 		    end
 
-		    if (OPB_ABus == C_QUANTIZER_RAM_CHR) begin
+		    if ((OPB_ABus & C_QUANTIZER_RAM_CHR) == C_QUANTIZER_RAM_CHR) begin
 			qdata <= OPB_DBus_in;
 			qaddr <= {1'b1, OPB_ABus[7:2]};
 			qwren <= 1'b1;

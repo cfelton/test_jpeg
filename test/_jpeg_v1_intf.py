@@ -9,6 +9,7 @@ from _SignalQueue import SignalQueue
 
 from _opb import OPBBus
 from _jpeg_intf import JPEGEnc
+from _jpeg_roms import rom_lum, rom_chr
 
 
 class JPEGEncV1(JPEGEnc):
@@ -34,10 +35,45 @@ class JPEGEncV1(JPEGEnc):
         
         self.opb = OPBBus(clock, reset)
 
+        self._enc_done = Signal(bool(0))
+
         # set the encoder parameters 
         self.block_size = (16,8,)
         
-        
+
+    def initialize(self, luminance=1, chrominance=1):
+        """ initialize the encoder 
+
+        Arguments
+        ---------
+          luninance : 1, .85, .75 or .5
+          chrominance : 1, .85, .75 or .5
+        """
+        # lum address
+        offset = {1: 0x00, .85: 0x40, .75: 0x80, .50: 0xC0}
+        lbase,cbase = 64*offset[luminance], 64*offset[chrominance]
+
+        # program the luminance table
+        for ii,off in enumerate(range(lbase,lbase+64)):
+            addr = 0x00000100 + ii*4
+            #print("[%8d] V1 init %8X --> %8X" % (now(), addr, rom_lum[off]))
+            yield self.opb.write(addr, rom_lum[off])
+
+        # program the chrominace table
+        for ii,off in enumerate(range(cbase,cbase+64)):  
+            addr = 0x00000200 + ii*4
+            yield self.opb.write(addr, rom_chr[off])
+            
+      
+    def check_done(self, done):        
+        assert isinstance(done, SignalType)
+        rval = Signal(intbv(0)[32:])
+        yield self.opb.read(0x0C, rval)
+        if rval == 0x02:
+            done.next = True
+            self._enc_done.next = True
+
+
     def stream_img_in(self):
         """
         A transactor to take an image and stream it to the jpeg encoder.
@@ -57,6 +93,14 @@ class JPEGEncV1(JPEGEnc):
                 img = imglst[0]
                 nx,ny = img.size
 
+                # this encoder needs some commands via the control bus (memmap)
+                # to start encoding, need to program in the requested (?) x and y 
+                wval = concat(intbv(nx)[16:], intbv(ny)[16:])
+                yield self.opb.write(0x04, wval)
+                # write a start request, RGB=11, sof=1
+                yield self.opb.write(0x00, 0x07)
+
+
                 # stream the image to the encoder
                 print("encode image %s %d x %d" % (str(img), nx, ny,))
                 for yy in xrange(0, ny):
@@ -74,8 +118,15 @@ class JPEGEncV1(JPEGEnc):
                         yield self.clock.posedge
 
                 self.iram_wren.next = False
-                self.iram_wdata.next = 0
-                self.done.next = True
+                self.iram_wdata.next = 0     
+                # writing is complete
+                self.done.next = True        
+
+                # wait for the encoder to be completed
+                cd = Signal(bool(0))
+                while not cd:
+                    self.check_done(cd)
+                    yield clock.posedge
 
         return t_bus_in
 
@@ -93,10 +144,11 @@ class JPEGEncV1(JPEGEnc):
                     self._bitstream.append(self.ram_byte)
                     ii += 1
 
-                # @todo: determine end of the jpeg bitstream
-                if ii > 10:
+                #if ii > 10:
+                if self._enc_done:
                     print("V1: end of bitstream")
                     yield self._outq.put(self._bitstream)
+
 
         return t_bus_out
 

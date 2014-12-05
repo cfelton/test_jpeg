@@ -16,6 +16,17 @@ module tb_jpegenc;
     wire        j1_ram_wren;
     wire [23:0] j1_ram_wraddr;
     wire [23:0] j1_frame_size;
+
+    reg [31:0] 	j1_opb_abus;
+    reg [3:0] 	j1_opb_be;
+    reg [31:0] 	j1_opb_dbus_in;
+    reg         j1_opb_rnw;
+    reg         j1_opb_select;
+    wire        j1_opb_dbus_out;
+    wire        j1_opb_xferack;
+    wire        j1_opb_retry;
+    wire        j1_opb_toutsup;
+    wire        j1_opb_errack;    
     
     // version 2 (design2) interface
     reg         j2_eof;
@@ -37,11 +48,15 @@ module tb_jpegenc;
       $from_myhdl
 	(clock, reset,
 	 j1_iram_wdata, j1_iram_wren, j1_almost_full,
+	 j1_opb_abus, j1_opb_be, j1_opb_dbus_in,
+	 j1_opb_rnw, j1_opb_select,
 	 j2_eof, j2_en, j2_dati
 	 );
       $to_myhdl
 	(j1_iram_fifo_afull, j1_ram_byte, j1_ram_wren,
 	 j1_ram_wraddr, j1_almost_full, j1_frame_size,
+	 j1_opb_dbus_out, j1_opb_xferack, j1_opb_retry,
+	 j1_opb_toutsup, j1_opb_errack,
 	 j2_bits, j2_rdy, 
 	 j2_eof_cnt, j2_eof_p
 	 );      
@@ -49,10 +64,20 @@ module tb_jpegenc;
 
    JpegEnc
      DUTV1
-       (.CLK(clock),
-	.RST(reset),
+       (.CLK               (clock),
+	.RST               (reset),
+
+	.OPB_ABus          (j1_opb_abus),
+	.OPB_BE            (j1_opb_be),
+	.OPB_DBus_in       (j1_opb_dbus_in),
+	.OPB_RNW           (j1_opb_rnw),
+	.OPB_select        (j1_opb_select),
+	.OPB_DBus_out      (j1_opb_dbus_out),
+	.OPB_XferAck       (j1_opb_xferack),
+	.OPB_retry         (j1_opb_retry),
+	.OPB_toutSup       (j1_opb_toutsup),
+	.OPB_errAck        (j1_opb_errack),
 	
-	/// @todo: OPB bus
 	.iram_wdata        (j1_iram_wdata),
 	.iram_wren         (j1_iram_wren),
 	.iram_fifo_afull   (j1_iram_fifo_afull),

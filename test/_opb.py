@@ -17,23 +17,45 @@ class OPBBus(object):
         self.toutSup = Signal(bool(0))
         self.errAck = Signal(bool(0))
 
+
     def write(self, addr, data):
         """ write to address """
         self.ABus.next = addr
-        self.DBus_out.next = data
+        self.DBus_in.next = data
         self.select.next = True
         self.BE.next = 0xF
-        while not self.XferAck:
+        self.RNW.next = False
+        ack = False
+        while not ack:
             yield self.clock.posedge
+            ack = self.XferAck
         self.ABus.next = 0
-        self.DBus.next = 0
+        self.DBus_in.next = 0
         self.select.next = False
         self.BE.next = 0x0
+        yield self.clock.posedge
 
 
-    def read(self, addr):
+    def read(self, addr, rval):
         """ read address """
-        pass
+        assert isinstance(rval, SignalType)
+        self.ABus.next = addr
+        self.select.next = True
+        self.BE.next = 0xF
+        self.RNW.next = True
+        ack = False
+        while not ack:
+            yield self.clock.posedge
+            ack = self.XferAck
+        #rval.append(self.DBus_in.val)
+        rval.next = self.DBus_in
+        self.ABus.next = 0
+        self.DBus_out.next = 0
+        self.select.next = False
+        self.BE.next = 0x0
+        self.RNW.next = False
+        yield self.clock.posedge
+
 
     def interconnect(self, *per):
         """ """

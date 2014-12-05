@@ -59,6 +59,17 @@ def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
         j1_almost_full     = jpgv1.almost_full,
         j1_frame_size      = jpgv1.frame_size,
 
+        j1_opb_abus        = jpgv1.opb.ABus,
+        j1_opb_be          = jpgv1.opb.BE,
+        j1_opb_dbus_in     = jpgv1.opb.DBus_in,
+        j1_opb_rnw         = jpgv1.opb.RNW,
+        j1_opb_select      = jpgv1.opb.select,
+        j1_opb_dbus_out    = jpgv1.opb.DBus_out,
+        j1_opb_xferack     = jpgv1.opb.XferAck,
+        j1_opb_retry       = jpgv1.opb.retry,
+        j1_opb_toutsup     = jpgv1.opb.toutSup,
+        j1_opb_errack      = jpgv1.opb.errAck,
+
         # encoder 2 (V2, design2)
         j2_eof        = jpgv2.end_of_file_signal,
         j2_en         = jpgv2.enable,
