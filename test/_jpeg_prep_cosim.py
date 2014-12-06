@@ -91,9 +91,12 @@ def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
 
 if __name__ == '__main__':
     args = Namespace(
-        build_only=True,
-        build_skip_v1=False,
-        build_skip_v2=False
+        build_only=True,            # build only
+        build_skip_v1=False,        # skip design 1
+        build_skip_v2=False,        # skip design 2
+        vtrace=True,                # enable VCD tracing in Verilog cosim
+        vtrace_level=0,             # Verilog VCD dumpvars level
+        vtrace_module='tb_jpegenc', # Verilog VCD dumpvars module to trace
     )
     
     prep_cosim(Signal(bool(0)), 

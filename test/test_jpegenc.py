@@ -154,7 +154,7 @@ if __name__ == '__main__':
         imgfn=ipth,            # image to test compression
         build_only=False,      # compile the V* only, not test
         build_skip_v1=False,   # skip the V1 encoder compile
-        nout=800,              # number of encoded outputs to capture (debug mode)
+        nout=1600,             # number of encoded outputs to capture (debug mode)
         dump_bitstreams=False, # dump full bitstreams at the end
     )
 

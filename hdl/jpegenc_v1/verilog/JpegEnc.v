@@ -268,36 +268,36 @@ module JpegEnc
        .outif_almost_full  (outif_almost_full   ),
        
        //-- HOST IF
-       .sof                (sof                 ),
+       .sof                (sof            ),
        .img_size_x         (img_size_x	   ),
        .img_size_y         (img_size_y	   ),
        .jpeg_ready         (jpeg_ready	   ),
-       .jpeg_busy          (jpeg_busy           ),
+       .jpeg_busy          (jpeg_busy      ),
        
        //-- FDCT 
-       .fdct_start         (fdct_start          ),
-       .fdct_ready         (fdct_ready          ),
-       .fdct_sm_settings_x_cnt (fdct_sm_settings_x_cnt),
-       .fdct_sm_settings_y_cnt (fdct_sm_settings_y_cnt),
+       .fdct_start               (fdct_start          ),
+       .fdct_ready               (fdct_ready          ),
+       .fdct_sm_settings_x_cnt   (fdct_sm_settings_x_cnt),
+       .fdct_sm_settings_y_cnt   (fdct_sm_settings_y_cnt),
        .fdct_sm_settings_cmp_idx (fdct_sm_settings_cmp_idx),
        
        //-- ZIGZAG
-       .zig_start          (zig_start           ),
-       .zig_ready          (zig_ready           ),
+       .zig_start               (zig_start           ),
+       .zig_ready               (zig_ready           ),
        .zig_sm_settings_x_cnt   (zig_sm_settings_x_cnt),
        .zig_sm_settings_y_cnt   (zig_sm_settings_y_cnt),
        .zig_sm_settings_cmp_idx (zig_sm_settings_cmp_idx),
               
        //-- Quantizer
-       .qua_start          (qua_start           ),
-       .qua_ready          (qua_ready           ),
+       .qua_start               (qua_start           ),
+       .qua_ready               (qua_ready           ),
        .qua_sm_settings_x_cnt   (qua_sm_settings_x_cnt),
        .qua_sm_settings_y_cnt   (qua_sm_settings_y_cnt),
        .qua_sm_settings_cmp_idx (qua_sm_settings_cmp_idx),
        
        //-- RLE
-       .rle_start          (rle_start           ),
-       .rle_ready          (rle_ready           ),
+       .rle_start               (rle_start           ),
+       .rle_ready               (rle_ready           ),
        .rle_sm_settings_x_cnt   (rle_sm_settings_x_cnt),
        .rle_sm_settings_y_cnt   (rle_sm_settings_y_cnt),
        .rle_sm_settings_cmp_idx (rle_sm_settings_cmp_idx),
@@ -337,6 +337,7 @@ module JpegEnc
 	 //-- CTRL	      			   
 	 .start_pb           (fdct_start	   ),
 	 .ready_pb           (fdct_ready	   ),
+	 
 	 // @todo: fix "settings"
 	 //.fdct_sm_settings   (fdct_sm_settings	   ),
   	 

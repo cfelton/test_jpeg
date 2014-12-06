@@ -98,34 +98,39 @@ module FDCT
 
 
     reg [7:0] 	    mdct_data_in = 0;
-    wire 	    mdct_idval = 1'b 0;
-    wire 	    mdct_odval = 1'b 0;
-    wire [11:0]     mdct_data_out = 0;
-    wire 	    odv1 = 1'b 0;
-    wire [11:0]     dcto1 = 0;
+    wire 	    mdct_idval;
+    wire 	    mdct_odval;
+    wire [11:0]     mdct_data_out;
+    
+    wire 	    odv1;
+    wire [11:0]     dcto1;
     reg [15:0] 	    x_pixel_cnt = 0;
     reg [15:0] 	    y_line_cnt = 0;
-    wire [31:0]     rd_addr = 0;
+    wire [31:0]     rd_addr;
     reg [6:0] 	    input_rd_cnt = 0;
+    
     reg 	    rd_en = 1'b 0;
     reg 	    rd_en_d1 = 1'b 0;
-    wire [31:0]     rdaddr = 0;
+    wire [31:0]     rdaddr;
+    
     reg 	    bf_dval = 1'b 0;
     reg 	    bf_dval_m1 = 1'b 0;
     reg 	    bf_dval_m2 = 1'b 0;
-    reg 	    bf_dval_m3 = 1'b 0;
-    reg [5:0] 	    wr_cnt = 0;
-    wire [11:0]     dbuf_data = 0;
-    wire [11:0]     dbuf_q = 0;
-    wire 	    dbuf_we = 1'b 0;
-    wire [6:0] 	    dbuf_waddr = 0;
-    wire [6:0] 	    dbuf_raddr = 0;
-    reg [2:0] 	    xw_cnt = 0;
-    reg [2:0] 	    yw_cnt = 0;
-    wire [11:0]     dbuf_q_z1 = 0;
+    reg 	    bf_dval_m3 = 1'b 0;    
+    
+    wire [11:0]     dbuf_data;
+    wire [11:0]     dbuf_q;
+    wire 	    dbuf_we;
+    wire [6:0] 	    dbuf_waddr;
+    wire [6:0] 	    dbuf_raddr;
+
+    reg [5:0] 	    wr_cnt;    
+    reg [2:0] 	    xw_cnt;
+    reg [2:0] 	    yw_cnt;
+    wire [11:0]     dbuf_q_z1;
     
     parameter C_SIMA_ASZ = 9;
-    wire [C_SIMA_ASZ - 1:0] sim_rd_addr = 0;
+    wire [C_SIMA_ASZ - 1:0] sim_rd_addr;
     
     reg [23:0] 	    Y_Reg_1 = 0;
     reg [23:0] 	    Y_Reg_2 = 0;
@@ -142,13 +147,13 @@ module FDCT
     reg [23:0] 	    Cb_Reg = 0;
     reg [23:0] 	    Cr_Reg = 0;
     
-    wire [8:0] 		    R_s = 0;
-    wire [8:0] 		    G_s = 0;
-    wire [8:0] 		    B_s = 0;
+    wire [8:0] 		    R_s;
+    wire [8:0] 		    G_s;
+    wire [8:0] 		    B_s;
     
-    wire [7:0] 		    Y_8bit = 0;
-    wire [7:0] 		    Cb_8bit = 0;
-    wire [7:0] 		    Cr_8bit = 0;
+    wire [7:0] 		    Y_8bit;
+    wire [7:0] 		    Cb_8bit;
+    wire [7:0] 		    Cr_8bit;
     reg [2:0] 		    cmp_idx = 0;
     
     reg [2:0] 		    cur_cmp_idx = 0;
@@ -161,30 +166,35 @@ module FDCT
     reg [2:0] 		    cur_cmp_idx_d7 = 0;
     reg [2:0] 		    cur_cmp_idx_d8 = 0;
     reg [2:0] 		    cur_cmp_idx_d9 = 0;
-    reg 		    fifo1_rd = 1'b 0;
-    wire 		    fifo1_wr = 1'b 0;
-    wire [11:0] 	    fifo1_q = 0;
-    wire 		    fifo1_full = 1'b 0;
-    wire 		    fifo1_empty = 1'b 0;
-    wire [9:0] 		    fifo1_count = 0;
-    reg [5:0] 		    fifo1_rd_cnt = 0;
-    reg 		    fifo1_q_dval = 1'b 0;
-    wire [11:0] 	    fifo_data_in = 0;
-    reg 		    fifo_rd_arm = 1'b 0;
+    
+    reg 		    fifo1_rd;
+    wire 		    fifo1_wr;
+    wire [11:0] 	    fifo1_q;
+    wire 		    fifo1_full;
+    wire 		    fifo1_empty;
+    wire [9:0] 		    fifo1_count;
+    reg [5:0] 		    fifo1_rd_cnt;
+    reg 		    fifo1_q_dval;
+    wire [11:0] 	    fifo_data_in;    
+    reg 		    fifo_rd_arm;
+    
     reg 		    eoi_fdct = 1'b 0;
     reg 		    bf_fifo_rd_s = 1'b 0;
     reg 		    start_int = 1'b 0;
     reg [4:0] 		    start_int_d = 0;
-    wire [23:0] 	    fram1_data = 0;
-    wire [23:0] 	    fram1_q = 0;
-    wire 		    fram1_we = 1'b 0;
+    
+    wire [23:0] 	    fram1_data;
+    wire [23:0] 	    fram1_q;
+    wire 		    fram1_we;
     reg [6:0] 		    fram1_waddr = 0;
     reg [6:0] 		    fram1_raddr = 0;
     reg [8:0] 		    fram1_rd_d = 0;
     reg 		    fram1_rd = 1'b 0;
-    reg 		    rd_started = 1'b 0;
-    reg 		    writing_en = 1'b 0;
-    wire 		    fram1_q_vld = 1'b 0;
+    
+    reg 		    rd_started;    
+    reg 		    writing_en;
+
+    wire 		    fram1_q_vld;
     reg [2:0] 		    fram1_line_cnt = 0;
     wire [2:0] 		    fram1_line_cnt_p1 = 1;
     reg [2:0] 		    fram1_pix_cnt = 0;  
@@ -467,77 +477,86 @@ module FDCT
        .count    (fifo1_count   )
        );
     
-  assign fifo1_wr = mdct_odval;
-  assign fifo_data_in = mdct_data_out;
+    assign fifo1_wr = mdct_odval;
+    assign fifo_data_in = mdct_data_out;
     
-  //-----------------------------------------------------------------
-  // FIFO1 rd controller
-  //-----------------------------------------------------------------
-  always @(posedge CLK or posedge RST) begin
-    if(RST == 1'b 1) begin
-      fifo1_rd <= 1'b 0;
-      fifo_rd_arm <= 1'b 0;
-      fifo1_rd_cnt <= {6{1'b0}};
-      fifo1_q_dval <= 1'b 0;
-    end else begin
-      fifo1_rd <= 1'b 0;
-      fifo1_q_dval <= fifo1_rd;
-      if(start_pb == 1'b 1) begin
-        fifo_rd_arm <= 1'b 1;
-        fifo1_rd_cnt <= {6{1'b0}};
-      end
-      if(fifo_rd_arm == 1'b 1) begin
-        if(fifo1_rd_cnt == (64 - 1)) begin
-          fifo_rd_arm <= 1'b 0;
-          fifo1_rd <= 1'b 1;
-        end
-        else if(fifo1_empty == 1'b 0) begin
-          fifo1_rd <= 1'b 1;
-          fifo1_rd_cnt <= fifo1_rd_cnt + 1;
-        end
-      end
+    //-----------------------------------------------------------------
+    // FIFO1 rd controller
+    //-----------------------------------------------------------------
+    always @(posedge CLK or posedge RST) begin
+	if(RST == 1'b1) begin
+	    fifo1_rd <= 1'b0;
+	    fifo_rd_arm <= 1'b0;
+	    fifo1_rd_cnt <= {6{1'b0}};
+	    fifo1_q_dval <= 1'b0;
+	end 
+	else begin
+	    fifo1_rd <= 1'b0;
+	    fifo1_q_dval <= fifo1_rd;
+	    
+	    if(start_pb == 1'b1) begin
+		fifo_rd_arm <= 1'b1;
+		fifo1_rd_cnt <= {6{1'b0}};
+	    end
+	    
+	    if(fifo_rd_arm == 1'b1) begin
+		if(fifo1_rd_cnt == (64 - 1)) begin
+		    fifo_rd_arm <= 1'b0;
+		    fifo1_rd <= 1'b1;
+		end
+		else if(fifo1_empty == 1'b0) begin
+		    fifo1_rd <= 1'b1;
+		    fifo1_rd_cnt <= fifo1_rd_cnt + 1;
+		end
+	    end
+	end
     end
-  end
 
-  //-----------------------------------------------------------------
-  // write counter
-  //-----------------------------------------------------------------
-  always @(posedge CLK or posedge RST) begin
-    if(RST == 1'b 1) begin
-      wr_cnt <= {6{1'b0}};
-      ready_pb <= 1'b 0;
-      xw_cnt <= {3{1'b0}};
-      yw_cnt <= {3{1'b0}};
-      writing_en <= 1'b 0;
-    end else begin
-      ready_pb <= 1'b 0;
-      if(start_pb == 1'b 1) begin
-        wr_cnt <= {6{1'b0}};
-        xw_cnt <= {3{1'b0}};
-        yw_cnt <= {3{1'b0}};
-        writing_en <= 1'b 1;
-      end
-      if(writing_en == 1'b 1) begin
-        if(fifo1_q_dval == 1'b 1) begin
-          if(wr_cnt == (64 - 1)) begin
-            wr_cnt <= {6{1'b0}};
-            ready_pb <= 1'b 1;
-            writing_en <= 1'b 0;
-          end
-          else begin
-            wr_cnt <= wr_cnt + 1;
-          end
-          if(yw_cnt == (8 - 1)) begin
-            yw_cnt <= {3{1'b0}};
-            xw_cnt <= xw_cnt + 1;
-          end
-          else begin
-            yw_cnt <= yw_cnt + 1;
-          end
-        end
-      end
+    //-----------------------------------------------------------------
+    // write counter
+    //-----------------------------------------------------------------
+    always @(posedge CLK or posedge RST) begin
+	if(RST == 1'b1) begin
+	    wr_cnt     <= {6{1'b0}};
+            ready_pb   <= 1'b0;
+            xw_cnt     <= {3{1'b0}};
+       	    yw_cnt     <= {3{1'b0}};
+            writing_en <= 1'b0;
+        end 
+        else begin
+	    ready_pb <= 1'b0;
+	    
+	    if(start_pb == 1'b1) begin
+                wr_cnt <= {6{1'b0}};
+                xw_cnt <= {3{1'b0}};
+                yw_cnt <= {3{1'b0}};
+                writing_en <= 1'b1;
+            end
+	    
+	    if(writing_en == 1'b1) begin
+                if(fifo1_q_dval == 1'b1) begin
+		    
+	    	    if(wr_cnt == (64 - 1)) begin
+	    	        wr_cnt <= {6{1'b0}};
+	    	        ready_pb <= 1'b1;
+                        writing_en <= 1'b0;
+                    end
+                    else begin
+	    	        wr_cnt <= wr_cnt + 1;
+	    	    end
+		    
+	    	    if(yw_cnt == (8 - 1)) begin
+	    	        yw_cnt <= {3{1'b0}};
+	    	        xw_cnt <= xw_cnt + 1;
+                        end
+	    	    else begin
+	    	        yw_cnt <= yw_cnt + 1;
+	    	    end
+		    
+                end
+	    end
+	end
     end
-  end
 
     //-----------------------------------------------------------------
     // RGB to YCbCr conversion
