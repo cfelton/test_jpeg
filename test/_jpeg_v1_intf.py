@@ -126,7 +126,7 @@ class JPEGEncV1(JPEGEnc):
                 cd = Signal(bool(0))
                 while not cd:
                     self.check_done(cd)
-                    yield clock.posedge
+                    yield self.clock.posedge
 
         return t_bus_in
 

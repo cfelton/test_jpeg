@@ -1,6 +1,14 @@
 
 `timescale 1ns/1ps
 
+`ifndef VTRACE_LEVEL
+ `define VTRACE_LEVEL 0
+`endif
+
+`ifndef VTRACE_MODULE
+ `define VTRACE_MODULE tb_jpegenc
+`endif
+
 module tb_jpegenc;
    
     reg clock;   
@@ -22,7 +30,7 @@ module tb_jpegenc;
     reg [31:0] 	j1_opb_dbus_in;
     reg         j1_opb_rnw;
     reg         j1_opb_select;
-    wire        j1_opb_dbus_out;
+    wire [31:0] j1_opb_dbus_out;
     wire        j1_opb_xferack;
     wire        j1_opb_retry;
     wire        j1_opb_toutsup;
@@ -38,11 +46,14 @@ module tb_jpegenc;
     wire [4:0] 	j2_eof_cnt;
     wire        j2_eof_p;   
 	       
-		
+
+`ifdef VTRACE		
    initial begin
       $dumpfile("vcd/_tb_jpegenc.vcd");
-      $dumpvars(0, tb_jpegenc);
+      //$dumpvars(0, tb_jpegenc);
+       $dumpvars(VTRACE_LEVEL, VTRACE_MODULE);
    end
+`endif    
       
    initial begin
       $from_myhdl

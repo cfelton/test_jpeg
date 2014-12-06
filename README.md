@@ -3,6 +3,9 @@
 
 Current Status
 ==============
+ 
+   05-Dec-2014 : Design1 conversion to verilog is mostly complete, 
+     spending some time verifying.
 
    09-Nov-2014 : The test environment will stream an image to both
      the design1 and design2 encoders.  The output is not interrogated
@@ -11,7 +14,9 @@ Current Status
 Things to be completed
 ----------------------
 
-   #. Finish converting desing 1 to Verilog.
+   #. [ ] Check encoded bitstreams, determine metrics to compare 
+          encoders.
+   #. [X] Finish converting desing 1 to Verilog.
 
 Introduction
 ============
@@ -76,6 +81,30 @@ be run.
 Depending on the test file the test can take significant time to run.
 Majority of the time is spent in the Verilog simulator (as seen from
 top).  
+
+<!-- 
+MyHDL has some inefficiencies with Icarus
+([Icarus Cosimulation](http://docs.myhdl.org/en/latest/manual/cosimulation.html#icarus-verilog)).
+-->
+
+
+|    PID   COMMAND      %CPU TIME     MEM    
+|    3061  vvp          82.7 09:45.51 8200K  
+|    3048  Python       18.7 02:16.07 14M   
+
+Cosimulation time for a 80x80 pixel image and not VCD tracing.
+ 
+|    CPython execution time:
+|    pypy execution time:
+
+Cosimulation time for a 80x80 pixel image and VCD tracing.
+
+|    CPython execution time:
+|    pypy execution time:
+
+
+As mentioned, majority of the time is spent in the Verilog 
+simulator the Python run-time has little effect.
 
 
 Results

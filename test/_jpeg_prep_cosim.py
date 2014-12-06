@@ -27,11 +27,14 @@ def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
     os.system(cmd)
 
     files = ['tb_jpegenc.v']
-    cmd = "iverilog -g2005 -o jpegenc %s %s tb_jpegenc.v" % \
-    ( 
-        " ".join(filelist_v1), 
-        " ".join(filelist_v2),
-    )
+    vstr = "-D VTRACE" if args.vtrace else ""
+    dstr = "%s -D VTRACE_LEVEL=%d -D VTRACE_MODULE=%s " % \
+           (vstr, args.vtrace_level, args.vtrace_module)
+    cmd = "iverilog -g2005 -o jpegenc %s %s %s %s" % \
+          (dstr
+           " ".join(filelist_v1), 
+           " ".join(filelist_v2),
+          " ".join(files), )
     print("compiling testbench ...")
     os.system(cmd)
 
@@ -43,7 +46,8 @@ def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
         return None
 
     print("cosimulation setup ...")
-    cmd = "vvp -m ./myhdl.vpi jpegenc"
+    dstr = " " if args.vtrace else "-none "
+    cmd = "vvp -lxt2 %s -m ./myhdl.vpi jpegenc" % (dstr)
 
     gcosim = Cosimulation(cmd,
         clock = clock,
