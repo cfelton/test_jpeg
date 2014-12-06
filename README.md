@@ -88,6 +88,21 @@ MyHDL has some inefficiencies with Icarus
 -->
 
 
+<!--
+    limited capture no tracing
+    10:  
+    20:
+    100: 
+
+    limited capture Verilog tracing
+           Total   V1    V2
+    100:   5.8     3.24  5.19
+    200:   6.7     3.53  6.15
+    400:   9.5     4.00  8.89
+    800:                 14.03
+    1000:
+-->
+
 |    PID   COMMAND      %CPU TIME     MEM    
 |    3061  vvp          82.7 09:45.51 8200K  
 |    3048  Python       18.7 02:16.07 14M   

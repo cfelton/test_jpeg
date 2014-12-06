@@ -15,14 +15,14 @@ def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
     #    Verilog, for now just build
     if not args.build_skip_v1:
         # @todo: save std* and create log
-        cmd = "iverilog -g2005 -o jpegenc_v1 %s" % (" ".join(filelist_v1))
+        cmd = "iverilog -g2001 -o jpegenc_v1 %s" % (" ".join(filelist_v1))
         print("compiling v1 ...")
         os.system(cmd)
 
     # build the second JPEG encoder
     # @todo: use subprocess, check the return and the "log"
     #   to verify it build correctly.
-    cmd = "iverilog -g2005 -o jpegenc_v2 %s " % (" ".join(filelist_v2))
+    cmd = "iverilog -g2001 -o jpegenc_v2 %s " % (" ".join(filelist_v2))
     print("compiling v2 ...")
     os.system(cmd)
 
@@ -30,11 +30,11 @@ def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
     vstr = "-D VTRACE" if args.vtrace else ""
     dstr = "%s -D VTRACE_LEVEL=%d -D VTRACE_MODULE=%s " % \
            (vstr, args.vtrace_level, args.vtrace_module)
-    cmd = "iverilog -g2005 -o jpegenc %s %s %s %s" % \
-          (dstr
+    cmd = "iverilog -g2001 -o jpegenc %s %s %s %s" % \
+          (dstr,
            " ".join(filelist_v1), 
            " ".join(filelist_v2),
-          " ".join(files), )
+           " ".join(files), )
     print("compiling testbench ...")
     os.system(cmd)
 
@@ -46,8 +46,8 @@ def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
         return None
 
     print("cosimulation setup ...")
-    dstr = " " if args.vtrace else "-none "
-    cmd = "vvp -lxt2 %s -m ./myhdl.vpi jpegenc" % (dstr)
+    dstr = "-lxt2 " if args.vtrace else "-none "
+    cmd = "vvp -m ./myhdl.vpi jpegenc %s" % (dstr)
 
     gcosim = Cosimulation(cmd,
         clock = clock,

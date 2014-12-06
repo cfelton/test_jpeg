@@ -78,10 +78,12 @@ module BUF_FIFO
  input wire 			 RST,
  input wire [15:0] 		 img_size_x,
  input wire [15:0] 		 img_size_y,
+ 
  input wire 			 sof,
  input wire 			 iram_wren,
  input wire [C_PIXEL_BITS - 1:0] iram_wdata,
  output reg 			 fifo_almost_full,
+ 
  input wire 			 fdct_fifo_rd,
  output wire [23:0] 		 fdct_fifo_q,
  output reg 			 fdct_fifo_hf_full
@@ -92,40 +94,37 @@ module BUF_FIFO
     ///    don't believe the 
     parameter C_EXTRA_LINES = 8;
     parameter C_MAX_LINE_WIDTH = 1280;
-    
-    // HOST PROG
-    // HOST DATA
-    // FDCT
-    
     parameter C_NUM_LINES = 8 + C_EXTRA_LINES;
     
-    reg [15:0] 			 pixel_cnt = 0;
-    wire [15:0] 		 line_cnt = 0;
-    wire [C_PIXEL_BITS - 1:0] 	 ramq = 0;
-    reg [C_PIXEL_BITS - 1:0] 	 ramd = 0;
-    reg [$clog2(C_MAX_LINE_WIDTH * C_NUM_LINES) - 1:0] ramwaddr = 0;
-    reg 					       ramenw = 1'b 0;
     
-    wire [$clog2(C_MAX_LINE_WIDTH * C_NUM_LINES) - 1:0] ramraddr = 0;
-    reg [3:0] 						pix_inblk_cnt = 0;
-    reg [3:0] 						pix_inblk_cnt_d1 = 0;
-    reg [2:0] 						line_inblk_cnt = 0;
-    reg [12:0] 						read_block_cnt = 0;
-    reg [12:0] 						read_block_cnt_d1 = 0;
-    wire [12:0] 					write_block_cnt = 0;
+    reg [15:0] 			 pixel_cnt;
+    wire [15:0] 		 line_cnt;
+    wire [C_PIXEL_BITS - 1:0] 	 ramq;
+    reg [C_PIXEL_BITS - 1:0] 	 ramd;
     
-    reg [16 + $clog2(C_NUM_LINES) - 1:0] 		ramraddr_int = 0;
-    reg [16 + $clog2(C_NUM_LINES) - 1:0] 		raddr_base_line = 0;
-    reg [15:0] 						raddr_tmp = 0;
-    reg [$clog2(C_MAX_LINE_WIDTH * C_NUM_LINES) - 1:0] 	ramwaddr_d1 = 0;
+    reg [$clog2(C_MAX_LINE_WIDTH * C_NUM_LINES) - 1:0] ramwaddr;
+    reg 					       ramenw;    
+    wire [$clog2(C_MAX_LINE_WIDTH * C_NUM_LINES) - 1:0] ramraddr;
     
-    wire [$clog2(C_NUM_LINES) - 1:0] 			line_lock = 0;
-    reg [$clog2(C_NUM_LINES)  - 1:0] 			memwr_line_cnt = 0;
-    reg [$clog2(C_NUM_LINES)  - 1 + 1:0] 		memrd_offs_cnt = 0;
-    reg [$clog2(C_NUM_LINES)  - 1:0] 			memrd_line = 0;
-    reg [15:0] 						wr_line_idx = 0;
-    reg [15:0] 						rd_line_idx = 0;
-    reg 						image_write_end = 1'b 0;  
+    reg [3:0] 						pix_inblk_cnt;
+    reg [3:0] 						pix_inblk_cnt_d1;
+    reg [2:0] 						line_inblk_cnt;
+    reg [12:0] 						read_block_cnt;
+    reg [12:0] 						read_block_cnt_d1;
+    wire [12:0] 					write_block_cnt;
+    
+    reg [16 + $clog2(C_NUM_LINES) - 1:0] 		ramraddr_int;
+    reg [16 + $clog2(C_NUM_LINES) - 1:0] 		raddr_base_line;
+    reg [15:0] 						raddr_tmp;
+    reg [$clog2(C_MAX_LINE_WIDTH * C_NUM_LINES) - 1:0] 	ramwaddr_d1;
+    
+    wire [$clog2(C_NUM_LINES) - 1:0] 			line_lock;
+    reg [$clog2(C_NUM_LINES)  - 1:0] 			memwr_line_cnt;
+    reg [$clog2(C_NUM_LINES)  - 1 + 1:0] 		memrd_offs_cnt;
+    reg [$clog2(C_NUM_LINES)  - 1:0] 			memrd_line;
+    reg [15:0] 						wr_line_idx;
+    reg [15:0] 						rd_line_idx;
+    reg 						image_write_end;  
    
    
     //-----------------------------------------------------------------
@@ -139,6 +138,7 @@ module BUF_FIFO
       (.d     (ramd),
        .waddr (ramwaddr_d1),
        .raddr (ramraddr),
+       .we    (ramenw),
        .clk   (CLK),
        .q     (ramq)
        );
@@ -297,7 +297,9 @@ module BUF_FIFO
   end
 
   // generate RAM data output based on 16 or 24 bit mode selection
-  assign fdct_fifo_q = C_PIXEL_BITS == 16 ? {ramq[15:11],3'b 000,ramq[10:5],2'b 00,ramq[4:0],3'b 000} : (((ramq)));
+  assign fdct_fifo_q = C_PIXEL_BITS == 16 ? {ramq[15:11],3'b 000,ramq[10:5],2'b 00,ramq[4:0],3'b 000} : 
+		                            (((ramq)));
+    
   assign ramraddr = ramraddr_int[$clog2(C_MAX_LINE_WIDTH * C_NUM_LINES) - 1:0];
    
   //-----------------------------------------------------------------

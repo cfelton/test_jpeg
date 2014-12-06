@@ -2,6 +2,8 @@
 from __future__ import division
 from __future__ import print_function
 
+import datetime
+
 from PIL import Image
 
 from myhdl import *
@@ -39,7 +41,9 @@ class JPEGEncV1(JPEGEnc):
 
         # set the encoder parameters 
         self.block_size = (16,8,)
-        
+
+        self.nout = args.nout
+        self.start_time = args.start_time
 
     def initialize(self, luminance=1, chrominance=1):
         """ initialize the encoder 
@@ -102,7 +106,7 @@ class JPEGEncV1(JPEGEnc):
 
 
                 # stream the image to the encoder
-                print("encode image %s %d x %d" % (str(img), nx, ny,))
+                print("V1: encode image %s %d x %d" % (str(img), nx, ny,))
                 for yy in xrange(0, ny):
                     for xx in xrange(0, nx):
                         self.iram_wren.next = False
@@ -138,16 +142,21 @@ class JPEGEncV1(JPEGEnc):
         @instance
         def t_bus_out():
             ii = 0
-            while True:
+            do_capture = True
+            while do_capture:
                 yield self.clock.posedge
                 if self.ram_wren:
-                    self._bitstream.append(self.ram_byte)
+                    self._bitstream.append(int(self.ram_byte))
                     ii += 1
 
                 #if ii > 10:
-                if self._enc_done:
-                    print("V1: end of bitstream")
+                if ((self.nout > 0 and ii >= self.nout) or self._enc_done):
                     yield self._outq.put(self._bitstream)
+                    do_capture = False
+
+                    end_time = datetime.datetime.now()
+                    dt = end_time - self.start_time
+                    print("V1: end of bitstream %s " % (dt,))
 
 
         return t_bus_out

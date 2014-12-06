@@ -5,28 +5,6 @@ from PIL import Image
 
 from myhdl import *
 from _SignalQueue import SignalQueue
-
-
-# @todo: create a generic base class with generic signals to 
-#    support the different versions.  Create specific classes
-#    for each encoder.  Each encoder will have a small adapter
-#    to drive the specific encoders interface
-class JPEGEnc(object):
-    
-    def __init__(self, clock, rest):
-        # pixel stream input
-        self.sof = Signal(bool(0))        # start of figure/frame
-        self.eof = Signal(bool(0))        # end of figure/frame
-        self.pxl = Signal(intbv(0)[24:])  # pixel bus
-        self.pbv = Signal(bool(0))        # pixel bus valid
-        
-        # bitstream output
-        self.sob = Signal(bool(0))        # start of bitstream
-        self.eob = Signal(bool(0))        # end of bitstream
-        self.bst = Signal(intbv(0)[32:])  # jpeg bitstream
-        self.pwrd = Signal(bool(0))       # partial word (always last)
-        self.pcnt = Signal(intbv(0)[4:])  # valid bits in last (partial) word
-
     
                  
 class JPEGEnc(object):

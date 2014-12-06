@@ -4,6 +4,7 @@ from __future__ import print_function
 import sys
 import os
 import random
+import datetime
 import argparse
 from argparse import Namespace
 
@@ -24,8 +25,10 @@ def test_jpegenc(args):
     jpgv2 = JPEGEncV2(clock, reset, args=args)
 
     # prepare the cosimulation
-    tbdut = prep_cosim(clock, reset, jpgv1, jpgv2, args=args)    
+    tbdut = prep_cosim(clock, reset, jpgv1, jpgv2, args=args)   
 
+    v1_bic,v2_bic = [None],[None]
+            
     @always(delay(10))
     def tbclk():
         clock.next = not clock
@@ -34,6 +37,9 @@ def test_jpegenc(args):
         # get the bus adapters to the encoders
         tbintf = (jpgv1.get_gens(), jpgv2.get_gens(),)
         finished = [Signal(bool(0)) for _ in range(2)]
+
+        # open the image for testing
+        img = Image.open(args.imgfn)
 
         def _pulse_reset():
             yield delay(13)
@@ -55,8 +61,20 @@ def test_jpegenc(args):
                 else:
                     wait = False
             
-            for ii in range(1000):
+            for ii in range(100):
                 yield clock.posedge
+
+            print("V1 bitstream, len %d" % (len(v1_bic[0]),))
+            for ii,bb in enumerate(v1_bic[0]):
+                print("  [%6d]  %08X" % (ii, int(bb),))
+                if ii > 4 and not args.dump_bitstreams:
+                    break;
+
+            print("V2 bitstream, len %d" % (len(v2_bic[0]),))
+            for ii,bb in enumerate(v2_bic[0]):
+                print("  [%6d]  %08X" % (ii, int(bb),))
+                if ii > 4 and not args.dump_bitstreams:
+                    break
 
             print("end simulation")
             raise StopSimulation
@@ -70,18 +88,16 @@ def test_jpegenc(args):
                 yield delay(10)
             yield delay(100)
             yield clock.posedge
+
             # initialize the JPEG encoder
             yield jpgv1.initialize()
-
             # send and image to be encoded
-            img = Image.open(args.imgfn)
             yield jpgv1.put_image(img)
-            bic = [None]
-            yield jpgv1.get_jpeg(bic)
+            yield jpgv1.get_jpeg(v1_bic)
             
-            while not jpgv1.done:
-                yield delay(1000)
-                yield clock.posedge            
+            #while not jpgv1.done:
+            #    yield delay(1000)
+            #    yield clock.posedge            
 
             finished[0].next = True
 
@@ -95,14 +111,12 @@ def test_jpegenc(args):
             yield delay(100)
             yield clock.posedge
 
-            img = Image.open(args.imgfn)
             yield jpgv2.put_image(img)
-            bic = [None]
-            yield jpgv2.get_jpeg(bic)
+            yield jpgv2.get_jpeg(v2_bic)
             
-            while not jpgv2.done:
-                yield delay(1000)
-                yield clock.posedge
+            #while not jpgv2.done:
+            #    yield delay(1000)
+            #    yield clock.posedge
 
             finished[1].next = True
 
@@ -133,14 +147,18 @@ if __name__ == '__main__':
 
     # setup arguments for the test (future capture from CLI)
     args = Namespace(
-        trace=False,          # enable tracing (debug)
-        vtrace=False,         # enable VCD tracing in Verilog cosim
-        vtrace_level=0,       # Verilog VCD dumpvars level
-        vtrace_module='tb_jpgenc', # Verilog VCD dumpvars module to trace
-        imgfn=ipth,           # image to test compression
-        build_only=False,     # compile the V* only, not test
-        build_skip_v1=False   # skip the V1 encoder compile
+        trace=False,           # enable tracing (debug)
+        vtrace=True,           # enable VCD tracing in Verilog cosim
+        vtrace_level=0,        # Verilog VCD dumpvars level
+        vtrace_module='tb_jpegenc', # Verilog VCD dumpvars module to trace
+        imgfn=ipth,            # image to test compression
+        build_only=False,      # compile the V* only, not test
+        build_skip_v1=False,   # skip the V1 encoder compile
+        nout=800,              # number of encoded outputs to capture (debug mode)
+        dump_bitstreams=False, # dump full bitstreams at the end
     )
+
+    args.start_time = datetime.datetime.now()
 
     # run the JPEG encoder test
     test_jpegenc(args)
