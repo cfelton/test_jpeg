@@ -81,10 +81,10 @@ module SingleSM
  output wire [1:0] fsm_o
 );
 
-// from/to SM(m)
-// from/to SM(m+1)
-// from/to processing block
-// state debug
+    // from/to SM(m)
+    // from/to SM(m+1)
+    // from/to processing block
+    // state debug
 
     parameter [1:0]
       IDLE = 0,

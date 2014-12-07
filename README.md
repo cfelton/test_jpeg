@@ -4,6 +4,12 @@
 Current Status
 ==============
  
+   07-Dec-2014 : Neither encoder completes successfully a small image
+     test, currently debugging (design1 (v1) conversion complete need
+     to find any errors in conversion).  The test environment will 
+     stream the image in and complete shortly after the image has 
+     been streamed in.
+
    05-Dec-2014 : Design1 conversion to verilog is mostly complete, 
      spending some time verifying.
 
@@ -11,18 +17,25 @@ Current Status
      the design1 and design2 encoders.  The output is not interrogated
      (yet).  Design1 conversion to verilog is incomplete.
 
+
 Things to be completed
 ----------------------
 
-   #. [ ] Check encoded bitstreams, determine metrics to compare 
+   1. [ ] Check encoded bitstreams, determine metrics to compare 
           encoders.
-   #. [X] Finish converting desing 1 to Verilog.
+
+   1. [ ] Debug the small test image, neither encoder appears to
+          finish.
+
+   1. [X] Finish converting desing1 to Verilog.
+
 
 Introduction
 ============
 This repository contains a verification environment to functionally
 verify and compare a couple different hardware JPEG encoders.  The 
 JPEG encoders used are the cores available at open-cores.
+
 
 Verification Environment
 ========================
@@ -34,14 +47,16 @@ similar settings.
 In the future the output of the various encoders will be compared to 
 each other.
 
+
 JPEG Encoders
 =============
-  - jpegenc_v1: is the VHDL JPEG encoder converted to Verilog
-  - jpegenc_v2: is the Verilog JPEG encoder.
-  - jpegenc_v3: WIP design3 jpeg encoder
-  - jpegenc_v4: <future> jpeg2k encoder
 
-(@todo: the above need better names)
+   - jpegenc_v1: is the VHDL JPEG encoder converted to Verilog
+   - jpegenc_v2: is the Verilog JPEG encoder.
+   - jpegenc_v3: WIP design3 jpeg encoder
+   - jpegenc_v4: <future> jpeg2k encoder
+
+(@todo: the above need better names?)
 
 
 Getting Started

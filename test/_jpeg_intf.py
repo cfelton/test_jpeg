@@ -40,28 +40,32 @@ class JPEGEnc(object):
         self._outq = SignalQueue()
         self._bitstream = []
 
-    def _ext8(self, img):
-        """ extend an image to be a multiple of 8 pixels
+        self.pxl_done = Signal(bool(0))  # streaming pixels in finished
+        self.enc_done = Signal(bool(0))  # encoder is done encoding
+
+
+    def _ext(self, img, N=16):
+        """ extend an image to be a multiple of N pixels
         """
         w,h = img.size
-        w8,h8 = w+(8-w%8), h+(8-h%8)
-        nimg = Image.new("RGB", (w8,h8,))
+        we,he = w+(N-w%N), h+(N-h%N)
+        nimg = Image.new("RGB", (we,he,))
         nimg.paste(img, (0,0,))
         return nimg
 
 
     def put_image(self, img):
-        """
+        """ put an image to stream into the encoder
         """
         assert img.mode == 'RGB'
-        nimg = self._ext8(img)
+        nimg = self._ext(img, N=16)
         self._bitstream = []
         yield self._inq.put(nimg)
         yield self.clock.posedge
 
 
     def get_jpeg(self, bic):
-        """
+        """ retrieve the encoded bitstream
         """
         assert isinstance(bic, list)
         yield self._outq.get(bic, block=True)

@@ -36,14 +36,14 @@ class JPEGEncV1(JPEGEnc):
         self.frame_size = Signal(intbv(0)[24:])           # output
         
         self.opb = OPBBus(clock, reset)
-
-        self._enc_done = Signal(bool(0))
+        self._enc_done = False   
 
         # set the encoder parameters 
         self.block_size = (16,8,)
 
         self.nout = args.nout
         self.start_time = args.start_time
+
 
     def initialize(self, luminance=1, chrominance=1):
         """ initialize the encoder 
@@ -93,7 +93,7 @@ class JPEGEncV1(JPEGEnc):
                 # get the an image to be streamed to the encoder
                 imglst = [None]
                 yield self._inq.get(imglst, block=True)
-                self.done.next = False
+                self.pxl_done.next = False
                 img = imglst[0]
                 nx,ny = img.size
 
@@ -124,11 +124,21 @@ class JPEGEncV1(JPEGEnc):
                 self.iram_wren.next = False
                 self.iram_wdata.next = 0     
                 # writing is complete
-                self.done.next = True        
+                self.pxl_done.next = True       
+                end_time = datetime.datetime.now()
+                dt = end_time - self.start_time
+                print("V1: end pixel stream %s " % (dt,))
+
 
                 # wait for the encoder to be completed
+                self.iram_wdata.next = 0
                 cd = Signal(bool(0))
                 while not cd:
+                    # @todo: keep writing zeros till complete???
+                    if self.iram_fifo_afull:
+                        self.iram_wren.next = False
+                    else:
+                        self.iram_wren.next = True
                     self.check_done(cd)
                     yield self.clock.posedge
 
@@ -136,7 +146,7 @@ class JPEGEncV1(JPEGEnc):
 
 
     def stream_jpg_out(self):
-        """
+        """ capture the encoded bitstream
         """
 
         @instance
@@ -157,7 +167,7 @@ class JPEGEncV1(JPEGEnc):
                     end_time = datetime.datetime.now()
                     dt = end_time - self.start_time
                     print("V1: end of bitstream %s " % (dt,))
-
+                    self.enc_done.next = True
 
         return t_bus_out
 

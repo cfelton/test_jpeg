@@ -50,7 +50,7 @@ class JPEGEncV2(JPEGEnc):
             while True:
                 imglst = [None]
                 yield self._inq.get(imglst, block=True)
-                self.done.next = False
+                self.pxl_done.next = False
                 img = imglst[0]
                 nx,ny = img.size
                 print("V2: encode image %s %d x %d" % (str(img), nx, ny,))
@@ -80,15 +80,19 @@ class JPEGEncV2(JPEGEnc):
                         yield self.clock.posedge                                        
                         
 
-                self.done.next = True
+                self.pxl_done.next = True
                 self.data_in.next = 0
                 self.end_of_file_signal.next = False
+                end_time = datetime.datetime.now()
+                dt = end_time - self.start_time
+                print("V2: end pixel stream %s " % (dt,))
+
 
         return t_bus_in
 
 
     def stream_jpg_out(self):
-        """
+        """ capture the encoded bitstream
         """
         
         @instance
@@ -110,6 +114,7 @@ class JPEGEncV2(JPEGEnc):
                     end_time = datetime.datetime.now()
                     dt = end_time - self.start_time
                     print("V2: end of bitstream %s " % (dt,))
+                    self.enc_done.next = True
 
         return t_bus_out
 

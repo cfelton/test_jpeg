@@ -340,7 +340,6 @@ module CtrlSM
 	      COMP : begin
 		  if(idle[1] == 1'b1 && start[1] == 1'b0) begin
 		      if(RSM_cmp_idx < ((CMP_MAX))) begin
-			  // 
 		      	  start_sm <= 1'b1;
 		      end
 		      else begin
