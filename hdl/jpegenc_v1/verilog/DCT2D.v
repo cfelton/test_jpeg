@@ -73,7 +73,7 @@
 
 module DCT2D
 #(
-  /// @todo: these were constnats from MDCT_PKG, not sure if
+  /// @todo: these were constants from MDCT_PKG, not sure if
   ///    this should be repeated in each module or in a header
   ///    (ugh preprocessor) not sure if iverilog supports SV pkg.
   parameter IP_W        = 8,  

@@ -66,65 +66,65 @@ module FIFO
  output wire fullo,
  output wire emptyo,
  output wire [ADDR_WIDTH:0] count
-
 );
 
 
-reg [ADDR_WIDTH - 1:0] raddr_reg;
-reg [ADDR_WIDTH - 1:0] waddr_reg;
-reg [ADDR_WIDTH:0] count_reg;
-wire rd_en_reg;
-wire wr_en_reg;
-reg empty_reg;
-reg full_reg;
-wire [DATA_WIDTH - 1:0] ramq;
-wire [DATA_WIDTH - 1:0] ramd;
-wire [ADDR_WIDTH - 1:0] ramwaddr;
-wire ramenw;
-wire [ADDR_WIDTH - 1:0] ramraddr;
-wire ramenr;
-parameter ZEROS_C = 0;
-parameter ONES_C = 1;
+    reg [ADDR_WIDTH - 1:0]  raddr_reg;
+    reg [ADDR_WIDTH - 1:0]  waddr_reg;
+    reg [ADDR_WIDTH:0] 	    count_reg;
+    wire 		    rd_en_reg;
+    wire 		    wr_en_reg;
+    reg 		    empty_reg;
+    reg 		    full_reg;
+    
+    wire [DATA_WIDTH - 1:0] ramq;
+    wire [DATA_WIDTH - 1:0] ramd;
+    wire [ADDR_WIDTH - 1:0] ramwaddr;
+    wire 		    ramenw;
+    wire [ADDR_WIDTH - 1:0] ramraddr;
+    wire 		    ramenr;
+    
+    parameter ZEROS_C = 0;
+    parameter ONES_C  = 1;
 
-  //U_RAMF : RAMF
-  //generic map (
-  //         RAMD_W => DATA_WIDTH,
-  //         RAMA_W => ADDR_WIDTH
-  //)   
-  //port map (      
-  //      d            => ramd,               
-  //      waddr        => ramwaddr,     
-  //      raddr        => ramraddr,     
-  //      we           => ramenw,     
-  //      clk          => clk,     
-  //      
-  //      q            => ramq     
-  //); 
-  assign ramd = datai;
-  assign ramwaddr = (waddr_reg);
-  assign ramenw = wr_en_reg;
-  assign ramraddr = (raddr_reg);
-  assign ramenr = 1'b 1;
-  assign datao = ramq;
-  assign emptyo = empty_reg;
-  assign fullo = full_reg;
-  assign rd_en_reg = (rinc &  ~empty_reg);
-  assign wr_en_reg = (winc &  ~full_reg);
-  assign count = (count_reg);
-  always @(posedge clk) begin
-    if(rst == 1'b 1) begin
-      empty_reg <= 1'b 1;
-    end
-    else begin
-      if(count_reg == ((ZEROS_C)) || (count_reg == 1 && rd_en_reg == 1'b 1 && wr_en_reg == 1'b 0)) begin
-        empty_reg <= 1'b 1;
-      end
-      else begin
-        empty_reg <= 1'b 0;
-      end
-    end
-  end
+    RAMF
+      #(.RAMD_W(DATA_WIDTH), .RAMA_W(ADDR_WIDTH))
+    U_RAMF
+      (.d      (ramd),
+       .waddr  (ramwaddr),
+       .raddr  (ramraddr),
+       .we     (ramenw),
+       .clk    (clk),
+       .q      (ramq)
+       );
 
+    
+    assign ramd = datai;
+    assign ramwaddr = (waddr_reg);
+    assign ramenw = wr_en_reg;
+    assign ramraddr = (raddr_reg);
+    assign ramenr = 1'b 1;
+    assign datao = ramq;
+    assign emptyo = empty_reg;
+    assign fullo = full_reg;
+    assign rd_en_reg = (rinc &  ~empty_reg);
+    assign wr_en_reg = (winc &  ~full_reg);
+    assign count = (count_reg);
+    
+    always @(posedge clk) begin
+	if(rst == 1'b 1) begin
+	    empty_reg <= 1'b 1;
+	end
+	else begin
+	    if(count_reg == ((ZEROS_C)) || (count_reg == 1 && rd_en_reg == 1'b 1 && wr_en_reg == 1'b 0)) begin
+		empty_reg <= 1'b 1;
+	    end
+	    else begin
+		empty_reg <= 1'b 0;
+	    end
+	end
+    end
+    
     always @(posedge clk) begin
 	if(rst == 1'b 1) begin
 	    full_reg <= 1'b 0;
@@ -140,46 +140,45 @@ parameter ONES_C = 1;
 	    end	      
 	end
     end
-
-  always @(posedge clk) begin
-    if(rst == 1'b 1) begin
-      raddr_reg <= {(((ADDR_WIDTH - 1))-((0))+1){1'b0}};
+    
+    always @(posedge clk) begin
+	if(rst == 1'b1) begin
+	    raddr_reg <= {(((ADDR_WIDTH - 1))-((0))+1){1'b0}};
     end
-    else begin
-      if((rd_en_reg == 1'b 1)) begin
-        raddr_reg <= raddr_reg + ((1));
-        // ADDR_WIDTH
-      end
+	else begin
+	    if((rd_en_reg == 1'b 1)) begin
+		raddr_reg <= raddr_reg + 1;
+	    end
+	end
     end
-  end
-
-  always @(posedge clk) begin
-    if(rst == 1'b 1) begin
-      waddr_reg <= {(((ADDR_WIDTH - 1))-((0))+1){1'b0}};
+    
+    always @(posedge clk) begin
+	if(rst == 1'b1) begin
+	    waddr_reg <= {(((ADDR_WIDTH - 1))-((0))+1){1'b0}};
     end
-    else begin
-      if(wr_en_reg == 1'b 1) begin
-        waddr_reg <= waddr_reg + ((1));
-        // ADDR_WIDTH
-      end
+	else begin
+	    if(wr_en_reg == 1'b1) begin
+		waddr_reg <= waddr_reg + 1;
+	    end
+	end
     end
-  end
-
-  always @(posedge clk) begin
-    if(rst == 1'b 1) begin
-      count_reg <= {(((ADDR_WIDTH))-((0))+1){1'b0}};
-    end
-    else begin
-      if((rd_en_reg == 1'b 1 && wr_en_reg == 1'b 0) || (rd_en_reg == 1'b 0 && wr_en_reg == 1'b 1)) begin
-        if(rd_en_reg == 1'b 1) begin
-          count_reg <= count_reg - ((1));
+    
+    always @(posedge clk) begin
+	if(rst == 1'b1) begin
+	    count_reg <= {(((ADDR_WIDTH))-((0))+1){1'b0}};
         end
-        else begin
-          count_reg <= count_reg + ((1));
-        end
-      end
+	else begin
+	    if((rd_en_reg == 1'b1 && wr_en_reg == 1'b0) || 
+	       (rd_en_reg == 1'b0 && wr_en_reg == 1'b1)) begin
+		if(rd_en_reg == 1'b 1) begin
+		    count_reg <= count_reg - 1;
+		end
+		else begin
+		    count_reg <= count_reg + 1;
+		end
+	    end
+	end
     end
-  end
-
+    
 
 endmodule

@@ -67,92 +67,48 @@
 // ///  * http://copyfree.org/licenses/mit/license.txt
 // ///
 // //////////////////////////////////////////////////////////////////////////////
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//--------------------------------- LIBRARY/PACKAGE ---------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-// generic packages/libraries:
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-// user packages/libraries:
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//--------------------------------- ENTITY ------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
+
 // no timescale needed
 
 module ZZ_TOP
 (
- CLK,
- RST,
- start_pb,
- ready_pb,
- qua_buf_sel,
- qua_rdaddr,
- qua_data,
- fdct_buf_sel,
- fdct_rd_addr,
- fdct_data,
- fdct_rden
- );
-
-   input CLK;
-   input RST;
-   // CTRL
-   input start_pb;
-   output ready_pb;
-   // @todo: can't use record, break it down to the 3 members.
-   //    port is currently unused.
-   //zig_sm_settings    : in  T_SM_SETTINGS;
-   // Quantizer
-   input  qua_buf_sel;
-   input [5:0] qua_rdaddr;
-   output [11:0] qua_data;
-   // FDCT
-   output 	 fdct_buf_sel;
-   output [5:0]  fdct_rd_addr;
-   input [11:0]  fdct_data;
-   output 	 fdct_rden;
-
-   wire 	 CLK;
-   wire 	 RST;
-   wire 	 start_pb;
-   reg 		 ready_pb;
-   wire 	 qua_buf_sel;
-   wire [5:0] 	 qua_rdaddr;
-   wire [11:0] 	 qua_data;
-   wire 	 fdct_buf_sel;
-   wire [5:0] 	 fdct_rd_addr;
-   wire [11:0] 	 fdct_data;
-   wire 	 fdct_rden;
+ input wire 	    CLK,
+ input wire 	    RST,
+ // CTRL
+ input wire 	    start_pb,
+ output reg 	    ready_pb,
+ // Quantizer
+ input wire 	    qua_buf_sel,
+ input wire [5:0]   qua_rdaddr,
+ output wire [11:0] qua_data,
+ // FDCT
+ output wire 	    fdct_buf_sel,
+ output wire [5:0]  fdct_rd_addr,
+ input wire [11:0]  fdct_data,
+ output wire 	    fdct_rden
+ );   
    
-   
-   //-----------------------------------------------------------------------------
-   //-----------------------------------------------------------------------------
-   //--------------------------------- ARCHITECTURE ------------------------------
-   //-----------------------------------------------------------------------------
-   //-----------------------------------------------------------------------------
    wire [11:0] 	 dbuf_data;
    wire [11:0] 	 dbuf_q;
    wire 	 dbuf_we;
    wire [6:0] 	 dbuf_waddr;
    wire [6:0] 	 dbuf_raddr;
+    
    wire [11:0] 	 zigzag_di;
    wire 	 zigzag_divalid;
    wire [11:0] 	 zigzag_dout;
    wire 	 zigzag_dovalid;
+    
    reg [5:0] 	 wr_cnt = 0;
-   reg [5:0] 	 rd_cnt = 0;
+   reg [5:0] 	 rd_cnt = 0;    
    reg [5:0] 	 rd_en_d;
    reg 		 rd_en;
+    
    reg 		 fdct_buf_sel_s;
    wire [5:0] 	 zz_rd_addr;
    wire 	 fifo_empty;
-   reg 		 fifo_rden;  
+   reg 		 fifo_rden;
+    
    //-----------------------------------------------------------------------------
    // Architecture: begin
    //-----------------------------------------------------------------------------
@@ -168,39 +124,18 @@ module ZZ_TOP
    ZIGZAG 
      #(.RAMADDR_W(16), .RAMDATA_W(12))
    U_ZIGZAG
-     (.rst(RST),
-      .clk(CLK),
-      .di(zigzag_di),
-      .divalid(zigzag_divalid),
-      .rd_addr(rd_cnt),
-      .fifo_rden(fifo_rden),
-      .fifo_empty(fifo_empty),
-      .dout(zigzag_dout),
-      .dovalid(zigzag_dovalid),
-      .zz_rd_addr(zz_rd_addr)
+     (.rst        (RST),
+      .clk        (CLK),
+      .di         (zigzag_di),
+      .divalid    (zigzag_divalid),
+      .rd_addr    (rd_cnt),
+      .fifo_rden  (fifo_rden),
+      .fifo_empty (fifo_empty),
+      .dout       (zigzag_dout),
+      .dovalid    (zigzag_dovalid),
+      .zz_rd_addr (zz_rd_addr)
       );
-   
-   //U_zigzag : entity work.zigzag
-   //generic map
-   //  ( 
-   //    RAMADDR_W     => 6,
-   //    RAMDATA_W     => 12
-   //  )
-   //port map
-   //  (
-   //    rst        => RST,
-   //    clk        => CLK,
-   //    di         => zigzag_di,
-   //    divalid    => zigzag_divalid,
-   //    rd_addr    => rd_cnt,
-   //    fifo_rden  => fifo_rden,
-   //    
-   //    fifo_empty => fifo_empty,
-   //    dout       => zigzag_dout,
-   //    dovalid    => zigzag_dovalid,
-   //    zz_rd_addr => zz_rd_addr
-   //  );
-   
+      
    assign zigzag_di = fdct_data;
    assign zigzag_divalid = rd_en_d[1];
     
@@ -218,24 +153,7 @@ module ZZ_TOP
       .clk(CLK),
       .q(dbuf_q)
       );
-   
-   //U_RAMZ : entity work.RAMZ
-   //generic map
-   //( 
-   //    RAMADDR_W     => 7,
-   //    RAMDATA_W     => 12
-   //)
-   //port map
-   //(      
-   //      d           => dbuf_data,
-   //      waddr       => dbuf_waddr,
-   //      raddr       => dbuf_raddr,
-   //      we          => dbuf_we,
-   //      clk         => CLK,
-   //                  
-   //      q           => dbuf_q
-   //);
-   
+      
    assign dbuf_data = zigzag_dout;
    assign dbuf_waddr = {( ~qua_buf_sel),(wr_cnt)};
    assign dbuf_we = zigzag_dovalid;
@@ -292,14 +210,14 @@ module ZZ_TOP
    always @(posedge CLK or posedge RST) begin
       if(RST == 1'b1) begin
 	 wr_cnt <= {6{1'b0}};
-         ready_pb <= 1'b 0;
+         ready_pb <= 1'b0;
       end 
       else begin
-	 ready_pb <= 1'b 0;
-	 if(start_pb == 1'b 1) begin
+	 ready_pb <= 1'b0;
+	 if(start_pb == 1'b1) begin
             wr_cnt <= {6{1'b0}};
          end
-	 if(zigzag_dovalid == 1'b 1) begin
+	 if(zigzag_dovalid == 1'b1) begin
             if(wr_cnt == (64 - 1)) begin
                wr_cnt <= {6{1'b0}};
 	     end
@@ -308,7 +226,7 @@ module ZZ_TOP
             end
             // give ready ahead to save cycles!
             if(wr_cnt == (64 - 1 - 3)) begin
-               ready_pb <= 1'b 1;
+               ready_pb <= 1'b1;
             end
 	 end
       end

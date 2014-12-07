@@ -90,30 +90,6 @@ module ZIGZAG
  output reg [5:0] 	       zz_rd_addr
 );
        
-   // @todo: need to manually convert the ZIGZIG RAM'r
-   //type ZIGZAG_TYPE is   array (0 to 2**RAMADDR_W-1) of INTEGER range 0 to 2**RAMADDR_W-1;
-   //constant ZIGZAG_ARRAY : ZIGZAG_TYPE := 
-   //                    (
-   //                     0,1,8,16,9,2,3,10, 
-   //                     17,24,32,25,18,11,4,5,
-   //                     12,19,26,33,40,48,41,34,
-   //                     27,20,13,6,7,14,21,28,
-   //                     35,42,49,56,57,50,43,36,
-   //                     29,22,15,23,30,37,44,51,
-   //                     58,59,52,45,38,31,39,46,
-   //                     53,60,61,54,47,55,62,63
-   //                    );
-   reg [5:0] ZIGZAG_ARRAY [0:64];
-   initial begin
-      ZIGZAG_ARRAY[0] = 0;    ZIGZAG_ARRAY[1] = 1;   ZIGZAG_ARRAY[2] = 8;   ZIGZAG_ARRAY[3] = 16;
-      ZIGZAG_ARRAY[4] = 9;    ZIGZAG_ARRAY[5] = 2;   ZIGZAG_ARRAY[6] = 3;   ZIGZAG_ARRAY[7] = 10;
-
-      ZIGZAG_ARRAY[8]  = 17;  ZIGZAG_ARRAY[9]  = 24; ZIGZAG_ARRAY[10] = 32; ZIGZAG_ARRAY[11] = 25;
-      ZIGZAG_ARRAY[12] = 18;  ZIGZAG_ARRAY[13] = 11; ZIGZAG_ARRAY[14] = 4;  ZIGZAG_ARRAY[15] = 5;
-
-      // @todo: ...
-   end
-   
    wire 		    fifo_wr;
    wire [11:0] 		    fifo_q;
    wire 		    fifo_full;
@@ -123,61 +99,42 @@ module ZIGZAG
    
    assign dout = fifo_q;
    assign fifo_empty = fifo_empty_s;
+    
    //-----------------------------------------------------------------
    // FIFO (show ahead)
    //-----------------------------------------------------------------
-     FIFO
-    #(.DATA_WIDTH(12),
-      .ADDR_WIDTH(6)
-      )
-   U_FIFO
-     (.rst(RST),
-      .clk(CLK),
-      .rinc(fifo_rden),
-      .winc(fifo_wr),
-      .datai(fifo_data_in),
-      .datao(fifo_q),
-      .fullo(fifo_full),
-      .emptyo(fifo_empty_s),
-      .count(fifo_count)
-      );   
-      
-   //U_FIFO : entity work.FIFO   
-   //generic map
-   //(
-   //      DATA_WIDTH        => 12,
-   //      ADDR_WIDTH        => 6
-   //)
-   //port map 
-   //(        
-   //      rst               => RST,
-   //      clk               => CLK,
-   //      rinc              => fifo_rden,
-   //      winc              => fifo_wr,
-   //      datai             => fifo_data_in,
-   //
-   //      datao             => fifo_q,
-   //      fullo             => fifo_full,
-   //      emptyo            => fifo_empty_s,
-   //      count             => fifo_count
-   //);
-   
-   assign fifo_wr = divalid;
-   assign fifo_data_in = di;
-   always @(posedge clk) begin
-      if(rst == 1'b 1) begin
-	 zz_rd_addr <= {6{1'b0}};
-      dovalid <= 1'b 0;
-   end
-      else begin
-	 //
-	 //zz_rd_addr <= std_logic_vector(
-	 //              to_unsigned((ZIGZAG_ARRAY(to_integer(rd_addr))),6));
-	 zz_rd_addr <= ZIGZAG_ARRAY[rd_addr];	 
-	 dovalid <= fifo_rden &  ~fifo_empty_s;
-      end
-   end
-   
-   //------------------------------------------------------------------------------
+    FIFO
+      #(.DATA_WIDTH(12),
+	.ADDR_WIDTH(6)
+	)
+    U_FIFO
+      (.rst     (rst),
+       .clk     (clk),
+       .rinc    (fifo_rden),
+       .winc    (fifo_wr),
+       .datai   (fifo_data_in),
+       .datao   (fifo_q),
+       .fullo   (fifo_full),
+       .emptyo  (fifo_empty_s),
+       .count   (fifo_count)
+       );   
+    
+    assign fifo_wr = divalid;
+    assign fifo_data_in = di;
+
+    wire [5:0] 	_zz_rd_addr;
+    m_zz_rom U_ZZ_ROM
+      (.rd_addr(rd_addr), .zz_rd_addr(_zz_rd_addr));
+    
+    always @(posedge clk) begin
+	if(rst == 1'b1) begin
+	    zz_rd_addr <= {6{1'b0}};
+            dovalid <= 1'b0;
+        end
+	else begin
+	    zz_rd_addr <= _zz_rd_addr; 
+	    dovalid <= fifo_rden &  ~fifo_empty_s;
+	end
+    end   
    
 endmodule

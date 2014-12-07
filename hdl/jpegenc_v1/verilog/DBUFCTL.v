@@ -71,41 +71,41 @@
 // //////////////////////////////////////////////////////////////////////////////
 // no timescale needed
 
-module DBUFCTL(
-input wire clk,
-input wire rst,
-input wire wmemsel,
-input wire rmemsel,
-input wire datareadyack,
-output wire memswitchwr,
-output wire memswitchrd,
-output reg dataready
+module DBUFCTL
+(
+ input wire  clk,
+ input wire  rst,
+ input wire  wmemsel,
+ input wire  rmemsel,
+ input wire  datareadyack,
+ output wire memswitchwr,
+ output wire memswitchrd,
+ output reg  dataready
 );
 
 
+    reg      memswitchwr_reg;
+    wire     memswitchrd_reg;
 
-
-reg memswitchwr_reg;
-wire memswitchrd_reg;
-
-  assign memswitchwr = memswitchwr_reg;
-  assign memswitchrd = memswitchrd_reg;
-  assign memswitchrd_reg = rmemsel;
-  always @(posedge clk or posedge rst) begin
-    if(rst == 1'b 1) begin
-      memswitchwr_reg <= 1'b 0;
-      // initially mem 1 is selected
-      dataready <= 1'b 0;
-    end else begin
-      memswitchwr_reg <= wmemsel;
-      if(wmemsel != memswitchwr_reg) begin
-        dataready <= 1'b 1;
-      end
-      if(datareadyack == 1'b 1) begin
-        dataready <= 1'b 0;
-      end
+    assign memswitchwr = memswitchwr_reg;
+    assign memswitchrd = memswitchrd_reg;
+    assign memswitchrd_reg = rmemsel;
+    
+    always @(posedge clk or posedge rst) begin
+	if(rst == 1'b 1) begin
+	    memswitchwr_reg <= 1'b0;
+	    // initially mem 1 is selected
+	    dataready <= 1'b0;
+	end 
+	else begin
+	    memswitchwr_reg <= wmemsel;
+	    if(wmemsel != memswitchwr_reg) begin
+		dataready <= 1'b1;
+	    end
+	    if(datareadyack == 1'b1) begin
+		dataready <= 1'b0;
+	    end
+	end
     end
-  end
-
 
 endmodule

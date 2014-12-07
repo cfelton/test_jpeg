@@ -70,118 +70,112 @@
 //------------------------------------------------------------------------------
 // no timescale needed
 
-module quantizer(
-input wire rst,
-input wire clk,
-input wire [SIZE_C - 1:0] di,
-input wire divalid,
-input wire [7:0] qdata,
-input wire [6:0] qwaddr,
-input wire qwren,
-input wire [2:0] cmp_idx,
-output wire [SIZE_C - 1:0] do,
-output wire dovalid
+module quantizer
+#(
+  parameter SIZE_C     = 12,
+  parameter RAMQADDR_W = 7,
+  parameter RAMQDATA_W = 8
+)
+(
+ input wire 		    rst,
+ input wire 		    clk,
+ input wire [SIZE_C - 1:0]  di,
+ input wire 		    divalid,
+ input wire [7:0] 	    qdata,
+ input wire [6:0] 	    qwaddr,
+ input wire 		    qwren,
+ input wire [2:0] 	    cmp_idx,
+ output wire [SIZE_C - 1:0] doq,
+ output wire 		    dovalid
 );
 
-parameter [31:0] SIZE_C=12;
-parameter [31:0] RAMQADDR_W=7;
-parameter [31:0] RAMQDATA_W=8;
-
-
-
-parameter INTERN_PIPE_C = 3;
-reg [RAMQADDR_W - 2:0] romaddr_s = 0;
-wire [RAMQADDR_W - 1:0] slv_romaddr_s = 0;
-wire [RAMQDATA_W - 1:0] romdatao_s = 0;
-wire [SIZE_C - 1:0] divisor_s = 0;
-wire [SIZE_C - 1:0] remainder_s = 0;
-wire [SIZE_C - 1:0] do_s = 0;
-wire round_s = 1'b 0;
-reg [SIZE_C - 1:0] di_d1 = 0;
-reg [4:0] pipeline_reg = 0;
-reg [SIZE_C + INTERN_PIPE_C + 1 - 1:0] sign_bit_pipe = 0;
-wire [SIZE_C - 1:0] do_rdiv = 0;
-reg table_select = 1'b 0;
-
-  //--------------------------
-  // RAMQ
-  //--------------------------
-  // @todo manually instantiate
-  //U_RAMQ : entity work.RAMZ
-  //  generic map
-  //  (
-  //    RAMADDR_W    => RAMQADDR_W,
-  //    RAMDATA_W    => RAMQDATA_W
-  //  )
-  //  port map
-  //  (
-  //    d           => qdata,
-  //    waddr       => qwaddr,
-  //    raddr       => slv_romaddr_s,
-  //    we          => qwren,
-  //    clk         => CLK,
-  //                
-  //    q           => romdatao_s
-  //  );
-  assign divisor_s[RAMQDATA_W - 1:0] = romdatao_s;
-  assign divisor_s[SIZE_C - 1:RAMQDATA_W] = {(((SIZE_C - 1))-((RAMQDATA_W))+1){1'b0}};
-  // @todo manually instantiate
-  //r_divider : entity work.r_divider
-  //port map
-  //(
-  //     rst   => rst,
-  //     clk   => clk,
-  //     a     => di_d1,     
-  //     d     => romdatao_s,    
-  //           
-  //     q     => do_s
-  //) ;
-  assign do = do_s;
-  assign slv_romaddr_s = {table_select,(romaddr_s)};
-  //----------------------------
-  // Quantization sub table select
-  //----------------------------
-  always @(posedge clk) begin
-    if(rst == 1'b 1) begin
-      table_select <= 1'b 0;
+    parameter INTERN_PIPE_C = 3;
+    localparam M = SIZE_C + INTERN_PIPE_C + 1;
+    
+    reg [RAMQADDR_W - 2:0]  romaddr_s;
+    wire [RAMQADDR_W - 1:0] slv_romaddr_s;
+    wire [RAMQDATA_W - 1:0] romdatao_s;
+    wire [SIZE_C - 1:0]     divisor_s;
+    wire [SIZE_C - 1:0]     remainder_s;
+    wire [SIZE_C - 1:0]     do_s;
+    wire 		    round_s;
+    reg [SIZE_C - 1:0] 	    di_d1;
+    reg [4:0] 		    pipeline_reg;
+    reg [M - 1:0] 	    sign_bit_pipe;
+    
+    wire [SIZE_C - 1:0]     do_rdiv;
+    reg 		    table_select;
+    
+    //--------------------------
+    // RAMQ
+    //--------------------------
+    RAMZ
+      #(.RAMADDR_W(RAMQADDR_W), .RAMDATA_W(RAMQDATA_W))
+    U_RAMQ
+      (.d     (qdata         ),
+       .waddr (qwaddr	     ),
+       .raddr (slv_romaddr_s ),
+       .we    (qwren	     ),
+       .clk   (clk	     ),
+       .q     (romdatao_s    )
+       );
+    
+    assign divisor_s[RAMQDATA_W - 1:0] = romdatao_s;
+    assign divisor_s[SIZE_C - 1:RAMQDATA_W] = {(((SIZE_C - 1))-((RAMQDATA_W))+1){1'b0}};
+    
+    r_divider U_r_divider
+      (.rst(rst),
+       .clk(clk),
+       .a(di_d1),
+       .d(romdatao_s),
+       .q(do_s)
+       );
+    
+    assign doq = do_s;
+    assign slv_romaddr_s = {table_select,(romaddr_s)};
+    
+    //----------------------------
+    // Quantization sub table select
+    //----------------------------
+    always @(posedge clk) begin
+	if(rst == 1'b1) begin
+	    table_select <= 1'b0;
+	end
+	else begin
+	    // luminance table select
+	    if(cmp_idx < 2) begin
+		table_select <= 1'b0;
+		// chrominance table select
+	    end
+	    else begin
+		table_select <= 1'b1;
+	    end
+	end
     end
-    else begin
-      // luminance table select
-      if(cmp_idx < 2) begin
-        table_select <= 1'b 0;
-        // chrominance table select
-      end
-      else begin
-        table_select <= 1'b 1;
-      end
+    
+    //--------------------------
+    // address incrementer
+    //--------------------------
+    always @(posedge clk) begin
+	if(rst == 1'b1) begin
+	    romaddr_s <= {(((RAMQADDR_W - 2))-((0))+1){1'b0}};
+	    pipeline_reg <= {5{1'b0}};
+            di_d1 <= {(((SIZE_C - 1))-((0))+1){1'b0}};
+            sign_bit_pipe <= {(((SIZE_C + INTERN_PIPE_C + 1 - 1))-((0))+1){1'b0}};
+        end
+        else begin
+	    if(divalid == 1'b1) begin
+		romaddr_s <= romaddr_s + 1;
+	    end
+	    //pipeline_reg <= pipeline_reg(pipeline_reg'length-2 downto 0) & divalid;
+	    pipeline_reg <= {pipeline_reg[5 - 2:0], divalid};
+	    di_d1 <= di;
+	    sign_bit_pipe <= sign_bit_pipe[M-2 : 0];
+	end
     end
-  end
 
-  //--------------------------
-  // address incrementer
-  //--------------------------
-  always @(posedge clk) begin
-    if(rst == 1'b 1) begin
-      romaddr_s <= {(((RAMQADDR_W - 2))-((0))+1){1'b0}};
-      pipeline_reg <= {5{1'b0}};
-      di_d1 <= {(((SIZE_C - 1))-((0))+1){1'b0}};
-      sign_bit_pipe <= {(((SIZE_C + INTERN_PIPE_C + 1 - 1))-((0))+1){1'b0}};
-    end
-    else begin
-      if(divalid == 1'b 1) begin
-        // @todo fix
-        //romaddr_s <= romaddr_s + TO_UNSIGNED(1,romaddr_s'length);
-      end
-      //pipeline_reg <= pipeline_reg(pipeline_reg'length-2 downto 0) & divalid;
-      pipeline_reg <= {pipeline_reg[5 - 2:0],divalid};
-      di_d1 <= di;
-      // @todo fix the following
-      // sign_bit_pipe <= sign_bit_pipe(sign_bit_pipe'length-2 downto 0) & di(SIZE_C-1);
-    end
-  end
+    
+    assign dovalid = pipeline_reg[4];
 
-  // @todo: fix
-  assign dovalid = pipeline_reg[4];
-//------------------------------------------------------------------------------
 
 endmodule

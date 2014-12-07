@@ -239,81 +239,88 @@ module BUF_FIFO
     always @(posedge CLK or posedge RST) begin
 	if(RST == 1'b1) begin 
 	    memrd_offs_cnt <= {((($clog2(C_NUM_LINES) - 1 + 1))-((0))+1){1'b0}};
-        read_block_cnt <= {13{1'b0}};
-	pix_inblk_cnt <= {4{1'b0}};
-      line_inblk_cnt <= {3{1'b0}};
-      rd_line_idx <= {16{1'b0}};
-      pix_inblk_cnt_d1 <= {4{1'b0}};
-      read_block_cnt_d1 <= {13{1'b0}};
-    end else begin
-      pix_inblk_cnt_d1 <= pix_inblk_cnt;
-      read_block_cnt_d1 <= read_block_cnt;
-      // BUF FIFO read
-      if(fdct_fifo_rd == 1'b 1) begin
-        // last pixel in block
-        if(pix_inblk_cnt == (8 - 1)) begin
-          pix_inblk_cnt <= {4{1'b0}};
-          // last line in 8
-          if(line_inblk_cnt == (8 - 1)) begin
+            read_block_cnt <= {13{1'b0}};
+	    pix_inblk_cnt <= {4{1'b0}};
             line_inblk_cnt <= {3{1'b0}};
-            // last block in last line
-            if(read_block_cnt == (((img_size_x[15:3])) - 1)) begin
-              read_block_cnt <= {13{1'b0}};
-              rd_line_idx <= rd_line_idx + 8;
-              if((memrd_offs_cnt + 8) > (C_NUM_LINES - 1)) begin
-                memrd_offs_cnt <= memrd_offs_cnt + 8 - C_NUM_LINES;
-              end
-              else begin
-                memrd_offs_cnt <= memrd_offs_cnt + 8;
-              end
-            end
-            else begin
-              read_block_cnt <= read_block_cnt + 1;
-            end
-          end
-          else begin
-            line_inblk_cnt <= line_inblk_cnt + 1;
-          end
-        end
-        else begin
-          pix_inblk_cnt <= pix_inblk_cnt + 1;
-        end
-      end
-      if((memrd_offs_cnt + ((line_inblk_cnt))) > (C_NUM_LINES - 1)) begin
-        memrd_line <= memrd_offs_cnt[$clog2(C_NUM_LINES) - 1:0] + ((line_inblk_cnt)) - ((C_NUM_LINES));
-      end
-      else begin
-        memrd_line <= memrd_offs_cnt[$clog2(C_NUM_LINES) - 1:0] + ((line_inblk_cnt));
-      end
-      if(sof == 1'b 1) begin
-        memrd_line <= {((($clog2(C_NUM_LINES) - 1))-((0))+1){1'b0}};
-        memrd_offs_cnt <= {((($clog2(C_NUM_LINES) - 1 + 1))-((0))+1){1'b0}};
-        read_block_cnt <= {13{1'b0}};
-        pix_inblk_cnt <= {4{1'b0}};
-        line_inblk_cnt <= {3{1'b0}};
-        rd_line_idx <= {16{1'b0}};
-      end
+            rd_line_idx <= {16{1'b0}};
+            pix_inblk_cnt_d1 <= {4{1'b0}};
+            read_block_cnt_d1 <= {13{1'b0}};
+        end 
+	else begin
+	    pix_inblk_cnt_d1 <= pix_inblk_cnt;
+	    read_block_cnt_d1 <= read_block_cnt;
+	    
+	    // BUF FIFO read
+	    if(fdct_fifo_rd == 1'b 1) begin
+		// last pixel in block
+		if(pix_inblk_cnt == (8 - 1)) begin
+		    pix_inblk_cnt <= {4{1'b0}};
+		
+		    // last line in 8
+		    if(line_inblk_cnt == (8 - 1)) begin
+		        line_inblk_cnt <= {3{1'b0}};
+		        // last block in last line
+		        if(read_block_cnt == (((img_size_x[15:3])) - 1)) begin
+		    	read_block_cnt <= {13{1'b0}};
+    	  	            rd_line_idx <= rd_line_idx + 8;
+		            if((memrd_offs_cnt + 8) > (C_NUM_LINES - 1)) begin
+                                memrd_offs_cnt <= memrd_offs_cnt + 8 - C_NUM_LINES;
+		    	end
+		    	else begin
+		    	    memrd_offs_cnt <= memrd_offs_cnt + 8;
+		    	end
+		        end
+		        else begin
+		    	read_block_cnt <= read_block_cnt + 1;
+		        end
+                    end
+		    else begin
+		        line_inblk_cnt <= line_inblk_cnt + 1;
+		    end		
+                end
+	        else begin
+	            pix_inblk_cnt <= pix_inblk_cnt + 1;
+	        end
+	    end
+	    
+	    if((memrd_offs_cnt + ((line_inblk_cnt))) > (C_NUM_LINES - 1)) begin
+		memrd_line <= memrd_offs_cnt[$clog2(C_NUM_LINES) - 1:0] + ((line_inblk_cnt)) - ((C_NUM_LINES));
+	    end
+	    else begin
+		memrd_line <= memrd_offs_cnt[$clog2(C_NUM_LINES) - 1:0] + ((line_inblk_cnt));
+	    end
+	    
+	    if(sof == 1'b1) begin
+		memrd_line <= {((($clog2(C_NUM_LINES) - 1))-((0))+1){1'b0}};
+                memrd_offs_cnt <= {((($clog2(C_NUM_LINES) - 1 + 1))-((0))+1){1'b0}};
+                read_block_cnt <= {13{1'b0}};
+                pix_inblk_cnt <= {4{1'b0}};
+                line_inblk_cnt <= {3{1'b0}};
+                rd_line_idx <= {16{1'b0}};
+	    end
+	end
     end
-  end
 
-  // generate RAM data output based on 16 or 24 bit mode selection
-  assign fdct_fifo_q = C_PIXEL_BITS == 16 ? {ramq[15:11],3'b 000,ramq[10:5],2'b 00,ramq[4:0],3'b 000} : 
-		                            (((ramq)));
+    // generate RAM data output based on 16 or 24 bit mode selection
+    assign fdct_fifo_q = C_PIXEL_BITS == 16 ? 
+			 {ramq[15:11],3'b 000,ramq[10:5],2'b 00,ramq[4:0],3'b 000} : 
+		         (((ramq)));
     
-  assign ramraddr = ramraddr_int[$clog2(C_MAX_LINE_WIDTH * C_NUM_LINES) - 1:0];
+    assign ramraddr = ramraddr_int[$clog2(C_MAX_LINE_WIDTH * C_NUM_LINES) - 1:0];
    
-  //-----------------------------------------------------------------
-  // resolve RAM read address
-  //-----------------------------------------------------------------
-  always @(posedge CLK or posedge RST) begin
-    if(RST == 1'b 1) begin
-      ramraddr_int <= {(((16 + $clog2(C_NUM_LINES) - 1))-((0))+1){1'b0}};
-    end else begin
-      raddr_base_line <= ((memrd_line)) * ((img_size_x));
-      raddr_tmp <= {read_block_cnt_d1,3'b 000} + pix_inblk_cnt_d1;
-      ramraddr_int <= raddr_tmp + raddr_base_line;
+    //-----------------------------------------------------------------
+    // resolve RAM read address
+    //-----------------------------------------------------------------
+    always @(posedge CLK or posedge RST) begin
+	if(RST == 1'b1) begin
+	    ramraddr_int <= {(((16 + $clog2(C_NUM_LINES) - 1))-((0))+1){1'b0}};
+        end 
+	else begin
+	    raddr_base_line <= ((memrd_line)) * ((img_size_x));
+	    raddr_tmp <= {read_block_cnt_d1,3'b000} + pix_inblk_cnt_d1;
+	    ramraddr_int <= raddr_tmp + raddr_base_line;
+	end
     end
-  end
 
 endmodule
 

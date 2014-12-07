@@ -15,8 +15,6 @@ module RAMZ
  );
     
     reg [RAMADDR_W-1:0]     read_addr;
-    /// @todo: memory size needs to be a function of the
-    ///    parameters
     localparam MEM_SIZE = 2**RAMADDR_W;
     reg [RAMDATA_W-1:0]  mem [0:MEM_SIZE-1];
     

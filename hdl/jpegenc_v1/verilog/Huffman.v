@@ -72,19 +72,25 @@ module Huffman
 (
  input wire 	   CLK,
  input wire 	   RST,
+ 
  input wire 	   start_pb,
  output reg 	   ready_pb,
+ 
  input wire [2:0]  huf_sm_cmp_idx,
  input wire 	   sof,
  input wire [15:0] img_size_x,
  input wire [15:0] img_size_y,
+ 
  output wire 	   rle_buf_sel,
  output wire 	   rd_en,
  input wire [3:0]  runlength,
+ 
  input wire [3:0]  VLI_size,
  input wire [11:0] VLI,
+ 
  input wire 	   d_val,
  input wire 	   rle_fifo_empty,
+ 
  input wire 	   bs_buf_sel,
  output wire 	   bs_fifo_empty,
  input wire 	   bs_rd_req,
@@ -107,9 +113,11 @@ module Huffman
     reg 	   first_rle_word = 1'b0;
     reg [C_M - 1:0] word_reg = 0;
     reg [4:0] 	    bit_ptr = 0;
-    wire [1:0] 	    num_fifo_wrs = 0;
-    wire [15:0]     VLI_ext = 0;
-    wire [4:0] 	    VLI_ext_size = 0;
+    
+    wire [1:0] 	    num_fifo_wrs;
+    wire [15:0]     VLI_ext;
+    wire [4:0] 	    VLI_ext_size;
+    
     reg 	    ready_HFW = 1'b0;
     reg [7:0] 	    fifo_wbyte = 0;
     reg [1:0] 	    fifo_wrt_cnt = 0;
@@ -119,30 +127,39 @@ module Huffman
     reg [27:0] 	    block_cnt = 0;
     reg [4:0] 	    VLC_size = 0;
     reg [15:0] 	    VLC = 0;
-    wire [3:0] 	    VLC_DC_size = 0;
-    wire [8:0] 	    VLC_DC = 0;
-    wire [4:0] 	    VLC_AC_size = 0;
-    wire [15:0]     VLC_AC = 0;
-    wire 	    vlc_vld = 1'b0;
-    reg 	    d_val_d1 = 1'b0;
-    reg 	    d_val_d2 = 1'b0;
-    reg 	    d_val_d3 = 1'b0;
-    reg 	    d_val_d4 = 1'b0;
-    reg [3:0] 	    VLI_size_d = 0;
-    reg [11:0] 	    VLI_d = 0;
-    reg [3:0] 	    VLI_size_d1 = 0;
-    reg [11:0] 	    VLI_d1 = 0;
+    
+    wire [3:0] 	    VLC_DC_size;
+    wire [8:0] 	    VLC_DC;
+    wire [4:0] 	    VLC_AC_size;
+    wire [15:0]     VLC_AC;
+    wire 	    vlc_vld;
+    
+    reg 	    d_val_d1;
+    reg 	    d_val_d2;
+    reg 	    d_val_d3;
+    reg 	    d_val_d4;
+    
+    reg [3:0] 	    VLI_size_d;
+    reg [11:0] 	    VLI_d;
+    reg [3:0] 	    VLI_size_d1;
+    reg [11:0] 	    VLI_d1;
+    
     reg 	    HFW_running = 1'b0;
-    wire [3:0] 	    runlength_r = 0;
-    reg [3:0] 	    VLI_size_r = 0;
-    reg [11:0] 	    VLI_r = 0;
+    
+    wire [3:0] 	    runlength_r;
+    
+    reg [3:0] 	    VLI_size_r;
+    reg [11:0] 	    VLI_r;
+    
     reg 	    rd_en_s = 1'b0;
     reg [7:0] 	    pad_byte = 0;
     reg 	    pad_reg = 1'b0;
-    wire [3:0] 	    VLC_CR_DC_size = 0;
-    wire [10:0]     VLC_CR_DC = 0;
-    wire [4:0] 	    VLC_CR_AC_size = 0;
-    wire [15:0]     VLC_CR_AC = 0;
+    
+    wire [3:0] 	    VLC_CR_DC_size;
+    wire [10:0]     VLC_CR_DC;
+    wire [4:0] 	    VLC_CR_AC_size;
+    wire [15:0]     VLC_CR_AC;
+    
     reg 	    start_pb_d1 = 1'b0;  
 
     // loop index
@@ -158,12 +175,12 @@ module Huffman
     always @(posedge CLK or posedge RST) begin
 	if(RST == 1'b1) begin
 	    VLI_size_r <= {4{1'b0}};
-	    VLI_r <= {12{1'b0}};
-    end 
+	    VLI_r      <= {12{1'b0}};
+        end 
 	else begin
-	    if(d_val == 1'b 1) begin
+	    if(d_val == 1'b1) begin
 		VLI_size_r <= VLI_size;
-		VLI_r <= VLI;
+		VLI_r      <= VLI;
 	    end
 	end
     end
@@ -208,45 +225,35 @@ module Huffman
     //-----------------------------------------------------------------
     // AC_ROM Chrominance
     //-----------------------------------------------------------------
-    // @todo: fix, manually instantiate, converter   
-    //U_AC_CR_ROM : entity work.AC_CR_ROM
-    //port map
-    //(
-    //      CLK                => CLK,
-    //      RST                => RST,
-    //      runlength          => runlength,
-    //      VLI_size           => VLI_size,
-    //                         
-    //      VLC_AC_size        => VLC_CR_AC_size,
-    //      VLC_AC             => VLC_CR_AC
-    //  );
     AC_CR_ROM
-      U_AC_CR_ROM
-	(.CLK         (CLK),
-	 .RST         (RST),
-	 .runlength   (runlength),
-	 .VLI_size    (VLI_size),
-	 .VLC_AC_size (VLC_CR_AC_size),
-	 .VLC_AC      (VLC_CR_AC)
-	 );
+      #()
+    U_AC_CR_ROM
+      (.CLK         (CLK),
+       .RST         (RST),
+       .runlength   (runlength),
+       .VLI_size    (VLI_size),
+       .VLC_AC_size (VLC_CR_AC_size),
+       .VLC_AC      (VLC_CR_AC)
+       );
     
     //-----------------------------------------------------------------
     // Double Fifo
     //-----------------------------------------------------------------
     DoubleFifo
-      U_DoubleFifo
-	(
-         .CLK                (CLK            ),
-         .RST                (RST	      ),
-         //-- HUFFMAN	      		      
-         .data_in            (fifo_wbyte     ),
-         .wren               (fifo_wren      ),
-         //-- BYTE STUFFER   		      
-         .buf_sel            (bs_buf_sel     ),
-         .rd_req             (bs_rd_req      ),
-         .fifo_empty         (bs_fifo_empty  ),
-         .data_out           (bs_packed_byte )
-	 );
+      #()
+    U_DoubleFifo
+      (
+       .CLK                (CLK            ),
+       .RST                (RST	      ),
+       //-- HUFFMAN	      		      
+       .data_in            (fifo_wbyte     ),
+       .wren               (fifo_wren      ),
+       //-- BYTE STUFFER   		      
+       .buf_sel            (bs_buf_sel     ),
+       .rd_req             (bs_rd_req      ),
+       .fifo_empty         (bs_fifo_empty  ),
+       .data_out           (bs_packed_byte )
+       );
     
     //-----------------------------------------------------------------
     // RLE buf_sel
@@ -361,38 +368,40 @@ module Huffman
     //-----------------------------------------------------------------
     always @(posedge CLK or posedge RST) begin
 	if(RST == 1'b1) begin
-	    ready_HFW <= 1'b0;
-	    fifo_wrt_cnt <= {2{1'b0}};
-	    fifo_wren <= 1'b0;
-	    fifo_wbyte <= {8{1'b0}};
-	    rd_en_s <= 1'b 0;
-	    start_pb_d1 <= 1'b 0;
-    end 
+	    ready_HFW     <= 1'b0;
+	    fifo_wrt_cnt  <= {2{1'b0}};
+	    fifo_wren     <= 1'b0;
+	    fifo_wbyte    <= {8{1'b0}};
+	    rd_en_s       <= 1'b0;
+	    start_pb_d1   <= 1'b0;
+	end 
 	else begin
-	    fifo_wren <= 1'b 0;
-	    ready_HFW <= 1'b 0;
-	    rd_en_s <= 1'b 0;
+	    fifo_wren   <= 1'b0;
+	    ready_HFW   <= 1'b0;
+	    rd_en_s     <= 1'b0;
 	    start_pb_d1 <= start_pb;
-	    if(start_pb_d1 == 1'b 1) begin
-		rd_en_s <= 1'b 1 &  ~rle_fifo_empty;
+	    
+	    if(start_pb_d1 == 1'b1) begin
+		rd_en_s <= 1'b1 &  ~rle_fifo_empty;
 	    end
-	    if(HFW_running == 1'b 1 && ready_HFW == 1'b 0) begin
+	    
+	    if(HFW_running == 1'b1 && ready_HFW == 1'b0) begin
 		// there is no at least one integer byte to write this time
 		if(num_fifo_wrs == 0) begin
-		    ready_HFW <= 1'b 1;
+		    ready_HFW <= 1'b1;
 		    if(state == RUN_VLI) begin
-			rd_en_s <= 1'b 1 &  ~rle_fifo_empty;
+			rd_en_s <= 1'b1 &  ~rle_fifo_empty;
 		    end
 		    // single byte write to FIFO
 		end
 		else begin
 		    fifo_wrt_cnt <= fifo_wrt_cnt + 1;
-		    fifo_wren <= 1'b 1;
+		    fifo_wren <= 1'b1;
 		    // last byte write
 		    if((fifo_wrt_cnt + 1) == num_fifo_wrs) begin
-			ready_HFW <= 1'b 1;
+			ready_HFW <= 1'b1;
 			if(state == RUN_VLI) begin
-			    rd_en_s <= 1'b 1 &  ~rle_fifo_empty;
+			    rd_en_s <= 1'b1 &  ~rle_fifo_empty;
 			end
 			fifo_wrt_cnt <= {2{1'b0}};
 		    end
@@ -401,10 +410,10 @@ module Huffman
 
 	    
 	    case(fifo_wrt_cnt)
-	      2'b 00 : begin
+	      2'b00 : begin
 		  fifo_wbyte <= (word_reg[C_M - 1:C_M - 8]);
 	      end
-	      2'b 01 : begin
+	      2'b01 : begin
 		  fifo_wbyte <= (word_reg[C_M - 8 - 1:C_M - 16]);
 	      end
 	      default : begin
@@ -412,7 +421,7 @@ module Huffman
 	      end
 	    endcase
 	    
-	    if(pad_reg == 1'b 1) begin
+	    if(pad_reg == 1'b1) begin
 		fifo_wbyte <= pad_byte;
 	    end
 	end
@@ -426,7 +435,7 @@ module Huffman
     //-----------------------------------------------------------------
     always @(posedge CLK or posedge RST) begin
 	if(RST == 1'b 1) begin
-	    ready_pb <= 1'b 0;
+	    ready_pb <= 1'b0;
 	    first_rle_word <= 1'b 0;
 	    state <= IDLE;
 	    word_reg <= {(((C_M - 1))-((0))+1){1'b0}};
@@ -454,26 +463,31 @@ module Huffman
 			      word_reg[C_M - 1 - bit_ptr - i] <= VLC[VLC_size - 1 - i];
 			  end
 		      end
+		      
 		      //bit_ptr <= bit_ptr + resize(VLC_size,bit_ptr'length);
 		      bit_ptr <= bit_ptr + ((VLC_size));
+		      
 		      // HandleFifoWrites
 		      HFW_running <= 1'b1;
 		      // HandleFifoWrites completed
 		  end
 		  else if(HFW_running == 1'b1 && (num_fifo_wrs == 0 || (fifo_wrt_cnt + 1) == num_fifo_wrs)) begin
 		      // shift word reg left to skip bytes already written to FIFO
-		      // @todo: fix no convert
+		      // @todo: check manual conversion
 		      //word_reg <= shift_left(word_reg, to_integer(num_fifo_wrs & "000"));
+		      word_reg <= (word_reg << {num_fifo_wrs, 3'b000});
+		      
 		      // adjust bit pointer after some bytes were written to FIFO
 		      // modulo 8 operation
-		      bit_ptr <= bit_ptr - {num_fifo_wrs,3'b 000};
+		      bit_ptr <= bit_ptr - {num_fifo_wrs,3'b000};
 		      HFW_running <= 1'b 0;
 		      first_rle_word <= 1'b 0;
 		      state <= RUN_VLI;
 		  end
 	      end
+	      
 	      RUN_VLI : begin
-		  if(HFW_running == 1'b 0) begin
+		  if(HFW_running == 1'b0) begin
 		      for (i=0; i <= C_M - 1; i = i + 1) begin
 			  if(i < VLI_ext_size) begin
 			      word_reg[C_M - 1 - bit_ptr - i] <= VLI_ext[VLI_ext_size - 1 - i];
@@ -487,22 +501,24 @@ module Huffman
 		  end
 		  else if(HFW_running == 1'b1 && (num_fifo_wrs == 0 || (fifo_wrt_cnt + 1) == num_fifo_wrs)) begin
 		      // shift word reg left to skip bytes already written to FIFO
-		      // @todo: fix, didn't convert
+		      // @todo: check manual conversion
 		      //word_reg <= shift_left(word_reg, to_integer(num_fifo_wrs & "000"));
+		      word_reg <= (word_reg << {num_fifo_wrs, 3'b000});
+		      
 		      // adjust bit pointer after some bytes were written to FIFO
 		      // modulo 8 operation
-		      bit_ptr <= bit_ptr - {num_fifo_wrs,3'b 000};
+		      bit_ptr <= bit_ptr - {num_fifo_wrs,3'b000};
 		      HFW_running <= 1'b0;
 		      // end of block
 		      if(rle_fifo_empty == 1'b1) begin
 			  // end of segment
-			  // @todo: fix, doesn't convert
-			  //if bit_ptr - (num_fifo_wrs & "000") /= 0 and last_block = '1' then
-			  //  state <= PAD;  
-			  //else
-			  //  ready_pb <= '1';
-			  //  state    <= IDLE;
-			  //end if;
+			  if ((bit_ptr - {num_fifo_wrs, 3'b000} != 0) && last_block == 1) begin
+			      state <= PAD;
+			  end
+			  else begin
+			      ready_pb <= 1;
+			      state <= IDLE;			      
+			  end
 		      end
 		      else begin
 			  state <= RUN_VLC;
@@ -510,6 +526,7 @@ module Huffman
 		  end
 		  // end of segment which requires bit padding
 	      end
+	      
 	      PAD : begin
 		  if(HFW_running == 1'b0) begin
 		      // 1's bit padding to integer number of bytes
@@ -529,17 +546,19 @@ module Huffman
 		  end
 		  else if(HFW_running == 1'b 1 && (num_fifo_wrs == 0 || (fifo_wrt_cnt + 1) == num_fifo_wrs)) begin
 		      bit_ptr <= {5{1'b0}};
-		       HFW_running <= 1'b 0;
-		       pad_reg <= 1'b 0;
-		       ready_pb <= 1'b 1;
+		       HFW_running <= 1'b0;
+		       pad_reg <= 1'b0;
+		       ready_pb <= 1'b1;
 		       state <= IDLE;
 		   end
 	      end
+	      
 	      default : begin
 	      end
+	      
 	    endcase
 	    
-	    if(sof == 1'b 1) begin
+	    if(sof == 1'b1) begin
 		bit_ptr <= {5{1'b0}};
 	    end
 	end

@@ -103,8 +103,6 @@ module MDCT
     wire [RAMADRR_W - 1:0] ramwaddro_s;
     wire [RAMDATA_W - 1:0] ramdatai_s;
     wire 		   ramwe_s;  
-
-    // @todo: fix, converter doesn't handle user defined types
     
     //signal romedatao_s          : T_ROM1DATAO; 
     //signal romodatao_s          : T_ROM1DATAO;

@@ -64,7 +64,12 @@ def test_jpegenc(args):
             for ii in range(100):
                 yield clock.posedge
 
-            print("V1 bitstream, len %d" % (len(v1_bic[0]),))
+            v1_non_zero = False
+            for bb in v1_bic[0]:
+                if bb != 0:
+                    v1_non_zero = True
+
+            print("V1 bitstream, len %d (more than zeros %s)" % (len(v1_bic[0]),v1_non_zero,))
             for ii,bb in enumerate(v1_bic[0]):
                 print("  [%6d]  %08X" % (ii, int(bb),))
                 if ii > 4 and not args.dump_bitstreams:
@@ -154,7 +159,7 @@ if __name__ == '__main__':
         imgfn=ipth,            # image to test compression
         build_only=False,      # compile the V* only, not test
         build_skip_v1=False,   # skip the V1 encoder compile
-        nout=1600,             # number of encoded outputs to capture (debug mode)
+        nout=0,                # number of encoded outputs to capture (debug mode)
         dump_bitstreams=False, # dump full bitstreams at the end
     )
 

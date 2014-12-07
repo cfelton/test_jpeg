@@ -81,9 +81,6 @@ module DoubleFifo
  output reg [7:0] data_out
 );
 
-// HUFFMAN
-// BYTE STUFFER
-
 
     reg 	  fifo1_rd;
     reg 	  fifo1_wr;
