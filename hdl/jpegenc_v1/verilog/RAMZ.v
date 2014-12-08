@@ -14,8 +14,9 @@ module RAMZ
  output wire [RAMDATA_W-1:0] q
  );
     
-    reg [RAMADDR_W-1:0]     read_addr;    
-    reg [RAMDATA_W-1:0]     mem [0:64-1];
+    reg [RAMADDR_W-1:0]     read_addr;
+    localparam MEM_SIZE = 2**RAMADDR_W;
+    reg [RAMDATA_W-1:0]  mem [0:MEM_SIZE-1];
     
     assign q = mem[read_addr];
     

@@ -67,76 +67,48 @@
 // ///  * http://copyfree.org/licenses/mit/license.txt
 // ///
 // //////////////////////////////////////////////////////////////////////////////
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//--------------------------------- LIBRARY/PACKAGE ---------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-// generic packages/libraries:
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-// user packages/libraries:
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//--------------------------------- ENTITY ------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
+
 // no timescale needed
 
-module OutMux(
-input wire CLK,
-input wire RST,
-input wire out_mux_ctrl,
-input wire [7:0] bs_ram_byte,
-input wire bs_ram_wren,
-input wire [23:0] bs_ram_wraddr,
-input wire [7:0] jfif_ram_byte,
-input wire jfif_ram_wren,
-input wire [23:0] jfif_ram_wraddr,
-output reg [7:0] ram_byte,
-output reg ram_wren,
-output reg [23:0] ram_wraddr
+module OutMux
+(
+ input wire 	   CLK,
+ input wire 	   RST,
+ input wire 	   out_mux_ctrl,
+ input wire [7:0]  bs_ram_byte,
+ input wire 	   bs_ram_wren,
+ input wire [23:0] bs_ram_wraddr,
+ input wire [7:0]  jfif_ram_byte,
+ input wire 	   jfif_ram_wren,
+ input wire [23:0] jfif_ram_wraddr,
+ output reg [7:0]  ram_byte,
+ output reg 	   ram_wren,
+ output reg [23:0] ram_wraddr
 );
 
-// CTRL
-// ByteStuffer
-// JFIFGen
-// OUT RAM
 
-
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//--------------------------------- ARCHITECTURE ------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-// Architecture: begin
-//-----------------------------------------------------------------------------
-
-  //-----------------------------------------------------------------
-  // Mux
-  //-----------------------------------------------------------------
-  always @(posedge CLK or posedge RST) begin
-    if(RST == 1'b 1) begin
-      ram_byte <= {8{1'b0}};
-      ram_wren <= 1'b 0;
-      ram_wraddr <= {24{1'b0}};
-    end else begin
-      if(out_mux_ctrl == 1'b 0) begin
-        ram_byte <= jfif_ram_byte;
-        ram_wren <= jfif_ram_wren;
-        ram_wraddr <= (jfif_ram_wraddr);
-      end
-      else begin
-        ram_byte <= bs_ram_byte;
-        ram_wren <= bs_ram_wren;
-        ram_wraddr <= bs_ram_wraddr;
-      end
+    //-----------------------------------------------------------------
+    // Mux
+    //-----------------------------------------------------------------
+    always @(posedge CLK or posedge RST) begin
+	if(RST == 1'b 1) begin
+	    ram_byte <= {8{1'b0}};
+            ram_wren <= 1'b 0;
+            ram_wraddr <= {24{1'b0}};
+        end 
+	else begin
+            if(out_mux_ctrl == 1'b 0) begin
+		ram_byte <= jfif_ram_byte;
+		ram_wren <= jfif_ram_wren;
+		ram_wraddr <= (jfif_ram_wraddr);
+	    end
+	    else begin
+		ram_byte <= bs_ram_byte;
+		ram_wren <= bs_ram_wren;
+		ram_wraddr <= bs_ram_wraddr;
+	    end
+	end
     end
-  end
 
 
 endmodule

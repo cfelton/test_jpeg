@@ -81,10 +81,10 @@ module SingleSM
  output wire [1:0] fsm_o
 );
 
-// from/to SM(m)
-// from/to SM(m+1)
-// from/to processing block
-// state debug
+    // from/to SM(m)
+    // from/to SM(m+1)
+    // from/to processing block
+    // state debug
 
     parameter [1:0]
       IDLE = 0,
@@ -93,41 +93,44 @@ module SingleSM
     
     reg [1:0] 	   state;  
     
-    assign fsm_o = state == IDLE ? 2'b00 : state == WAIT_FOR_BLK_RDY ? 2'b01 : state == WAIT_FOR_BLK_IDLE ? 2'b10 : 2'b11;
+    assign fsm_o = state == IDLE ? 2'b00 : 
+		   state == WAIT_FOR_BLK_RDY ? 2'b01 : 
+		   state == WAIT_FOR_BLK_IDLE ? 2'b10 : 
+		   2'b11;
     
     //----------------------------------------------------------------------------
     // FSM
     //----------------------------------------------------------------------------
     always @(posedge CLK or posedge RST) begin
 	if(RST == 1'b1) begin
-	    idle_o <= 1'b 0;
-	    start_o <= 1'b 0;
-	    pb_start_o <= 1'b 0;
+	    idle_o <= 1'b0;
+	    start_o <= 1'b0;
+	    pb_start_o <= 1'b0;
 	    state <= IDLE;
 	end 
 	else begin
-	    idle_o <= 1'b 0;
-	    start_o <= 1'b 0;
-	    pb_start_o <= 1'b 0;
+	    idle_o <= 1'b0;
+	    start_o <= 1'b0;
+	    pb_start_o <= 1'b0;
 	    
 	    case(state)
 	      IDLE : begin
-		  idle_o <= 1'b 1;
+		  idle_o <= 1'b1;
 		  // this fsm is started
-		  if(start_i == 1'b 1) begin
+		  if(start_i == 1'b1) begin
 		      state <= WAIT_FOR_BLK_RDY;
 		      // start processing block associated with this FSM
-		      pb_start_o <= 1'b 1;
-		      idle_o <= 1'b 0;
+		      pb_start_o <= 1'b1;
+		      idle_o <= 1'b0;
 		  end
 	      end
 	      WAIT_FOR_BLK_RDY : begin
 		  // wait until processing block completes
-		  if(pb_rdy_i == 1'b 1) begin
+		  if(pb_rdy_i == 1'b1) begin
 		      // wait until next FSM is idle before starting it
-		      if(idle_i == 1'b 1) begin
+		      if(idle_i == 1'b1) begin
 			  state <= IDLE;
-			  start_o <= 1'b 1;
+			  start_o <= 1'b1;
 		      end
 		      else begin
 			  state <= WAIT_FOR_BLK_IDLE;
@@ -135,15 +138,15 @@ module SingleSM
 		  end
 	      end
 	      WAIT_FOR_BLK_IDLE : begin
-		  if(idle_i == 1'b 1) begin
+		  if(idle_i == 1'b1) begin
 		      state <= IDLE;
-		      start_o <= 1'b 1;
+		      start_o <= 1'b1;
 		  end
 	      end
 	      default : begin
-		  idle_o <= 1'b 0;
-		  start_o <= 1'b 0;
-		  pb_start_o <= 1'b 0;
+		  idle_o <= 1'b0;
+		  start_o <= 1'b0;
+		  pb_start_o <= 1'b0;
 		  state <= IDLE;
 	      end
 	    endcase

@@ -67,22 +67,7 @@
 // ///  * http://copyfree.org/licenses/mit/license.txt
 // ///
 // //////////////////////////////////////////////////////////////////////////////
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//--------------------------------- LIBRARY/PACKAGE ---------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-// generic packages/libraries:
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-// user packages/libraries:
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//--------------------------------- ENTITY ------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
+
 // no timescale needed
 
 module CtrlSM
@@ -147,8 +132,6 @@ module CtrlSM
  
 );
     
-    // @todo: check, VHDL used global values from the package
-    //    need to verify these are correct
     localparam NUM_STAGES = 6;
     localparam CMP_MAX = 4;
 	
@@ -292,9 +275,9 @@ module CtrlSM
 	    start1_d        <= 1'b0;
 	    jpeg_ready      <= 1'b0;
 
-	    RSM_x_cnt       <= {1{1'b0}};
-	    RSM_y_cnt       <= {1{1'b0}};
-	    RSM_cmp_idx     <= {1{1'b0}};
+	    RSM_x_cnt       <= 0; 
+	    RSM_y_cnt       <= 0; 
+	    RSM_cmp_idx     <= 0; 
 	    
 	    jpeg_busy       <= 1'b0;
 	    out_mux_ctrl_s  <= 1'b0;
@@ -304,7 +287,7 @@ module CtrlSM
 	    jfif_start      <= 1'b0;
 	end 
 	else begin
-	    start_sm <= 1'b0;
+	    start_sm <= 1'b0;      // default value
 	    start1_d <= start_sm;
 	    
 	    jpeg_ready <= 1'b 0;
@@ -312,11 +295,11 @@ module CtrlSM
 	    out_mux_ctrl_s2 <= out_mux_ctrl_s;
 	    out_mux_ctrl <= out_mux_ctrl_s2;
 	    
-	    case(main_state)	      
+	    case(main_state)
+	      
               //-----------------------------
 	      // IDLE
-	      //-----------------------------
-	      
+	      //-----------------------------	      
 	      IDLES : begin		  
 		  if(sof == 1'b1) begin
 		      RSM_x_cnt <= {1{1'b0}};
@@ -340,8 +323,7 @@ module CtrlSM
 
 	      //-----------------------------
 	      // HORIZ
-	      //-----------------------------
-	      
+	      //-----------------------------	      
 	      HORIZ : begin
 		  if(RSM_x_cnt < ((img_size_x))) begin
 		      main_state <= COMP;
@@ -358,11 +340,10 @@ module CtrlSM
 	      COMP : begin
 		  if(idle[1] == 1'b1 && start[1] == 1'b0) begin
 		      if(RSM_cmp_idx < ((CMP_MAX))) begin
-			  // 
 		      	  start_sm <= 1'b1;
 		      end
 		      else begin
-		      	  RSM_cmp_idx <= {1{1'b0}};
+		      	  RSM_cmp_idx <= 0;
 		          RSM_x_cnt <= RSM_x_cnt + 16;
 		      
 		          main_state <= HORIZ;		      
@@ -394,8 +375,8 @@ module CtrlSM
 	      // VERT
 	      //-----------------------------	      
 	      EOI : begin
-		  if(jfif_ready == 1'b 1) begin
-		      jpeg_ready <= 1'b 1;
+		  if(jfif_ready == 1'b1) begin
+		      jpeg_ready <= 1'b1;
 		      main_state <= IDLES;
 		  end
 	      end
@@ -408,16 +389,17 @@ module CtrlSM
 	      end
 	    endcase
 
-	      if(start1_d == 1'b 1) begin
+	    if(start1_d == 1'b1) begin
 	      	RSM_cmp_idx <= RSM_cmp_idx + 1;
-	      end
+	    end
 	    
 	    if(main_state == IDLES) begin
 		jpeg_busy <= 1'b 0;
-	    end
+	    end	    
 	    else begin
 		jpeg_busy <= 1'b 1;
 	    end
+	    
 	end
     end
     

@@ -72,105 +72,93 @@
 //------------------------------------------------------------------------------
 // no timescale needed
 
-module r_divider(
-rst,
-clk,
-a,
-d,
-q
+module r_divider
+(
+ input wire rst,
+ input wire clk,
+ input wire [11:0] a,
+ input wire [7:0] d,
+ output reg [11:0] q
 );
 
-input rst;
-input clk;
-input [11:0] a;
-input [7:0] d;
-output [11:0] q;
+    wire [15:0] romr_datao;
+    wire [7:0] 	romr_addr;
+    wire [11:0] dividend;
+    reg [11:0] 	dividend_d1 = 0;
+    wire [15:0] reciprocal;
+    
+    reg [27:0] mult_out = 0;
+    reg [11:0] mult_out_s = 0;
+    
+    wire   signbit;
+    reg    signbit_d1 = 1'b 0;
+    reg    signbit_d2 = 1'b 0;
+    reg    signbit_d3 = 1'b 0;
+    reg    round = 1'b 0;
 
-wire rst;
-wire clk;
-wire [11:0] a;
-wire [7:0] d;
-reg [11:0] q;
-
-
-wire [15:0] romr_datao = 0;
-wire [7:0] romr_addr = 0;
-wire [11:0] dividend = 0;
-reg [11:0] dividend_d1 = 0;
-wire [15:0] reciprocal = 0;
-reg [27:0] mult_out = 0;
-reg [11:0] mult_out_s = 0;
-wire signbit = 1'b 0;
-reg signbit_d1 = 1'b 0;
-reg signbit_d2 = 1'b 0;
-reg signbit_d3 = 1'b 0;
-reg round = 1'b 0;
-
-  //U_ROMR : entity work.ROMR
-  //  generic map
-  //  (
-  //    ROMADDR_W    => 8,
-  //    ROMDATA_W    => 16
-  //  )
-  //  port map
-  //  (
-  //    addr  => romr_addr,
-  //    clk   => CLK,
-  //    datao => romr_datao
-  //  );
-  assign romr_addr = d;
-  assign reciprocal = (romr_datao);
-  assign dividend = (a);
-  //dividend(dividend'high);
-  assign signbit = dividend[11];
-  always @(posedge clk or posedge rst) begin
-    if(rst == 1'b 1) begin
-      mult_out <= {28{1'b0}};
-      mult_out_s <= {12{1'b0}};
-      dividend_d1 <= {12{1'b0}};
-      q <= {12{1'b0}};
-      signbit_d1 <= 1'b 0;
-      signbit_d2 <= 1'b 0;
-      signbit_d3 <= 1'b 0;
-      round <= 1'b 0;
-    end else begin
-      signbit_d1 <= signbit;
-      signbit_d2 <= signbit_d1;
-      signbit_d3 <= signbit_d2;
-      if(signbit == 1'b 1) begin
-        dividend_d1 <= (0 - dividend);
-      end
-      else begin
-        dividend_d1 <= (dividend);
-      end
-      mult_out <= dividend_d1 * reciprocal;
-      if(signbit_d2 == 1'b 0) begin
-        // mult_out_s <= resize(signed(mult_out(27 downto 16)), mult_out_s'length);
-        mult_out_s <= ((mult_out[27:16]));
-      end
-      else begin
-        // mult_out_s <= resize(0-signed(mult_out(27 downto 16)),mult_out_s'length);         
-        mult_out_s <= (0 - ((mult_out[27:16])));
-      end
-      round <= mult_out[15];
-      if(signbit_d3 == 1'b 0) begin
-        if(round == 1'b 1) begin
-          q <= (mult_out_s + 1);
-        end
-        else begin
-          q <= (mult_out_s);
-        end
-      end
-      else begin
-        if(round == 1'b 1) begin
-          q <= (mult_out_s - 1);
-        end
-        else begin
-          q <= (mult_out_s);
-        end
-      end
+    ROMR
+      //#(.ROMADDR_W(8), .ROMDATA_W(16))
+    U_ROMR
+      (.addr    (romr_addr),
+       .clk     (clk),
+       .datao   (romr_datao)
+       );
+    
+    assign romr_addr = d;
+    assign reciprocal = (romr_datao);
+    assign dividend = (a);
+    
+    //dividend(dividend'high);    
+    assign signbit = dividend[11];
+    
+    always @(posedge clk or posedge rst) begin
+        if(rst == 1'b1) begin
+            mult_out <= {28{1'b0}};
+	    mult_out_s <= {12{1'b0}};
+       	    dividend_d1 <= {12{1'b0}};
+	    q <= {12{1'b0}};
+            signbit_d1 <= 1'b 0;
+            signbit_d2 <= 1'b 0;
+            signbit_d3 <= 1'b 0;
+            round <= 1'b 0;
+        end 
+	else begin
+	    signbit_d1 <= signbit;
+	    signbit_d2 <= signbit_d1;
+	    signbit_d3 <= signbit_d2;
+	    if(signbit == 1'b 1) begin
+		dividend_d1 <= (0 - dividend);
+	    end
+	    else begin
+		dividend_d1 <= (dividend);
+	    end
+	    mult_out <= dividend_d1 * reciprocal;
+	    if(signbit_d2 == 1'b 0) begin
+		// mult_out_s <= resize(signed(mult_out(27 downto 16)), mult_out_s'length);
+		mult_out_s <= ((mult_out[27:16]));
+	    end
+	    else begin
+		// mult_out_s <= resize(0-signed(mult_out(27 downto 16)),mult_out_s'length);         
+		mult_out_s <= (0 - ((mult_out[27:16])));
+	    end
+	    round <= mult_out[15];
+	    if(signbit_d3 == 1'b 0) begin
+		if(round == 1'b 1) begin
+		    q <= (mult_out_s + 1);
+		end
+		else begin
+		    q <= (mult_out_s);
+		end
+	    end
+	    else begin
+		if(round == 1'b 1) begin
+		    q <= (mult_out_s - 1);
+		end
+		else begin
+		    q <= (mult_out_s);
+		end
+	    end
+	end
     end
-  end
-
 
 endmodule

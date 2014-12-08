@@ -5,7 +5,7 @@
 
 `timescale 1ns/10ps
 
-module m_romr (
+module ROMR (
     addr,
     clk,
     datao

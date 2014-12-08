@@ -123,7 +123,7 @@ module DCT1D
     
     reg  [(RAMADRR_W/2) - 1:0] col_reg         = 0;
     reg  [(RAMADRR_W/2) - 1:0] row_reg         = 0;
-    wire [(RAMADRR_W/2) - 1:0] rowr_reg        = 0;
+    wire [(RAMADRR_W/2) - 1:0] rowr_reg;
     reg  [(RAMADRR_W/2) - 1:0] inpcnt_reg      = 0;
     
     reg 		       ramwe_s         = 1'b0;

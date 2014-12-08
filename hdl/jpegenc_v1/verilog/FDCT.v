@@ -74,13 +74,16 @@ module FDCT
  input wire 	    RST,
  input wire 	    start_pb,
  output reg 	    ready_pb,
+ 
  output wire 	    bf_fifo_rd,
  input wire [23:0]  bf_fifo_q,
  input wire 	    bf_fifo_hf_full,
+ 
  input wire 	    zz_buf_sel,
  input wire [5:0]   zz_rd_addr,
  output wire [11:0] zz_data,
  input wire 	    zz_rden,
+ 
  input wire [15:0]  img_size_x,
  input wire [15:0]  img_size_y,
  input wire 	    sof
@@ -98,34 +101,39 @@ module FDCT
 
 
     reg [7:0] 	    mdct_data_in = 0;
-    wire 	    mdct_idval = 1'b 0;
-    wire 	    mdct_odval = 1'b 0;
-    wire [11:0]     mdct_data_out = 0;
-    wire 	    odv1 = 1'b 0;
-    wire [11:0]     dcto1 = 0;
+    wire 	    mdct_idval;
+    wire 	    mdct_odval;
+    wire [11:0]     mdct_data_out;
+    
+    wire 	    odv1;
+    wire [11:0]     dcto1;
     reg [15:0] 	    x_pixel_cnt = 0;
     reg [15:0] 	    y_line_cnt = 0;
-    wire [31:0]     rd_addr = 0;
+    wire [31:0]     rd_addr;
     reg [6:0] 	    input_rd_cnt = 0;
+    
     reg 	    rd_en = 1'b 0;
     reg 	    rd_en_d1 = 1'b 0;
-    wire [31:0]     rdaddr = 0;
+    wire [31:0]     rdaddr;
+    
     reg 	    bf_dval = 1'b 0;
     reg 	    bf_dval_m1 = 1'b 0;
     reg 	    bf_dval_m2 = 1'b 0;
-    reg 	    bf_dval_m3 = 1'b 0;
-    reg [5:0] 	    wr_cnt = 0;
-    wire [11:0]     dbuf_data = 0;
-    wire [11:0]     dbuf_q = 0;
-    wire 	    dbuf_we = 1'b 0;
-    wire [6:0] 	    dbuf_waddr = 0;
-    wire [6:0] 	    dbuf_raddr = 0;
-    reg [2:0] 	    xw_cnt = 0;
-    reg [2:0] 	    yw_cnt = 0;
-    wire [11:0]     dbuf_q_z1 = 0;
+    reg 	    bf_dval_m3 = 1'b 0;    
+    
+    wire [11:0]     dbuf_data;
+    wire [11:0]     dbuf_q;
+    wire 	    dbuf_we;
+    wire [6:0] 	    dbuf_waddr;
+    wire [6:0] 	    dbuf_raddr;
+
+    reg [5:0] 	    wr_cnt;    
+    reg [2:0] 	    xw_cnt;
+    reg [2:0] 	    yw_cnt;
+    wire [11:0]     dbuf_q_z1;
     
     parameter C_SIMA_ASZ = 9;
-    wire [C_SIMA_ASZ - 1:0] sim_rd_addr = 0;
+    wire [C_SIMA_ASZ - 1:0] sim_rd_addr;
     
     reg [23:0] 	    Y_Reg_1 = 0;
     reg [23:0] 	    Y_Reg_2 = 0;
@@ -142,13 +150,13 @@ module FDCT
     reg [23:0] 	    Cb_Reg = 0;
     reg [23:0] 	    Cr_Reg = 0;
     
-    wire [8:0] 		    R_s = 0;
-    wire [8:0] 		    G_s = 0;
-    wire [8:0] 		    B_s = 0;
+    wire [8:0] 		    R_s;
+    wire [8:0] 		    G_s;
+    wire [8:0] 		    B_s;
     
-    wire [7:0] 		    Y_8bit = 0;
-    wire [7:0] 		    Cb_8bit = 0;
-    wire [7:0] 		    Cr_8bit = 0;
+    wire [7:0] 		    Y_8bit;
+    wire [7:0] 		    Cb_8bit;
+    wire [7:0] 		    Cr_8bit;
     reg [2:0] 		    cmp_idx = 0;
     
     reg [2:0] 		    cur_cmp_idx = 0;
@@ -161,32 +169,37 @@ module FDCT
     reg [2:0] 		    cur_cmp_idx_d7 = 0;
     reg [2:0] 		    cur_cmp_idx_d8 = 0;
     reg [2:0] 		    cur_cmp_idx_d9 = 0;
-    reg 		    fifo1_rd = 1'b 0;
-    wire 		    fifo1_wr = 1'b 0;
-    wire [11:0] 	    fifo1_q = 0;
-    wire 		    fifo1_full = 1'b 0;
-    wire 		    fifo1_empty = 1'b 0;
-    wire [9:0] 		    fifo1_count = 0;
-    reg [5:0] 		    fifo1_rd_cnt = 0;
-    reg 		    fifo1_q_dval = 1'b 0;
-    wire [11:0] 	    fifo_data_in = 0;
-    reg 		    fifo_rd_arm = 1'b 0;
+    
+    reg 		    fifo1_rd;
+    wire 		    fifo1_wr;
+    wire [11:0] 	    fifo1_q;
+    wire 		    fifo1_full;
+    wire 		    fifo1_empty;
+    wire [9:0] 		    fifo1_count;
+    reg [5:0] 		    fifo1_rd_cnt;
+    reg 		    fifo1_q_dval;
+    wire [11:0] 	    fifo_data_in;    
+    reg 		    fifo_rd_arm;
+    
     reg 		    eoi_fdct = 1'b 0;
     reg 		    bf_fifo_rd_s = 1'b 0;
     reg 		    start_int = 1'b 0;
     reg [4:0] 		    start_int_d = 0;
-    wire [23:0] 	    fram1_data = 0;
-    wire [23:0] 	    fram1_q = 0;
-    wire 		    fram1_we = 1'b 0;
+    
+    wire [23:0] 	    fram1_data;
+    wire [23:0] 	    fram1_q;
+    wire 		    fram1_we;
     reg [6:0] 		    fram1_waddr = 0;
     reg [6:0] 		    fram1_raddr = 0;
     reg [8:0] 		    fram1_rd_d = 0;
     reg 		    fram1_rd = 1'b 0;
-    reg 		    rd_started = 1'b 0;
-    reg 		    writing_en = 1'b 0;
-    wire 		    fram1_q_vld = 1'b 0;
+    
+    reg 		    rd_started;    
+    reg 		    writing_en;
+
+    wire 		    fram1_q_vld;
     reg [2:0] 		    fram1_line_cnt = 0;
-    wire [2:0] 		    fram1_line_cnt_p1 = 1;
+    wire [2:0] 		    fram1_line_cnt_p1;
     reg [2:0] 		    fram1_pix_cnt = 0;  
 
     assign zz_data = dbuf_q;
@@ -218,8 +231,8 @@ module FDCT
 	    fram1_waddr <= {7{1'b0}};
         end 
 	else begin
-	    if(fram1_we == 1'b 1) begin
-		fram1_waddr <= (((fram1_waddr)) + 1);
+	    if(fram1_we == 1'b1) begin
+		fram1_waddr <= fram1_waddr + 1;
 	    end
 	end
     end
@@ -236,6 +249,7 @@ module FDCT
 	    y_line_cnt <= {16{1'b0}};
 	    input_rd_cnt <= {7{1'b0}};
 	    cmp_idx <= {3{1'b0}};
+	    
 	    cur_cmp_idx <= {3{1'b0}};
 	    cur_cmp_idx_d1 <= {3{1'b0}};
 	    cur_cmp_idx_d2 <= {3{1'b0}};
@@ -246,12 +260,14 @@ module FDCT
 	    cur_cmp_idx_d7 <= {3{1'b0}};
 	    cur_cmp_idx_d8 <= {3{1'b0}};
 	    cur_cmp_idx_d9 <= {3{1'b0}};
-	    eoi_fdct <= 1'b 0;
-	    start_int <= 1'b 0;
-	    bf_fifo_rd_s <= 1'b 0;
-	    bf_dval <= 1'b 0;
-	    bf_dval_m1 <= 1'b 0;
-	    bf_dval_m2 <= 1'b 0;
+	    
+	    eoi_fdct <= 1'b0;
+	    start_int <= 1'b0;
+	    bf_fifo_rd_s <= 1'b0;
+	    bf_dval <= 1'b0;
+	    bf_dval_m1 <= 1'b0;
+	    bf_dval_m2 <= 1'b0;
+	    
 	    fram1_rd <= 1'b 0;
 	    fram1_rd_d <= {9{1'b0}};
 	    start_int_d <= {5{1'b0}};
@@ -261,6 +277,7 @@ module FDCT
 	end 
 	else begin
 	    rd_en_d1 <= rd_en;
+	    
 	    cur_cmp_idx_d1 <= cur_cmp_idx;
 	    cur_cmp_idx_d2 <= cur_cmp_idx_d1;
 	    cur_cmp_idx_d3 <= cur_cmp_idx_d2;
@@ -270,73 +287,93 @@ module FDCT
 	    cur_cmp_idx_d7 <= cur_cmp_idx_d6;
 	    cur_cmp_idx_d8 <= cur_cmp_idx_d7;
 	    cur_cmp_idx_d9 <= cur_cmp_idx_d8;
-	    start_int <= 1'b 0;
+	    
+	    start_int <= 1'b0;
 	    bf_dval_m3 <= bf_fifo_rd_s;
 	    bf_dval_m2 <= bf_dval_m3;
 	    bf_dval_m1 <= bf_dval_m2;
 	    bf_dval <= bf_dval_m1;
+	    
 	    //fram1_rd_d     <= fram1_rd_d(fram1_rd_d'length-2 downto 0) & fram1_rd;
 	    fram1_rd_d <= {fram1_rd_d[9 - 2:0],fram1_rd};
+	    
 	    //start_int_d    <= start_int_d(start_int_d'length-2 downto 0) & start_int;
 	    start_int_d <= {start_int_d[5 - 2:0],start_int};
+
+	    //--------------------------------------------------------
 	    // SOF or internal self-start
-	    if((sof == 1'b 1 || start_int == 1'b 1)) begin
+	    if((sof == 1'b1 || start_int == 1'b1)) begin
 		input_rd_cnt <= {7{1'b0}};
-            // enable BUF_FIFO/FRAM1 reading
-            rd_started <= 1'b 1;
-            // component index
-            if(cmp_idx == (4 - 1)) begin
-		cmp_idx <= {3{1'b0}};
-            // horizontal block counter
-            if(x_pixel_cnt == (((img_size_x)) - 16)) begin
-		x_pixel_cnt <= {16{1'b0}};
-            // vertical block counter
-            if(y_line_cnt == (((img_size_y)) - 8)) begin
-		y_line_cnt <= {16{1'b0}};
-            // set end of image flag
-            eoi_fdct <= 1'b 1;
-        end
-            else begin
-		y_line_cnt <= y_line_cnt + 8;
-            end
-        end
-            else begin
-		x_pixel_cnt <= x_pixel_cnt + 16;
-            end
-        end
-            else begin
-		cmp_idx <= cmp_idx + 1;
-            end
-            cur_cmp_idx <= cmp_idx;
-	end
+                // enable BUF_FIFO/FRAM1 reading
+                rd_started <= 1'b1;
+            
+	        // component index
+                if(cmp_idx == (4 - 1)) begin
+		    cmp_idx <= {3{1'b0}};
+            
+	            // horizontal block counter
+                    if(x_pixel_cnt == (((img_size_x)) - 16)) begin
+		        x_pixel_cnt <= {16{1'b0}};
+            
+	               // vertical block counter
+                       if(y_line_cnt == (((img_size_y)) - 8)) begin
+		           y_line_cnt <= {16{1'b0}};
+            
+  	                  // set end of image flag
+                          eoi_fdct <= 1'b1;
+                       end
+                       else begin
+		           y_line_cnt <= y_line_cnt + 8;
+                       end
+                    end
+                    else begin
+		        x_pixel_cnt <= x_pixel_cnt + 16;
+                    end
+                end
+                else begin
+		    cmp_idx <= cmp_idx + 1;
+                end
+	    
+                cur_cmp_idx <= cmp_idx;
+	    end // end sof == 1 or start_int == 1
+	    //--------------------------------------------------------
+	    
 	    // wait until FIFO becomes half full but only for component 0
 	    // as we read buf FIFO only during component 0
-	    if(rd_started == 1'b 1 && (bf_fifo_hf_full == 1'b 1 || cur_cmp_idx > 1)) begin
-		rd_en <= 1'b 1;
-		rd_started <= 1'b 0;
+	    if(rd_started == 1'b1 && (bf_fifo_hf_full == 1'b1 || cur_cmp_idx > 1)) begin
+		rd_en <= 1'b1;
+		rd_started <= 1'b0;
 	    end
-	    bf_fifo_rd_s <= 1'b 0;
-	    fram1_rd <= 1'b 0;
+	    
+	    bf_fifo_rd_s <= 1'b0;
+	    fram1_rd <= 1'b0;
+
+	    //--------------------------------------------------------
 	    // stall reading from input FIFO and writing to output FIFO 
 	    // when output FIFO is almost full
-	    if(rd_en == 1'b 1 && ((fifo1_count)) < (512 - 64) && (bf_fifo_hf_full == 1'b 1 || cur_cmp_idx > 1)) begin
+	    if(rd_en == 1'b1 && ((fifo1_count)) < (512 - 64) && 
+	       (bf_fifo_hf_full == 1'b1 || cur_cmp_idx > 1)) begin
 		// read request goes to BUF_FIFO only for component 0. 
 		if(cur_cmp_idx < 2) begin
-		    bf_fifo_rd_s <= 1'b 1;
+		    bf_fifo_rd_s <= 1'b1;
 		end
 		// count number of samples read from input in one run
 		if(input_rd_cnt == (64 - 1)) begin
-		    rd_en <= 1'b 0;
+		    rd_en <= 1'b0;
 		    // internal restart
-		    start_int <= 1'b 1 &  ~eoi_fdct;
-		    eoi_fdct <= 1'b 0;
+		    start_int <= 1'b1 &  ~eoi_fdct;
+		    eoi_fdct <= 1'b0;
 		end
 		else begin
 		    input_rd_cnt <= input_rd_cnt + 1;
 		end
 		// FRAM read enable
-		fram1_rd <= 1'b 1;
+		fram1_rd <= 1'b1;
 	    end
+	    //--------------------------------------------------------
+
+
+	    //--------------------------------------------------------
 	    // increment FRAM1 read address according to subsampling
 	    // idea is to extract 8x8 from 16x8 block
 	    // there are two luminance blocks left and right
@@ -352,59 +389,60 @@ module FDCT
 		fram1_line_cnt <= {3{1'b0}};
 		fram1_pix_cnt <= {3{1'b0}};
 		 
-		 case(cur_cmp_idx_d4)
+		case(cur_cmp_idx_d4)
                    // Y1, Cr, Cb
-		   3'b 000,3'b 010,3'b 011 : begin
+		   3'b000, 3'b010, 3'b011 : begin
 		       fram1_raddr <= {7{1'b0}};
-		       // Y2
 		   end
-		   3'b 001 : begin
-		       //fram1_raddr <= std_logic_vector(to_unsigned(64, fram1_raddr'length));
-		       fram1_raddr <= ((64));
+		  // Y2		  
+		   3'b001 : begin
+		       fram1_raddr <= 64;
 		   end
 		   default : begin
 		   end
-		 endcase
-	     end
-	    
-	    else if(fram1_rd_d[4] == 1'b 1) begin
+	        endcase
+	    end	    
+	    else if(fram1_rd_d[4] == 1'b1) begin
 		if(fram1_pix_cnt == (8 - 1)) begin
 		    fram1_pix_cnt <= {3{1'b0}};
-		if(fram1_line_cnt == (8 - 1)) begin
-		    fram1_line_cnt <= {3{1'b0}};
-            end
-		else begin
-		    fram1_line_cnt <= fram1_line_cnt + 1;
-		end
-            end
-		else begin
-		    fram1_pix_cnt <= fram1_pix_cnt + 1;
-		end
+		    if(fram1_line_cnt == (8 - 1)) begin
+		        fram1_line_cnt <= {3{1'b0}};
+                    end
+		    else begin
+		        fram1_line_cnt <= fram1_line_cnt + 1;
+		    end
+                end
+	        else begin
+	            fram1_pix_cnt <= fram1_pix_cnt + 1;
+	        end
+
+		
 		case(cur_cmp_idx_d6)
-		  3'b 000,3'b 001 : begin
-		      fram1_raddr <= (((fram1_raddr)) + 1);
+		  3'b000, 3'b001 : begin
+	              fram1_raddr <= (((fram1_raddr)) + 1);
 		  end
-		  3'b 010,3'b 011 : begin
-		      if(fram1_pix_cnt == (4 - 1)) begin
-			  fram1_raddr <= {1'b 1,fram1_line_cnt,3'b 000};
-		      end
-		      else if(fram1_pix_cnt == (8 - 1)) begin
-			  if(fram1_line_cnt == (8 - 1)) begin
-			      fram1_raddr <= {1'b 0,3'b 000,3'b 000};
-			  end
-			  else begin
-			      /// @todo verify this is correct
-			      fram1_raddr <= {1'b0, fram1_line_cnt_p1, 3'b000};
-			  end
-		      end
-		      else begin
-			  fram1_raddr <= (((fram1_raddr)) + 2);
-		      end
+		  3'b010, 3'b011 : begin
+	              if(fram1_pix_cnt == (4 - 1)) begin
+	    		  fram1_raddr <= {1'b1,fram1_line_cnt,3'b000};
+	              end
+	              else if(fram1_pix_cnt == (8 - 1)) begin
+	    		  if(fram1_line_cnt == (8 - 1)) begin
+	    		      fram1_raddr <= {1'b0,3'b000,3'b000};
+	    		  end
+	    		  else begin
+	    		      fram1_raddr <= {1'b0, fram1_line_cnt_p1, 3'b000};
+	    		  end
+	              end
+	              else begin
+	    		  fram1_raddr <= fram1_raddr + 2;
+	              end
 		  end
 		  default : begin
 		  end
 		endcase
-	    end
+	    end // if(sof == 1'b1) 
+	    //--------------------------------------------------------
+	    
 	end
     end
     
@@ -430,25 +468,26 @@ module FDCT
     //-----------------------------------------------------------------
     // Mux1
     //-----------------------------------------------------------------
-  always @(posedge CLK or posedge RST) begin
-    if(RST == 1'b 1) begin
-      mdct_data_in <= {8{1'b0}};
-    end else begin
-      case(cur_cmp_idx_d9)
-      3'b 000,3'b 001 : begin
-        mdct_data_in <= (Y_8bit);
-      end
-      3'b 010 : begin
-        mdct_data_in <= (Cb_8bit);
-      end
-      3'b 011 : begin
-        mdct_data_in <= (Cr_8bit);
-      end
-      default : begin
-      end
-      endcase
+    always @(posedge CLK or posedge RST) begin
+	if(RST == 1'b1) begin
+	    mdct_data_in <= {8{1'b0}};
+        end 
+	else begin
+	    case(cur_cmp_idx_d9)
+	      3'b000, 3'b001 : begin
+		  mdct_data_in <= (Y_8bit);
+	      end
+	      3'b010 : begin
+		  mdct_data_in <= (Cb_8bit);
+	      end
+	      3'b011 : begin
+		  mdct_data_in <= (Cr_8bit);
+	      end
+	      default : begin
+	      end
+	    endcase
+	end
     end
-  end
 
     //-----------------------------------------------------------------
     // FIFO1
@@ -457,7 +496,7 @@ module FDCT
       #(.DATA_WIDTH(12), .ADDR_WIDTH(9))
     U_FIFO1      
       (.rst      (RST           ),
-       .clk      (CLK	    ),
+       .clk      (CLK	        ),
        .rinc     (fifo1_rd      ),
        .winc     (fifo1_wr      ),
        .datai    (fifo_data_in  ),   
@@ -467,77 +506,86 @@ module FDCT
        .count    (fifo1_count   )
        );
     
-  assign fifo1_wr = mdct_odval;
-  assign fifo_data_in = mdct_data_out;
+    assign fifo1_wr = mdct_odval;
+    assign fifo_data_in = mdct_data_out;
     
-  //-----------------------------------------------------------------
-  // FIFO1 rd controller
-  //-----------------------------------------------------------------
-  always @(posedge CLK or posedge RST) begin
-    if(RST == 1'b 1) begin
-      fifo1_rd <= 1'b 0;
-      fifo_rd_arm <= 1'b 0;
-      fifo1_rd_cnt <= {6{1'b0}};
-      fifo1_q_dval <= 1'b 0;
-    end else begin
-      fifo1_rd <= 1'b 0;
-      fifo1_q_dval <= fifo1_rd;
-      if(start_pb == 1'b 1) begin
-        fifo_rd_arm <= 1'b 1;
-        fifo1_rd_cnt <= {6{1'b0}};
-      end
-      if(fifo_rd_arm == 1'b 1) begin
-        if(fifo1_rd_cnt == (64 - 1)) begin
-          fifo_rd_arm <= 1'b 0;
-          fifo1_rd <= 1'b 1;
-        end
-        else if(fifo1_empty == 1'b 0) begin
-          fifo1_rd <= 1'b 1;
-          fifo1_rd_cnt <= fifo1_rd_cnt + 1;
-        end
-      end
+    //-----------------------------------------------------------------
+    // FIFO1 rd controller
+    //-----------------------------------------------------------------
+    always @(posedge CLK or posedge RST) begin
+	if(RST == 1'b1) begin
+	    fifo1_rd <= 1'b0;
+	    fifo_rd_arm <= 1'b0;
+	    fifo1_rd_cnt <= {6{1'b0}};
+	    fifo1_q_dval <= 1'b0;
+	end 
+	else begin
+	    fifo1_rd <= 1'b0;
+	    fifo1_q_dval <= fifo1_rd;
+	    
+	    if(start_pb == 1'b1) begin
+		fifo_rd_arm <= 1'b1;
+		fifo1_rd_cnt <= {6{1'b0}};
+	    end
+	    
+	    if(fifo_rd_arm == 1'b1) begin
+		if(fifo1_rd_cnt == (64 - 1)) begin
+		    fifo_rd_arm <= 1'b0;
+		    fifo1_rd <= 1'b1;
+		end
+		else if(fifo1_empty == 1'b0) begin
+		    fifo1_rd <= 1'b1;
+		    fifo1_rd_cnt <= fifo1_rd_cnt + 1;
+		end
+	    end
+	end
     end
-  end
 
-  //-----------------------------------------------------------------
-  // write counter
-  //-----------------------------------------------------------------
-  always @(posedge CLK or posedge RST) begin
-    if(RST == 1'b 1) begin
-      wr_cnt <= {6{1'b0}};
-      ready_pb <= 1'b 0;
-      xw_cnt <= {3{1'b0}};
-      yw_cnt <= {3{1'b0}};
-      writing_en <= 1'b 0;
-    end else begin
-      ready_pb <= 1'b 0;
-      if(start_pb == 1'b 1) begin
-        wr_cnt <= {6{1'b0}};
-        xw_cnt <= {3{1'b0}};
-        yw_cnt <= {3{1'b0}};
-        writing_en <= 1'b 1;
-      end
-      if(writing_en == 1'b 1) begin
-        if(fifo1_q_dval == 1'b 1) begin
-          if(wr_cnt == (64 - 1)) begin
-            wr_cnt <= {6{1'b0}};
-            ready_pb <= 1'b 1;
-            writing_en <= 1'b 0;
-          end
-          else begin
-            wr_cnt <= wr_cnt + 1;
-          end
-          if(yw_cnt == (8 - 1)) begin
-            yw_cnt <= {3{1'b0}};
-            xw_cnt <= xw_cnt + 1;
-          end
-          else begin
-            yw_cnt <= yw_cnt + 1;
-          end
-        end
-      end
+    //-----------------------------------------------------------------
+    // write counter
+    //-----------------------------------------------------------------
+    always @(posedge CLK or posedge RST) begin
+	if(RST == 1'b1) begin
+	    wr_cnt     <= {6{1'b0}};
+            ready_pb   <= 1'b0;
+            xw_cnt     <= {3{1'b0}};
+       	    yw_cnt     <= {3{1'b0}};
+            writing_en <= 1'b0;
+        end 
+        else begin
+	    ready_pb <= 1'b0;
+	    
+	    if(start_pb == 1'b1) begin
+                wr_cnt <= {6{1'b0}};
+                xw_cnt <= {3{1'b0}};
+                yw_cnt <= {3{1'b0}};
+                writing_en <= 1'b1;
+            end
+	    
+	    if(writing_en == 1'b1) begin
+                if(fifo1_q_dval == 1'b1) begin
+		    
+	    	    if(wr_cnt == (64 - 1)) begin
+	    	        wr_cnt <= {6{1'b0}};
+	    	        ready_pb <= 1'b1;
+                        writing_en <= 1'b0;
+                    end
+                    else begin
+	    	        wr_cnt <= wr_cnt + 1;
+	    	    end
+		    
+	    	    if(yw_cnt == (8 - 1)) begin
+	    	        yw_cnt <= {3{1'b0}};
+	    	        xw_cnt <= xw_cnt + 1;
+                        end
+	    	    else begin
+	    	        yw_cnt <= yw_cnt + 1;
+	    	    end
+		    
+                end
+	    end
+	end
     end
-  end
 
     //-----------------------------------------------------------------
     // RGB to YCbCr conversion

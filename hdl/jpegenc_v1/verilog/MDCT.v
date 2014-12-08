@@ -97,25 +97,31 @@ module MDCT
  output wire [OP_W - 1:0]  dcto1
 );
     
-    // debug
-    
+    // debug    
     wire [RAMDATA_W - 1:0] ramdatao_s;
     wire [RAMADRR_W - 1:0] ramraddro_s;
     wire [RAMADRR_W - 1:0] ramwaddro_s;
     wire [RAMDATA_W - 1:0] ramdatai_s;
     wire 		   ramwe_s;  
-
-    // @todo: fix, converter doesn't handle user defined types
     
-    //signal romedatao_s          : T_ROM1DATAO;
+    //signal romedatao_s          : T_ROM1DATAO; 
     //signal romodatao_s          : T_ROM1DATAO;
     //signal romeaddro_s          : T_ROM1ADDRO;
-    //signal romoaddro_s          : T_ROM1ADDRO;
-    //
+    //signal romoaddro_s          : T_ROM1ADDRO;    
+    wire [(9*ROMDATA_W)-1:0]    rome1datao_s_flat;
+    wire [(9*ROMDATA_W)-1:0]    romo1datao_s_flat;    
+    wire [(9*ROMADDR_W)-1:0]    rome1addro_s_flat;
+    wire [(9*ROMADDR_W)-1:0]    romo1addro_s_flat;
+    
     //signal rome2datao_s         : T_ROM2DATAO;
-    //signal romo2datao_s         : T_ROM2DATAO;
+    //signal romo2datao_s         : T_ROM2DATAO;    
     //signal rome2addro_s         : T_ROM2ADDRO;
     //signal romo2addro_s         : T_ROM2ADDRO;
+    wire [(11*ROMDATA_W)-1:0]   rome2datao_s_flat;
+    wire [(11*ROMDATA_W)-1:0]   romo2datao_s_flat;    
+    wire [(11*ROMADDR_W)-1:0]   rome2addro_s_flat;
+    wire [(11*ROMADDR_W)-1:0]   romo2addro_s_flat;
+    
     
     wire 		   odv2_s;
     wire [OP_W - 1:0] 	   dcto2_s;
@@ -132,139 +138,128 @@ module MDCT
     wire 		   dataready_s;
     wire 		   datareadyack_s;
 
-  //----------------------------
-  // 1D DCT port map
-  //----------------------------
-  // @todo: fix, manually instantiate
-  //U_DCT1D : entity work.DCT1D
-  //  port map(       
-  //      clk          => clk,         
-  //      rst          => rst,      
-  //      dcti         => dcti,   
-  //      idv          => idv,
-  //      romedatao    => romedatao_s,
-  //      romodatao    => romodatao_s,
-  //  
-  //      odv          => odv1,
-  //      dcto         => dcto1,
-  //      romeaddro    => romeaddro_s,
-  //      romoaddro    => romoaddro_s,
-  //      ramwaddro    => ramwaddro_s,
-  //      ramdatai     => ramdatai_s,
-  //      ramwe        => ramwe_s,
-  //      wmemsel      => wmemsel_s
-  //                );
-  //----------------------------
-  // 1D DCT port map
-  //----------------------------
-  // @todo: fix, manually instantiate  
-  //U_DCT2D : entity work.DCT2D
-  //  port map(       
-  //      clk          => clk,         
-  //      rst          => rst,      
-  //      romedatao    => rome2datao_s,
-  //      romodatao    => romo2datao_s,
-  //      ramdatao     => ramdatao_s,
-  //      dataready    => dataready_s,  
-  //    
-  //      odv          => odv,
-  //      dcto         => dcto,
-  //      romeaddro    => rome2addro_s,
-  //      romoaddro    => romo2addro_s,
-  //      ramraddro    => ramraddro_s,
-  //      rmemsel      => rmemsel_s,
-  //      datareadyack => datareadyack_s
-  //                );
-  //----------------------------
-  // RAM1 port map
-  //----------------------------
-  // @todo: fix, manually instantiate
-  //U1_RAM : entity work.RAM   
-  //  port map (      
-  //        d          => ramdatai_s,               
-  //        waddr      => ramwaddro_s,     
-  //        raddr      => ramraddro_s,     
-  //        we         => ramwe1_s,     
-  //        clk        => clk,      
-  //        
-  //        q          => ramdatao1_s      
-  //  );
-  //----------------------------
-  // RAM2 port map
-  //----------------------------
-  // @todo: fix, manually instantiate
-  //U2_RAM : entity work.RAM   
-  //  port map (      
-  //        d          => ramdatai_s,               
-  //        waddr      => ramwaddro_s,     
-  //        raddr      => ramraddro_s,     
-  //        we         => ramwe2_s,     
-  //        clk        => clk,      
-  //        
-  //        q          => ramdatao2_s      
-  //  );
-  // double buffer switch
-  assign ramwe1_s = memswitchwr_s == 1'b 0 ? ramwe_s : 1'b 0;
-  assign ramwe2_s = memswitchwr_s == 1'b 1 ? ramwe_s : 1'b 0;
-  assign ramdatao_s = memswitchrd_s == 1'b 0 ? ramdatao1_s : ramdatao2_s;
     //----------------------------
-  // DBUFCTL
-  //----------------------------
-  // @todo: fix, manually instantiate
-  //U_DBUFCTL : entity work.DBUFCTL         
-  //        port map(         
-  //                clk            => clk,
-  //                rst            => rst,
-  //    wmemsel        => wmemsel_s,
-  //    rmemsel        => rmemsel_s,
-  //    datareadyack   => datareadyack_s,
-  //      
-  //    memswitchwr    => memswitchwr_s,
-  //    memswitchrd    => memswitchrd_s,
-  //    dataready      => dataready_s
-  //                );  
-  //----------------------------
-  // 1st stage ROMs
-  //----------------------------
-  // @todo: fix, manually instantiate
-  //G_ROM_ST1 : for i in 0 to 8 generate
-  //  U1_ROME : entity work.ROME 
-  //  port map( 
-  //       addr        => romeaddro_s(i), 
-  //       clk         => clk,   
-  //       
-  //       datao       => romedatao_s(i)
-  //  );
-  //  
-  //  U1_ROMO : entity work.ROMO 
-  //  port map( 
-  //       addr        => romoaddro_s(i), 
-  //       clk         => clk,   
-  //       
-  //       datao       => romodatao_s(i)
-  //  );
-  //end generate G_ROM_ST1;
-  //----------------------------
-  // 2nd stage ROMs
-  //----------------------------
-  // @todo: fix, manually instantiate
-  //G_ROM_ST2 : for i in 0 to 10 generate
-  //  U2_ROME : entity work.ROME 
-  //  port map( 
-  //       addr        => rome2addro_s(i), 
-  //       clk         => clk,   
-  //       
-  //       datao       => rome2datao_s(i)
-  //  );
-  //  
-  //  U2_ROMO : entity work.ROMO 
-  //  port map( 
-  //       addr        => romo2addro_s(i), 
-  //       clk         => clk,   
-  //       
-  //       datao       => romo2datao_s(i)
-  //  );
-  //
-  //end generate G_ROM_ST2;
+    // 1D DCT port map
+    //----------------------------
+    DCT1D U_DCT1D
+      (.clk            (clk              ),  
+       .rst            (rst      	 ),
+       .dcti           (dcti   		 ),
+       .idv            (idv		 ),
+       .romedatao_flat (rome1datao_s_flat ),
+       .romodatao_flat (romo1datao_s_flat ),
+       .odv            (odv1		 ),
+       .dcto           (dcto1		 ),
+       .romeaddro_flat (rome1addro_s_flat ),
+       .romoaddro_flat (romo1addro_s_flat ),
+       .ramwaddro      (ramwaddro_s	 ),
+       .ramdatai       (ramdatai_s	 ),
+       .ramwe          (ramwe_s		 ),
+       .wmemsel        (wmemsel_s        )
+       );
+
+    
+    //----------------------------
+    // 1D DCT port map
+    //----------------------------
+    DCT2D U_DCT2D
+      (.clk          (clk                 ),
+       .rst          (rst		  ),
+       .romedatao_flat    (rome2datao_s_flat	  ),
+       .romodatao_flat    (romo2datao_s_flat	  ),
+       .ramdatao     (ramdatao_s	  ),
+       .dataready    (dataready_s	  ),
+       .odv          (odv		  ),
+       .dcto         (dcto		  ),
+       .romeaddro_flat    (rome2addro_s_flat	  ),
+       .romoaddro_flat    (romo2addro_s_flat	  ),
+       .ramraddro    (ramraddro_s	  ),
+       .rmemsel      (rmemsel_s		  ),
+       .datareadyack (datareadyack_s      ) 
+       );
+    
+    //----------------------------
+    // RAM1 port map
+    //----------------------------
+    RAM U1_RAM
+      (.d       (ramdatai_s  ),
+       .waddr   (ramwaddro_s ),
+       .raddr   (ramraddro_s ),
+       .we      (ramwe1_s    ),
+       .clk     (clk         ),
+       .q       (ramdatao1_s )
+       );
+    
+    //----------------------------
+    // RAM2 port map
+    //----------------------------
+    RAM U2_RAM
+      (.d      (ramdatai_s  ), 
+       .waddr  (ramwaddro_s ),
+       .raddr  (ramraddro_s ),   
+       .we     (ramwe2_s    ),
+       .clk    (clk         ),
+       .q      (ramdatao2_s )
+       );
+    
+    // double buffer switch
+    assign ramwe1_s = memswitchwr_s == 1'b 0 ? ramwe_s : 1'b 0;
+    assign ramwe2_s = memswitchwr_s == 1'b 1 ? ramwe_s : 1'b 0;
+    assign ramdatao_s = memswitchrd_s == 1'b 0 ? ramdatao1_s : ramdatao2_s;
+    
+    //----------------------------
+    // DBUFCTL
+    //----------------------------
+    DBUFCTL U_DBUFCTL
+      (.clk          (clk             ),   
+       .rst          (rst	      ),
+       .wmemsel      (wmemsel_s	      ),
+       .rmemsel      (rmemsel_s	      ),
+       .datareadyack (datareadyack_s  ),
+       .memswitchwr  (memswitchwr_s   ),
+       .memswitchrd  (memswitchrd_s   ),
+       .dataready    (dataready_s     )  
+       );
+    
+    //----------------------------
+    // 1st stage ROMs
+    //----------------------------
+    genvar  gi;
+    generate
+	for(gi = 0; gi < 9; gi=gi+1) begin : G_ROM_ST2
+	    ROME U1_ROME
+	         (.addr  (rome1addro_s_flat[ROMADDR_W*gi +: ROMADDR_W]),
+		  .clk   (clk),
+		  .datao (rome1datao_s_flat[ROMDATA_W*gi +: ROMDATA_W]) 
+		  );
+	    
+	    ROMO U1_ROMO
+	      (.addr   (romo1addro_s_flat[ROMADDR_W*gi +: ROMADDR_W]),
+	       .clk    (clk),
+	       .datao  (romo1datao_s_flat[ROMDATA_W*gi +: ROMDATA_W])
+	       );
+	end
+    endgenerate
+    
+    //----------------------------
+    // 2nd stage ROMs
+    //----------------------------
+    genvar  gj;
+    generate
+	for(gj = 0; gj < 11; gj=gj+1) begin : G_ROM_ST1
+	    ROME U2_ROME		 
+	         (.addr  (rome2addro_s_flat[ROMADDR_W*gj +: ROMADDR_W]),
+		  .clk   (clk),
+		  .datao (rome2datao_s_flat[ROMDATA_W*gj +: ROMDATA_W]) 
+		  );
+	    
+	    ROMO U2_ROMO
+	      (.addr   (romo2addro_s_flat[ROMADDR_W*gj +: ROMADDR_W]),
+	       .clk    (clk),
+	       .datao  (romo2datao_s_flat[ROMDATA_W*gj +: ROMDATA_W])
+	       );
+	end
+    endgenerate
+
 
 endmodule

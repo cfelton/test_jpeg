@@ -67,188 +67,161 @@
 // ///  * http://copyfree.org/licenses/mit/license.txt
 // ///
 // //////////////////////////////////////////////////////////////////////////////
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//--------------------------------- LIBRARY/PACKAGE ---------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-// generic packages/libraries:
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-// user packages/libraries:
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//--------------------------------- ENTITY ------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
 // no timescale needed
 
 module RLE_TOP(
-input wire CLK,
-input wire RST,
-input wire start_pb,
-output reg ready_pb,
-input wire [2:0] rss_cmp_idx,
-input wire huf_buf_sel,
-input wire huf_rden,
-output wire [3:0] huf_runlength,
-output wire [3:0] huf_size,
-output wire [11:0] huf_amplitude,
-output wire huf_dval,
-output wire huf_fifo_empty,
-output wire qua_buf_sel,
-output wire [5:0] qua_rd_addr,
-input wire [11:0] qua_data,
-input wire sof
+ input wire 	    CLK,
+ input wire 	    RST,
+ input wire 	    start_pb,
+ output reg 	    ready_pb,
+ input wire [2:0]   rss_cmp_idx,   // was rle_sm_settings.cmp_idx
+	       
+ input wire 	    huf_buf_sel,
+ input wire 	    huf_rden,
+ output wire [3:0]  huf_runlength,
+ output wire [3:0]  huf_size,
+ output wire [11:0] huf_amplitude,
+ output wire 	    huf_dval,
+ output wire 	    huf_fifo_empty,
+	       
+ output wire 	    qua_buf_sel,
+ output wire [5:0]  qua_rd_addr,
+ input wire [11:0]  qua_data,
+ input wire 	    sof
 );
 
-// CTRL
-//rle_sm_settings    : in T_SM_SETTINGS;
-// HUFFMAN
-// Quantizer
-// HostIF
+    wire [19:0]     dbuf_data;
+    wire [19:0]     dbuf_q;
+    wire 	    dbuf_we;
+    wire [3:0] 	    rle_runlength;
+    wire [3:0] 	    rle_size;
+    wire [11:0]     rle_amplitude;
+    wire 	    rle_dovalid;
+    wire [11:0]     rle_di;
+    wire 	    rle_divalid;
+    reg 	    qua_buf_sel_s;
+    reg 	    huf_dval_p0;
+    reg [5:0] 	    wr_cnt;  
 
 
 
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//--------------------------------- ARCHITECTURE ------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-wire [19:0] dbuf_data = 0;
-wire [19:0] dbuf_q = 0;
-wire dbuf_we = 1'b 0;
-wire [3:0] rle_runlength = 0;
-wire [3:0] rle_size = 0;
-wire [11:0] rle_amplitude = 0;
-wire rle_dovalid = 1'b 0;
-wire [11:0] rle_di = 0;
-wire rle_divalid = 1'b 0;
-reg qua_buf_sel_s = 1'b 0;
-reg huf_dval_p0 = 1'b 0;
-reg [5:0] wr_cnt = 0;  //-----------------------------------------------------------------------------
-// Architecture: begin
-//-----------------------------------------------------------------------------
-
-  assign huf_runlength = dbuf_q[19:16];
-  assign huf_size = dbuf_q[15:12];
-  assign huf_amplitude = dbuf_q[11:0];
-  assign qua_buf_sel = qua_buf_sel_s;
-  //-----------------------------------------------------------------
-  // RLE Core
-  //-----------------------------------------------------------------
-  // @todo: manual instantiation
-  //U_rle : entity work.rle
-  //generic map
-  //  ( 
-  //    RAMADDR_W  => 6,
-  //    RAMDATA_W  => 12
-  //  )
-  //port map
-  //  (
-  //    rst        => RST,
-  //    clk        => CLK,
-  //    di         => rle_di,
-  //    start_pb   => start_pb,
-  //    sof        => sof,
-  //    
-  //    --rle_sm_settings => rle_sm_settings,
-  //    rss_sm_settings => rss_cmp_idx
-  //
-  //    runlength  => rle_runlength,
-  //    size       => rle_size,
-  //    amplitude  => rle_amplitude,
-  //    dovalid    => rle_dovalid,
-  //    rd_addr    => qua_rd_addr
-  //  ); 
+    assign huf_runlength = dbuf_q[19:16];
+    assign huf_size = dbuf_q[15:12];
+    assign huf_amplitude = dbuf_q[11:0];
+    assign qua_buf_sel = qua_buf_sel_s;
+    
+    //-----------------------------------------------------------------
+    // RLE Core
+    //-----------------------------------------------------------------
+    rle
+      #(.RAMADDR_W(6), .RAMDATA_W(12))
+    U_rle
+      (.rst             (RST           ),
+       .clk             (CLK	       ),
+       .di              (rle_di	       ),
+       .start_pb        (start_pb      ),
+       .sof             (sof           ),
+       
+       //--rle_sm_settings => rle_sm_settings,
+       .rss_cmp_idx (rss_cmp_idx),
+			 
+       .runlength       (rle_runlength ), 
+       .size            (rle_size      ),
+       .amplitude       (rle_amplitude ),
+       .dovalid         (rle_dovalid   ),
+       .rd_addr         (qua_rd_addr   )
+       );
+    
   assign rle_di = qua_data;
-  //-----------------------------------------------------------------
-  // Double Fifo
-  //-----------------------------------------------------------------
-  // @todo: manual instantiation
-  //U_RleDoubleFifo : entity work.RleDoubleFifo
-  //port map
-  //(
-  //      CLK                => CLK,
-  //      RST                => RST,
-  //      -- RLE
-  //      data_in            => dbuf_data,
-  //      wren               => dbuf_we,
-  //      -- HUFFMAN
-  //      buf_sel            => huf_buf_sel,
-  //      rd_req             => huf_rden,
-  //      fifo_empty         => huf_fifo_empty,
-  //      data_out           => dbuf_q
-  //  );
-  assign dbuf_data = {rle_runlength,rle_size,rle_amplitude};
-  assign dbuf_we = rle_dovalid;
-  //-----------------------------------------------------------------
-  // ready_pb
-  //-----------------------------------------------------------------
-  always @(posedge CLK or posedge RST) begin
-    if(RST == 1'b 1) begin
-      ready_pb <= 1'b 0;
-      wr_cnt <= {6{1'b0}};
-    end else begin
-      ready_pb <= 1'b 0;
-      if(start_pb == 1'b 1) begin
-        wr_cnt <= {6{1'b0}};
-      end
-      // detect EOB (0,0) - end of RLE block
-      if(rle_dovalid == 1'b 1) begin
-        // ZERO EXTENSION
-        if(((rle_runlength)) == 15 && ((rle_size)) == 0) begin
-          wr_cnt <= wr_cnt + 16;
-        end
-        else begin
-          //wr_cnt <= wr_cnt + 1 + resize(unsigned(rle_runlength), wr_cnt'length);
-          wr_cnt <= wr_cnt + 1 + (((rle_runlength)));
-        end
-        // EOB can only be on AC!
-        // @todo: manually fix!
-        //if dbuf_data = (dbuf_data'range => '0') and wr_cnt /= 0 then
-        //  ready_pb <= '1';
-        //else
-        //  if wr_cnt + resize(unsigned(rle_runlength), wr_cnt'length) = 64-1 then
-        //    ready_pb <= '1';
-        //  end if;
-        //end if;
-        // end @todo manually fix
-      end
-    end
-  end
+    
+    //-----------------------------------------------------------------
+    // Double Fifo
+    //-----------------------------------------------------------------
+    RleDoubleFifo
+      #()
+    U_RleDoubleFifo
+	(.CLK             (CLK            ),
+	 .RST             (RST		  ),
+	 //-- RLE			  
+	 .data_in         (dbuf_data	  ),
+	 .wren            (dbuf_we	  ),
+	 //-- HUFFMAN			  
+	 .buf_sel         (huf_buf_sel	  ),
+	 .rd_req          (huf_rden	  ),
+	 .fifo_empty      (huf_fifo_empty ),
+	 .data_out        (dbuf_q         )
+	 );
 
-  //-----------------------------------------------------------------
-  // fdct_buf_sel
-  //-----------------------------------------------------------------
-  always @(posedge CLK or posedge RST) begin
-    if(RST == 1'b 1) begin
-      qua_buf_sel_s <= 1'b 0;
-    end else begin
-      if(start_pb == 1'b 1) begin
-        qua_buf_sel_s <=  ~qua_buf_sel_s;
-      end
+    
+    assign dbuf_data = {rle_runlength,rle_size,rle_amplitude};
+    assign dbuf_we = rle_dovalid;
+    
+    //-----------------------------------------------------------------
+    // ready_pb
+    //-----------------------------------------------------------------
+    always @(posedge CLK or posedge RST) begin
+	if(RST == 1'b1) begin
+	    ready_pb <= 1'b 0;
+	    wr_cnt <= {6{1'b0}};
+	end 
+	else begin
+	    ready_pb <= 1'b0;
+	    if(start_pb == 1'b1) begin
+		wr_cnt <= {6{1'b0}};
+	    end
+	    
+	    // detect EOB (0,0) - end of RLE block
+	    if(rle_dovalid == 1'b1) begin
+		// ZERO EXTENSION
+		if(((rle_runlength)) == 15 && ((rle_size)) == 0) begin
+		    wr_cnt <= wr_cnt + 16;
+		end
+		else begin
+		    //wr_cnt <= wr_cnt + 1 + resize(unsigned(rle_runlength), wr_cnt'length);
+		    wr_cnt <= wr_cnt + 1 + (((rle_runlength)));
+		end
+	  
+		// EOB can only be on AC!
+		if (dbuf_data == 0 && wr_cnt != 0) begin
+		    ready_pb <= 1'b1;
+		end
+		else begin
+		    if ((wr_cnt + rle_runlength) == 64-1) begin
+			ready_pb <= 1'b1;
+		    end
+		end
+	    end
+	end
     end
-  end
 
-  //-----------------------------------------------------------------
-  // output data valid
-  //-----------------------------------------------------------------
-  always @(posedge CLK or posedge RST) begin
-    if(RST == 1'b 1) begin
-      huf_dval_p0 <= 1'b 0;
-      //huf_dval    <= '0';
-    end else begin
-      huf_dval_p0 <= huf_rden;
-      //huf_dval    <= huf_rden;
+    //-----------------------------------------------------------------
+    // fdct_buf_sel
+    //-----------------------------------------------------------------
+    always @(posedge CLK or posedge RST) begin
+	if(RST == 1'b1) begin
+	    qua_buf_sel_s <= 1'b 0;
+	end 
+	else begin
+	    if(start_pb == 1'b 1) begin
+		qua_buf_sel_s <=  ~qua_buf_sel_s;
+	    end
+	end
     end
-  end
 
-  assign huf_dval = huf_rden;
-//-----------------------------------------------------------------------------
-// Architecture: end
-//-----------------------------------------------------------------------------
+    //-----------------------------------------------------------------
+    // output data valid
+    //-----------------------------------------------------------------
+    always @(posedge CLK or posedge RST) begin
+	if(RST == 1'b 1) begin
+	    huf_dval_p0 <= 1'b 0;
+	    //huf_dval    <= '0';
+	end 
+	else begin
+	    huf_dval_p0 <= huf_rden;
+	    //huf_dval    <= huf_rden;
+	end
+    end
+
+    assign huf_dval = huf_rden;
 
 endmodule

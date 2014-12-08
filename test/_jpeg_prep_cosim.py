@@ -15,23 +15,26 @@ def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
     #    Verilog, for now just build
     if not args.build_skip_v1:
         # @todo: save std* and create log
-        cmd = "iverilog -g2005 -o jpegenc_v1 %s" % (" ".join(filelist_v1))
+        cmd = "iverilog -g2001 -o jpegenc_v1 %s" % (" ".join(filelist_v1))
         print("compiling v1 ...")
         os.system(cmd)
 
     # build the second JPEG encoder
     # @todo: use subprocess, check the return and the "log"
     #   to verify it build correctly.
-    cmd = "iverilog -g2005 -o jpegenc_v2 %s " % (" ".join(filelist_v2))
+    cmd = "iverilog -g2001 -o jpegenc_v2 %s " % (" ".join(filelist_v2))
     print("compiling v2 ...")
     os.system(cmd)
 
     files = ['tb_jpegenc.v']
-    cmd = "iverilog -g2005 -o jpegenc %s %s tb_jpegenc.v" % \
-    ( 
-        " ".join(filelist_v1), 
-        " ".join(filelist_v2),
-    )
+    vstr = "-D VTRACE" if args.vtrace else ""
+    dstr = "%s -D VTRACE_LEVEL=%d -D VTRACE_MODULE=%s " % \
+           (vstr, args.vtrace_level, args.vtrace_module)
+    cmd = "iverilog -g2001 -o jpegenc %s %s %s %s" % \
+          (dstr,
+           " ".join(filelist_v1), 
+           " ".join(filelist_v2),
+           " ".join(files), )
     print("compiling testbench ...")
     os.system(cmd)
 
@@ -43,7 +46,8 @@ def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
         return None
 
     print("cosimulation setup ...")
-    cmd = "vvp -m ./myhdl.vpi jpegenc"
+    dstr = "-lxt2 " if args.vtrace else "-none "
+    cmd = "vvp -m ./myhdl.vpi jpegenc %s" % (dstr)
 
     gcosim = Cosimulation(
         cmd,
@@ -63,6 +67,17 @@ def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
         j1_opb_abus        = jpgv1.opb.ABus,
         jp_opb_be          = jpgv1.opb.BE
 
+        j1_opb_abus        = jpgv1.opb.ABus,
+        j1_opb_be          = jpgv1.opb.BE,
+        j1_opb_dbus_in     = jpgv1.opb.DBus_in,
+        j1_opb_rnw         = jpgv1.opb.RNW,
+        j1_opb_select      = jpgv1.opb.select,
+        j1_opb_dbus_out    = jpgv1.opb.DBus_out,
+        j1_opb_xferack     = jpgv1.opb.XferAck,
+        j1_opb_retry       = jpgv1.opb.retry,
+        j1_opb_toutsup     = jpgv1.opb.toutSup,
+        j1_opb_errack      = jpgv1.opb.errAck,
+
         # encoder 2 (V2, design2)
         j2_eof        = jpgv2.end_of_file_signal,
         j2_en         = jpgv2.enable,
@@ -80,9 +95,12 @@ def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
 
 if __name__ == '__main__':
     args = Namespace(
-        build_only=True,
-        build_skip_v1=False,
-        build_skip_v2=False
+        build_only=True,            # build only
+        build_skip_v1=False,        # skip design 1
+        build_skip_v2=False,        # skip design 2
+        vtrace=True,                # enable VCD tracing in Verilog cosim
+        vtrace_level=0,             # Verilog VCD dumpvars level
+        vtrace_module='tb_jpegenc', # Verilog VCD dumpvars module to trace
     )
     
     prep_cosim(Signal(bool(0)), 
