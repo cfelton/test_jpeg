@@ -108,23 +108,27 @@ def test_jpegenc(args):
             yield delay(100)
             yield clock.posedge
 
-            # initialize the JPEG encoder
-            yield jpgv1.initialize()
-            # send and image to be encoded
-            yield jpgv1.put_image(img)
+            # @todo: fix / remove, quick hack to see if multiple 
+            #   (continouous) images will result in a completed 
+            #   image.
+            for ni in range(3):
+                # initialize the JPEG encoder            
+                yield jpgv1.initialize()
+                # send and image to be encoded
+                yield jpgv1.put_image(img)
 
-            # no_wait indicates to stream the input and exit,
-            # don't wait the encoder to finish
-            if args.no_wait:
-                while not jpgv1.pxl_done:
-                    yield delay(1000)
-                    yield clock.posedge   
-                # this is a debug mode, after all pixles streamed
-                # in continue simulation for some period of time ...
-                for _ in range(200):
-                    yield delay(1000)
-            else:
-                yield jpgv1.get_jpeg(v1_bic)
+                # no_wait indicates to stream the input and exit,
+                # don't wait the encoder to finish
+                if args.no_wait:
+                    while not jpgv1.pxl_done:
+                        yield delay(1000)
+                        yield clock.posedge   
+                        # this is a debug mode, after all pixles streamed
+                        # in continue simulation for some period of time ...
+                        for _ in range(200):
+                            yield delay(1000)
+                else:
+                    yield jpgv1.get_jpeg(v1_bic)
             
             finished[0].next = True
 

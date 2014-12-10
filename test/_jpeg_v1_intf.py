@@ -129,18 +129,18 @@ class JPEGEncV1(JPEGEnc):
                 dt = end_time - self.start_time
                 print("V1: end pixel stream %s " % (dt,))
 
-
-                # wait for the encoder to be completed
-                self.iram_wdata.next = 0
-                cd = Signal(bool(0))
-                while not cd:
-                    # @todo: keep writing zeros till complete???
-                    if self.iram_fifo_afull:
-                        self.iram_wren.next = False
-                    else:
-                        self.iram_wren.next = True
-                    self.check_done(cd)
-                    yield self.clock.posedge
+                # what to do at the end??
+                #?## wait for the encoder to be completed
+                #?#self.iram_wdata.next = 0
+                #?#cd = Signal(bool(0))
+                #?#while not cd:
+                #?#    # @todo: keep writing zeros till complete???
+                #?#    if self.iram_fifo_afull:
+                #?#        self.iram_wren.next = False
+                #?#    else:
+                #?#        self.iram_wren.next = True
+                #?#    self.check_done(cd)
+                #?#    yield self.clock.posedge
 
         return t_bus_in
 

@@ -131,9 +131,9 @@ module HostIF
     // Architecture: begin
     //-----------------------------------------------------------------------------
     
-    assign OPB_retry = 1'b 0;
-    assign OPB_toutSup = 1'b 0;
-    assign OPB_errAck = 1'b 0;
+    assign OPB_retry = 1'b0;
+    assign OPB_toutSup = 1'b0;
+    assign OPB_errAck = 1'b0;
     assign img_size_x = image_size_reg[31:16];
     assign img_size_y = image_size_reg[15:0];
     assign outram_base_addr = cod_data_addr_reg[9:0];
@@ -142,41 +142,41 @@ module HostIF
     // OPB read
     //-----------------------------------------------------------------
     always @(posedge CLK or posedge RST) begin
-	if(RST == 1'b 1) begin
+	if(RST == 1'b1) begin
 	    OPB_DBus_out <= {32{1'b0}};
-	    rd_dval <= 1'b 0;
+	    rd_dval <= 1'b0;
 	    data_read <= {32{1'b0}};
         end 
 	else begin
-	    rd_dval <= 1'b 0;
+	    rd_dval <= 1'b0;
 	    OPB_DBus_out <= data_read;
-	    if(OPB_select == 1'b 1 && OPB_select_d == 1'b 0) begin
+	    if(OPB_select == 1'b 1 && OPB_select_d == 1'b0) begin
 		// only double word transactions are be supported
-		if(OPB_RNW == 1'b 1 && OPB_BE == 4'h F) begin
+		if(OPB_RNW == 1'b 1 && OPB_BE == 4'hF) begin
 		    case(OPB_ABus)
 		      C_ENC_START_REG : begin
 			  data_read <= enc_start_reg;
-			  rd_dval <= 1'b 1;
+			  rd_dval <= 1'b1;
 		      end
 		      C_IMAGE_SIZE_REG : begin
 			  data_read <= image_size_reg;
-			  rd_dval <= 1'b 1;
+			  rd_dval <= 1'b1;
 		      end
 		      C_IMAGE_RAM_ACCESS_REG : begin
 			  data_read <= image_ram_access_reg;
-			  rd_dval <= 1'b 1;
+			  rd_dval <= 1'b1;
 		      end
 		      C_ENC_STS_REG : begin
 			  data_read <= enc_sts_reg;
-			  rd_dval <= 1'b 1;
+			  rd_dval <= 1'b1;
 		      end
 		      C_COD_DATA_ADDR_REG : begin
 			  data_read <= cod_data_addr_reg;
-			  rd_dval <= 1'b 1;
+			  rd_dval <= 1'b1;
 		      end
 		      C_ENC_LENGTH_REG : begin
 			  data_read <= enc_length_reg;
-			  rd_dval <= 1'b 1;
+			  rd_dval <= 1'b1;
 		      end
 		      default : begin
 			  data_read <= {32{1'b0}};
@@ -191,9 +191,9 @@ module HostIF
     // OPB write
     //-----------------------------------------------------------------
     always @(posedge CLK or posedge RST) begin
-	if(RST == 1'b 1) begin
-	    qwren <= 1'b 0;
-	    write_done <= 1'b 0;
+	if(RST == 1'b1) begin
+	    qwren <= 1'b0;
+	    write_done <= 1'b0;
 	    enc_start_reg <= {32{1'b0}};
 	    image_size_reg <= {32{1'b0}};
 	    image_ram_access_reg <= {32{1'b0}};
@@ -202,47 +202,47 @@ module HostIF
 	    enc_length_reg <= {32{1'b0}};
 	    qdata <= {8{1'b0}};
 	    qaddr <= {7{1'b0}};
-	    OPB_select_d <= 1'b 0;
-	    sof <= 1'b 0;
-	    img_size_wr <= 1'b 0;
+	    OPB_select_d <= 1'b0;
+	    sof <= 1'b0;
+	    img_size_wr <= 1'b0;
 	end 
 	else begin
-	    qwren <= 1'b 0;
-	    write_done <= 1'b 0;
-	    sof <= 1'b 0;
-	    img_size_wr <= 1'b 0;
+	    qwren <= 1'b0;
+	    write_done <= 1'b0;
+	    sof <= 1'b0;
+	    img_size_wr <= 1'b0;
 	    OPB_select_d <= OPB_select;
-	    if(OPB_select == 1'b 1 && OPB_select_d == 1'b 0) begin
+	    if(OPB_select == 1'b1 && OPB_select_d == 1'b0) begin
 		// only double word transactions are be supported
-		if(OPB_RNW == 1'b 0 && OPB_BE == 4'h F) begin
+		if(OPB_RNW == 1'b0 && OPB_BE == 4'hF) begin
 		    case(OPB_ABus)
 		      C_ENC_START_REG : begin
 			  enc_start_reg <= OPB_DBus_in;
 			  write_done <= 1'b 1;
-			  if(OPB_DBus_in[0] == 1'b 1) begin
+			  if(OPB_DBus_in[0] == 1'b1) begin
 			      sof <= 1'b 1;
 			  end
 		      end
 		      C_IMAGE_SIZE_REG : begin
 			  image_size_reg <= OPB_DBus_in;
-			  img_size_wr <= 1'b 1;
-			  write_done <= 1'b 1;
+			  img_size_wr <= 1'b1;
+			  write_done <= 1'b1;
 		      end
 		      C_IMAGE_RAM_ACCESS_REG : begin
 			  image_ram_access_reg <= OPB_DBus_in;
-			  write_done <= 1'b 1;
+			  write_done <= 1'b1;
 		      end
 		      C_ENC_STS_REG : begin
 			  enc_sts_reg <= {32{1'b0}};
-			  write_done <= 1'b 1;
+			  write_done <= 1'b1;
 		      end
 		      C_COD_DATA_ADDR_REG : begin
 			  cod_data_addr_reg <= OPB_DBus_in;
-			  write_done <= 1'b 1;
+			  write_done <= 1'b1;
 		      end
 		      C_ENC_LENGTH_REG : begin
 			  //enc_length_reg <= OPB_DBus_in;
-			  write_done <= 1'b 1;
+			  write_done <= 1'b1;
 		      end
 		      default : begin
 		      end
@@ -264,9 +264,9 @@ module HostIF
 		end
 	    end
 	    // special handling of status reg
-	    if(jpeg_ready == 1'b 1) begin
+	    if(jpeg_ready == 1'b1) begin
 		// set jpeg done flag
-		enc_sts_reg[1] <= 1'b 1;
+		enc_sts_reg[1] <= 1'b1;
 	    end
 	    enc_sts_reg[0] <= jpeg_busy;
 	    enc_length_reg <= {32{1'b0}};
@@ -278,8 +278,8 @@ module HostIF
     // transfer ACK
     //-----------------------------------------------------------------
     always @(posedge CLK or posedge RST) begin
-	if(RST == 1'b 1) begin
-	    OPB_XferAck <= 1'b 0;
+	if(RST == 1'b1) begin
+	    OPB_XferAck <= 1'b0;
 	end 
 	else begin
 	    OPB_XferAck <= rd_dval | write_done;

@@ -63,9 +63,6 @@ def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
         j1_ram_wraddr      = jpgv1.ram_wraddr,
         j1_almost_full     = jpgv1.almost_full,
         j1_frame_size      = jpgv1.frame_size,
-        # -- j1 OPB interface
-        j1_opb_abus        = jpgv1.opb.ABus,
-        jp_opb_be          = jpgv1.opb.BE
 
         j1_opb_abus        = jpgv1.opb.ABus,
         j1_opb_be          = jpgv1.opb.BE,
