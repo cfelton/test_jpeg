@@ -76,64 +76,71 @@ module CtrlSM
 (
  input wire 	    CLK,
  input wire 	    RST,
+
+ //-- ouput IF
  input wire 	    outif_almost_full,
+
+ //-- HOST IF
  input wire 	    sof,
  input wire [15:0]  img_size_x,
  input wire [15:0]  img_size_y,
  output reg 	    jpeg_ready,
  output reg 	    jpeg_busy,
- 
+
+ //-- FDCT
  output wire 	    fdct_start,
  input wire 	    fdct_ready,
  output wire [15:0] fdct_sm_settings_x_cnt,
  output wire [15:0] fdct_sm_settings_y_cnt,
  output wire [2:0]  fdct_sm_settings_cmp_idx,
- 
+
+ //-- ZIGZAG
  output wire 	    zig_start,
  input wire 	    zig_ready,
  output wire [15:0] zig_sm_settings_x_cnt,
  output wire [15:0] zig_sm_settings_y_cnt,
  output wire [2:0]  zig_sm_settings_cmp_idx,
  
- 
+ //-- Qauntizer
  output wire 	    qua_start,
  input wire 	    qua_ready,
  output wire [15:0] qua_sm_settings_x_cnt,
  output wire [15:0] qua_sm_settings_y_cnt,
  output wire [2:0]  qua_sm_settings_cmp_idx,
  
- 
+ //-- RLE
  output wire 	    rle_start,
  input wire 	    rle_ready,
  output wire [15:0] rle_sm_settings_x_cnt,
  output wire [15:0] rle_sm_settings_y_cnt,
  output wire [2:0]  rle_sm_settings_cmp_idx,
  
- 
+ //-- Huffman
  output wire 	    huf_start,
  input wire 	    huf_ready,
  output wire [15:0] huf_sm_settings_x_cnt,
  output wire [15:0] huf_sm_settings_y_cnt,
  output wire [2:0]  huf_sm_settings_cmp_idx,
  
- 
+ //-- ByteStuffer
  output wire 	    bs_start,
  input wire 	    bs_ready,
  output wire [15:0] bs_sm_settings_x_cnt,
  output wire [15:0] bs_sm_settings_y_cnt,
  output wire [2:0]  bs_sm_settings_cmp_idx,
  
- 
+ //-- JFIF GEN
  output reg 	    jfif_start, 
  input wire 	    jfif_ready,
  output reg 	    jfif_eoi,
- 
+
+ //-- OUT MUX
  output reg 	    out_mux_ctrl
  
 );
     
-    localparam NUM_STAGES = 6;
-    localparam CMP_MAX = 4;
+    localparam NUM_STAGES = 6; // Processing block stages
+    localparam CMP_MAX    = 4; // Component max
 	
     /// @todo: verify correct encoding for states
     localparam
@@ -245,7 +252,7 @@ module CtrlSM
 		Reg_cmp_idx[gj] <= 0;
     	    end 
 	    else begin
-    		if(start[gj] == 1'b 1) begin
+    		if(start[gj] == 1'b1) begin
     		    if (gj == 1) begin
     			Reg_x_cnt[gj]    <= RSM_x_cnt;
     			Reg_y_cnt[gj]    <= RSM_y_cnt;
@@ -271,7 +278,7 @@ module CtrlSM
     always @(posedge CLK or posedge RST) begin
 	if(RST == 1'b1) begin
 	    main_state      <= IDLES;
-	    start_sm        <= 1'b0;
+	    start_sm        <= 1'b0;  // was start(1)
 	    start1_d        <= 1'b0;
 	    jpeg_ready      <= 1'b0;
 
@@ -302,12 +309,12 @@ module CtrlSM
 	      //-----------------------------	      
 	      IDLES : begin		  
 		  if(sof == 1'b1) begin
-		      RSM_x_cnt <= {1{1'b0}};
-		      RSM_y_cnt <= {1{1'b0}};
-		      jfif_start <= 1'b 1;
-		      out_mux_ctrl_s <= 1'b 0;
-		      jfif_eoi <= 1'b 0;
-		      main_state <= JFIF;
+		      RSM_x_cnt      <= {16{1'b0}};
+		      RSM_y_cnt      <= {16{1'b0}};
+		      jfif_start     <= 1'b1;
+		      out_mux_ctrl_s <= 1'b0;
+		      jfif_eoi       <= 1'b0;
+		      main_state     <= JFIF;
                   end
 	      end
 	      
@@ -315,9 +322,9 @@ module CtrlSM
 	      // JFIF
 	      //-----------------------------	      
 	      JFIF : begin
-		  if(jfif_ready == 1'b 1) begin
+		  if(jfif_ready == 1'b1) begin
 		      out_mux_ctrl_s <= 1'b 1;
-		      main_state <= HORIZ;
+		      main_state     <= HORIZ;
 		  end
 	      end
 
@@ -325,11 +332,11 @@ module CtrlSM
 	      // HORIZ
 	      //-----------------------------	      
 	      HORIZ : begin
-		  if(RSM_x_cnt < ((img_size_x))) begin
+		  if(RSM_x_cnt < img_size_x) begin
 		      main_state <= COMP;
 		  end
 		  else begin
-		      RSM_x_cnt <= {1{1'b0}};
+		      RSM_x_cnt  <= {16{1'b0}};
 		      main_state <= VERT;
                   end
 	      end
@@ -338,14 +345,13 @@ module CtrlSM
 	      // COMP
 	      //-----------------------------	     
 	      COMP : begin
-		  if(idle[1] == 1'b1 && start[1] == 1'b0) begin
-		      if(RSM_cmp_idx < ((CMP_MAX))) begin
+		  if(idle[1] == 1'b1 && start_sm == 1'b0) begin
+		      if(RSM_cmp_idx < CMP_MAX) begin
 		      	  start_sm <= 1'b1;
 		      end
 		      else begin
 		      	  RSM_cmp_idx <= 0;
-		          RSM_x_cnt <= RSM_x_cnt + 16;
-		      
+		          RSM_x_cnt  <= RSM_x_cnt + 16;		      
 		          main_state <= HORIZ;		      
 		      end
 		  end
@@ -356,9 +362,9 @@ module CtrlSM
 	      // VERT
 	      //-----------------------------	      
 	      VERT : begin
-		  if(RSM_y_cnt < (((img_size_y)) - 8)) begin
-		      RSM_x_cnt <= {1{1'b0}};
-		      RSM_y_cnt <= RSM_y_cnt + 8;
+		  if(RSM_y_cnt < (img_size_y - 8)) begin
+		      RSM_x_cnt  <= {16{1'b0}};
+		      RSM_y_cnt  <= RSM_y_cnt + 8;
 		      main_state <= HORIZ;
                   end
 		  else begin
@@ -394,10 +400,10 @@ module CtrlSM
 	    end
 	    
 	    if(main_state == IDLES) begin
-		jpeg_busy <= 1'b 0;
+		jpeg_busy <= 1'b0;
 	    end	    
 	    else begin
-		jpeg_busy <= 1'b 1;
+		jpeg_busy <= 1'b1;
 	    end
 	    
 	end

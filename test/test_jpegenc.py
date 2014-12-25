@@ -19,7 +19,7 @@ from _jpeg_v2_intf import JPEGEncV2
 def test_jpegenc(args):
 
     clock = Signal(bool(0))
-    reset = ResetSignal(0, active=1, async=True)
+    reset = ResetSignal(1, active=1, async=True)
 
     jpgv1 = JPEGEncV1(clock, reset, args=args)
     jpgv2 = JPEGEncV2(clock, reset, args=args)
@@ -66,6 +66,7 @@ def test_jpegenc(args):
         img = Image.open(args.imgfn)
 
         def _pulse_reset():
+            reset.next = reset.active
             yield delay(13)
             reset.next = reset.active
             yield delay(113)
@@ -98,7 +99,6 @@ def test_jpegenc(args):
             raise StopSimulation
             
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
         # stimulate V1 (design1) 
         @instance
         def tbstimv1():
@@ -108,27 +108,23 @@ def test_jpegenc(args):
             yield delay(100)
             yield clock.posedge
 
-            # @todo: fix / remove, quick hack to see if multiple 
-            #   (continouous) images will result in a completed 
-            #   image.
-            for ni in range(3):
-                # initialize the JPEG encoder            
-                yield jpgv1.initialize()
-                # send and image to be encoded
-                yield jpgv1.put_image(img)
+            # initialize the JPEG encoder            
+            yield jpgv1.initialize()
+            # send and image to be encoded
+            yield jpgv1.put_image(img)
 
-                # no_wait indicates to stream the input and exit,
-                # don't wait the encoder to finish
-                if args.no_wait:
-                    while not jpgv1.pxl_done:
+            # no_wait indicates to stream the input and exit,
+            # don't wait the encoder to finish
+            if args.no_wait:
+                while not jpgv1.pxl_done:
+                    yield delay(1000)
+                    yield clock.posedge   
+                    # this is a debug mode, after all pixles streamed
+                    # in continue simulation for some period of time ...
+                    for _ in range(400):
                         yield delay(1000)
-                        yield clock.posedge   
-                        # this is a debug mode, after all pixles streamed
-                        # in continue simulation for some period of time ...
-                        for _ in range(200):
-                            yield delay(1000)
-                else:
-                    yield jpgv1.get_jpeg(v1_bic)
+            else:
+                yield jpgv1.get_jpeg(v1_bic)
             
             finished[0].next = True
 

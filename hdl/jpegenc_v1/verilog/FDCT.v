@@ -72,18 +72,22 @@ module FDCT
 (
  input wire 	    CLK,
  input wire 	    RST,
+ //-- CTRL
  input wire 	    start_pb,
  output reg 	    ready_pb,
- 
+
+ //-- BUF_FIFO
  output wire 	    bf_fifo_rd,
  input wire [23:0]  bf_fifo_q,
  input wire 	    bf_fifo_hf_full,
- 
+
+ //-- ZIG ZAG
  input wire 	    zz_buf_sel,
  input wire [5:0]   zz_rd_addr,
  output wire [11:0] zz_data,
  input wire 	    zz_rden,
- 
+
+ //-- HOST
  input wire [15:0]  img_size_x,
  input wire [15:0]  img_size_y,
  input wire 	    sof
@@ -100,26 +104,26 @@ module FDCT
     localparam C_Cr_3  = -1332 ; 
 
 
-    reg [7:0] 	    mdct_data_in = 0;
+    reg [7:0] 	    mdct_data_in;
     wire 	    mdct_idval;
     wire 	    mdct_odval;
     wire [11:0]     mdct_data_out;
     
     wire 	    odv1;
     wire [11:0]     dcto1;
-    reg [15:0] 	    x_pixel_cnt = 0;
-    reg [15:0] 	    y_line_cnt = 0;
+    reg [15:0] 	    x_pixel_cnt;
+    reg [15:0] 	    y_line_cnt;
     wire [31:0]     rd_addr;
-    reg [6:0] 	    input_rd_cnt = 0;
+    reg [6:0] 	    input_rd_cnt;
     
-    reg 	    rd_en = 1'b 0;
-    reg 	    rd_en_d1 = 1'b 0;
+    reg 	    rd_en;
+    reg 	    rd_en_d1;
     wire [31:0]     rdaddr;
     
-    reg 	    bf_dval = 1'b 0;
-    reg 	    bf_dval_m1 = 1'b 0;
-    reg 	    bf_dval_m2 = 1'b 0;
-    reg 	    bf_dval_m3 = 1'b 0;    
+    reg 	    bf_dval;
+    reg 	    bf_dval_m1;
+    reg 	    bf_dval_m2;
+    reg 	    bf_dval_m3;    
     
     wire [11:0]     dbuf_data;
     wire [11:0]     dbuf_q;
@@ -135,78 +139,78 @@ module FDCT
     parameter C_SIMA_ASZ = 9;
     wire [C_SIMA_ASZ - 1:0] sim_rd_addr;
     
-    reg [23:0] 	    Y_Reg_1 = 0;
-    reg [23:0] 	    Y_Reg_2 = 0;
-    reg [23:0] 	    Y_Reg_3 = 0;
+    reg [23:0] 	    Y_Reg_1;
+    reg [23:0] 	    Y_Reg_2;
+    reg [23:0] 	    Y_Reg_3;
     
-    reg [23:0] 	    Cb_Reg_1 = 0;
-    reg [23:0] 	    Cb_Reg_2 = 0;
-    reg [23:0] 	    Cb_Reg_3 = 0;
-    reg [23:0] 	    Cr_Reg_1 = 0;
-    reg [23:0] 	    Cr_Reg_2 = 0;
-    reg [23:0] 	    Cr_Reg_3 = 0;
+    reg [23:0] 	    Cb_Reg_1;
+    reg [23:0] 	    Cb_Reg_2;
+    reg [23:0] 	    Cb_Reg_3;
+    reg [23:0] 	    Cr_Reg_1;
+    reg [23:0] 	    Cr_Reg_2;
+    reg [23:0] 	    Cr_Reg_3;
     
-    reg [23:0] 	    Y_Reg = 0;
-    reg [23:0] 	    Cb_Reg = 0;
-    reg [23:0] 	    Cr_Reg = 0;
+    reg [23:0] 	    Y_Reg;
+    reg [23:0] 	    Cb_Reg;
+    reg [23:0] 	    Cr_Reg;
     
-    wire [8:0] 		    R_s;
-    wire [8:0] 		    G_s;
-    wire [8:0] 		    B_s;
+    wire [8:0] 	    R_s;
+    wire [8:0] 	    G_s;
+    wire [8:0] 	    B_s;
     
-    wire [7:0] 		    Y_8bit;
-    wire [7:0] 		    Cb_8bit;
-    wire [7:0] 		    Cr_8bit;
-    reg [2:0] 		    cmp_idx = 0;
+    wire [7:0] 	    Y_8bit;
+    wire [7:0] 	    Cb_8bit;
+    wire [7:0] 	    Cr_8bit;
+    reg [2:0] 	    cmp_idx;
     
-    reg [2:0] 		    cur_cmp_idx = 0;
-    reg [2:0] 		    cur_cmp_idx_d1 = 0;
-    reg [2:0] 		    cur_cmp_idx_d2 = 0;
-    reg [2:0] 		    cur_cmp_idx_d3 = 0;
-    reg [2:0] 		    cur_cmp_idx_d4 = 0;
-    reg [2:0] 		    cur_cmp_idx_d5 = 0;
-    reg [2:0] 		    cur_cmp_idx_d6 = 0;
-    reg [2:0] 		    cur_cmp_idx_d7 = 0;
-    reg [2:0] 		    cur_cmp_idx_d8 = 0;
-    reg [2:0] 		    cur_cmp_idx_d9 = 0;
+    reg [2:0] 	    cur_cmp_idx;
+    reg [2:0] 	    cur_cmp_idx_d1;
+    reg [2:0] 	    cur_cmp_idx_d2;
+    reg [2:0] 	    cur_cmp_idx_d3;
+    reg [2:0] 	    cur_cmp_idx_d4;
+    reg [2:0] 	    cur_cmp_idx_d5;
+    reg [2:0] 	    cur_cmp_idx_d6;
+    reg [2:0] 	    cur_cmp_idx_d7;
+    reg [2:0] 	    cur_cmp_idx_d8;
+    reg [2:0] 	    cur_cmp_idx_d9;
     
-    reg 		    fifo1_rd;
-    wire 		    fifo1_wr;
-    wire [11:0] 	    fifo1_q;
-    wire 		    fifo1_full;
-    wire 		    fifo1_empty;
-    wire [9:0] 		    fifo1_count;
-    reg [5:0] 		    fifo1_rd_cnt;
-    reg 		    fifo1_q_dval;
-    wire [11:0] 	    fifo_data_in;    
-    reg 		    fifo_rd_arm;
+    reg 	    fifo1_rd;
+    wire 	    fifo1_wr;
+    wire [11:0]     fifo1_q;
+    wire 	    fifo1_full;
+    wire 	    fifo1_empty;
+    wire [9:0] 	    fifo1_count;
+    reg [5:0] 	    fifo1_rd_cnt;
+    reg 	    fifo1_q_dval;
+    wire [11:0]     fifo_data_in;    
+    reg 	    fifo_rd_arm;
     
-    reg 		    eoi_fdct = 1'b 0;
-    reg 		    bf_fifo_rd_s = 1'b 0;
-    reg 		    start_int = 1'b 0;
-    reg [4:0] 		    start_int_d = 0;
+    reg 	    eoi_fdct;
+    reg 	    bf_fifo_rd_s;
+    reg 	    start_int;
+    reg [4:0] 	    start_int_d;
     
-    wire [23:0] 	    fram1_data;
-    wire [23:0] 	    fram1_q;
-    wire 		    fram1_we;
-    reg [6:0] 		    fram1_waddr = 0;
-    reg [6:0] 		    fram1_raddr = 0;
-    reg [8:0] 		    fram1_rd_d = 0;
-    reg 		    fram1_rd = 1'b 0;
+    wire [23:0]     fram1_data;
+    wire [23:0]     fram1_q;
+    wire 	    fram1_we;
+    reg [6:0] 	    fram1_waddr;
+    reg [6:0] 	    fram1_raddr;
+    reg [8:0] 	    fram1_rd_d;
+    reg 	    fram1_rd;
     
-    reg 		    rd_started;    
-    reg 		    writing_en;
-
-    wire 		    fram1_q_vld;
-    reg [2:0] 		    fram1_line_cnt = 0;
-    wire [2:0] 		    fram1_line_cnt_p1;
-    reg [2:0] 		    fram1_pix_cnt = 0;  
-
-    assign zz_data = dbuf_q;
+    reg 	    rd_started;    
+    reg 	    writing_en;
+    
+    wire 	    fram1_q_vld;
+    reg [2:0] 	    fram1_line_cnt;
+    wire [2:0] 	    fram1_line_cnt_p1;
+    reg [2:0] 	    fram1_pix_cnt;  
+    
+    assign zz_data    = dbuf_q;
     assign bf_fifo_rd = bf_fifo_rd_s;
     
     //-----------------------------------------------------------------
-    // FRAM1
+    // FRAM1 (Frame RAM, hold 16x8)
     //-----------------------------------------------------------------
     RAMZ
       #(.RAMADDR_W(7), .RAMDATA_W(24))
@@ -215,16 +219,17 @@ module FDCT
        .waddr (fram1_waddr),
        .raddr (fram1_raddr),
        .we    (fram1_we),
+       .rd    (fram1_rd),
        .clk   (CLK),
        .q     (fram1_q)
        );
        
-    assign fram1_we = bf_dval;
-    assign fram1_data = bf_fifo_q;
-    assign fram1_q_vld = fram1_rd_d[5];
+    assign fram1_we = bf_dval;           // moving a new block
+    assign fram1_data = bf_fifo_q;       // data from BUF_FIFO
+    assign fram1_q_vld = fram1_rd_d[5];  // onto the next ...
     
     //-----------------------------------------------------------------
-    // FRAM1 process
+    // FRAM1 address process
     //-----------------------------------------------------------------
     always @(posedge CLK or posedge RST) begin
 	if(RST == 1'b 1) begin
@@ -236,19 +241,45 @@ module FDCT
 	    end
 	end
     end
+    
+    //-----------------------------------------------------------------
+    // Intermidiate (I)RAM read process 
+    //-----------------------------------------------------------------
 
-    //-----------------------------------------------------------------
-    // IRAM read process 
-    //-----------------------------------------------------------------
+    m_fdct_read_proc_sm_monitor U_MON
+      (.clock           (CLK),
+       .reset           (RST),
+       .sof             (sof),
+       .start_int       (start_int),
+       .x_pixel_cnt     (x_pixel_cnt),
+       .y_line_cnt      (y_line_cnt),
+       .img_size_x      (img_size_x),
+       .img_size_y      (img_size_y),
+       .cmp_idx         (cmp_idx),
+       .cur_cmp_idx     (cur_cmp_idx),
+       .rd_started      (rd_started),
+       .bf_fifo_hf_full (bf_fifo_hf_full),
+       .fram1_rd        (fram1_rd),
+       .fram1_raddr     (fram1_raddr),
+       .fram1_ln_cnt    (fram1_line_cnt),
+       .fram1_px_cnt    (fram1_pix_cnt),
+       .fram1_we        (fram1_we),
+       .fram1_waddr     (fram1_waddr),
+       .midv            (mdct_idval),
+       .modv            (mdct_odval),
+       .zz_rd           (zz_rden),
+       .zz_raddr        (zz_rd_addr)
+       );
+       
     assign fram1_line_cnt_p1 = fram1_line_cnt + 1;
     always @(posedge CLK or posedge RST) begin
-	if(RST == 1'b 1) begin
-	    rd_en <= 1'b 0;
-	    rd_en_d1 <= 1'b 0;
-	    x_pixel_cnt <= {16{1'b0}};
-	    y_line_cnt <= {16{1'b0}};
+	if(RST == 1'b1) begin
+	    rd_en        <= 1'b0;
+	    rd_en_d1     <= 1'b0;
+	    x_pixel_cnt  <= {16{1'b0}};
+	    y_line_cnt   <= {16{1'b0}};
 	    input_rd_cnt <= {7{1'b0}};
-	    cmp_idx <= {3{1'b0}};
+	    cmp_idx      <= {3{1'b0}};
 	    
 	    cur_cmp_idx <= {3{1'b0}};
 	    cur_cmp_idx_d1 <= {3{1'b0}};
@@ -288,17 +319,14 @@ module FDCT
 	    cur_cmp_idx_d8 <= cur_cmp_idx_d7;
 	    cur_cmp_idx_d9 <= cur_cmp_idx_d8;
 	    
-	    start_int <= 1'b0;
+	    start_int  <= 1'b0;
 	    bf_dval_m3 <= bf_fifo_rd_s;
 	    bf_dval_m2 <= bf_dval_m3;
 	    bf_dval_m1 <= bf_dval_m2;
-	    bf_dval <= bf_dval_m1;
+	    bf_dval    <= bf_dval_m1;
 	    
-	    //fram1_rd_d     <= fram1_rd_d(fram1_rd_d'length-2 downto 0) & fram1_rd;
-	    fram1_rd_d <= {fram1_rd_d[9 - 2:0],fram1_rd};
-	    
-	    //start_int_d    <= start_int_d(start_int_d'length-2 downto 0) & start_int;
-	    start_int_d <= {start_int_d[5 - 2:0],start_int};
+	    fram1_rd_d <= {fram1_rd_d[9-2:0], fram1_rd};
+	    start_int_d <= {start_int_d[5-2:0], start_int};
 
 	    //--------------------------------------------------------
 	    // SOF or internal self-start
@@ -336,17 +364,18 @@ module FDCT
 	    
                 cur_cmp_idx <= cmp_idx;
 	    end // end sof == 1 or start_int == 1
-	    //--------------------------------------------------------
 	    
+	    //--------------------------------------------------------	    
 	    // wait until FIFO becomes half full but only for component 0
 	    // as we read buf FIFO only during component 0
 	    if(rd_started == 1'b1 && (bf_fifo_hf_full == 1'b1 || cur_cmp_idx > 1)) begin
-		rd_en <= 1'b1;
+		rd_en      <= 1'b1;
 		rd_started <= 1'b0;
 	    end
-	    
+
+	    // default values, assigned below
 	    bf_fifo_rd_s <= 1'b0;
-	    fram1_rd <= 1'b0;
+	    fram1_rd     <= 1'b0;
 
 	    //--------------------------------------------------------
 	    // stall reading from input FIFO and writing to output FIFO 
@@ -381,13 +410,13 @@ module FDCT
 	    // there is 2:1 subsampled Cr block
 	    // subsampling done as simple decimation by 2 wo/ averaging
 	    if(sof == 1'b1) begin 
-		fram1_raddr <= {7{1'b0}};
+		fram1_raddr    <= {7{1'b0}};
                 fram1_line_cnt <= {3{1'b0}};
-                fram1_pix_cnt <= {3{1'b0}};
+                fram1_pix_cnt  <= {3{1'b0}};
 	    end
-	    else if(start_int_d[4] == 1'b 1) begin
+	    else if(start_int_d[4] == 1'b1) begin
 		fram1_line_cnt <= {3{1'b0}};
-		fram1_pix_cnt <= {3{1'b0}};
+		fram1_pix_cnt  <= {3{1'b0}};
 		 
 		case(cur_cmp_idx_d4)
                    // Y1, Cr, Cb
@@ -401,7 +430,8 @@ module FDCT
 		   default : begin
 		   end
 	        endcase
-	    end	    
+	     end
+	    
 	    else if(fram1_rd_d[4] == 1'b1) begin
 		if(fram1_pix_cnt == (8 - 1)) begin
 		    fram1_pix_cnt <= {3{1'b0}};
@@ -461,9 +491,10 @@ module FDCT
        );
     
     assign mdct_idval = fram1_rd_d[8];
-    assign R_s = {1'b 0,fram1_q[7:0]};
-    assign G_s = {1'b 0,fram1_q[15:8]};
-    assign B_s = {1'b 0,fram1_q[23:16]};
+    
+    assign R_s = {1'b0, fram1_q[7:0]};
+    assign G_s = {1'b0, fram1_q[15:8]};
+    assign B_s = {1'b0, fram1_q[23:16]};
     
     //-----------------------------------------------------------------
     // Mux1
@@ -514,8 +545,8 @@ module FDCT
     //-----------------------------------------------------------------
     always @(posedge CLK or posedge RST) begin
 	if(RST == 1'b1) begin
-	    fifo1_rd <= 1'b0;
-	    fifo_rd_arm <= 1'b0;
+	    fifo1_rd     <= 1'b0;
+	    fifo_rd_arm  <= 1'b0;
 	    fifo1_rd_cnt <= {6{1'b0}};
 	    fifo1_q_dval <= 1'b0;
 	end 
@@ -531,10 +562,10 @@ module FDCT
 	    if(fifo_rd_arm == 1'b1) begin
 		if(fifo1_rd_cnt == (64 - 1)) begin
 		    fifo_rd_arm <= 1'b0;
-		    fifo1_rd <= 1'b1;
+		    fifo1_rd    <= 1'b1;
 		end
 		else if(fifo1_empty == 1'b0) begin
-		    fifo1_rd <= 1'b1;
+		    fifo1_rd     <= 1'b1;
 		    fifo1_rd_cnt <= fifo1_rd_cnt + 1;
 		end
 	    end
@@ -556,15 +587,14 @@ module FDCT
 	    ready_pb <= 1'b0;
 	    
 	    if(start_pb == 1'b1) begin
-                wr_cnt <= {6{1'b0}};
-                xw_cnt <= {3{1'b0}};
-                yw_cnt <= {3{1'b0}};
+                wr_cnt     <= {6{1'b0}};
+                xw_cnt     <= {3{1'b0}};
+                yw_cnt     <= {3{1'b0}};
                 writing_en <= 1'b1;
             end
 	    
 	    if(writing_en == 1'b1) begin
-                if(fifo1_q_dval == 1'b1) begin
-		    
+                if(fifo1_q_dval == 1'b1) begin		    
 	    	    if(wr_cnt == (64 - 1)) begin
 	    	        wr_cnt <= {6{1'b0}};
 	    	        ready_pb <= 1'b1;
@@ -590,44 +620,41 @@ module FDCT
     //-----------------------------------------------------------------
     // RGB to YCbCr conversion
     //-----------------------------------------------------------------
-    always @(posedge CLK or posedge RST) begin
-	
-	if(RST == 1'b1) begin
-	    
+    always @(posedge CLK or posedge RST) begin	
+	if(RST == 1'b1) begin	    
 	    Y_Reg_1 <= {1{1'b0}};
 	    Y_Reg_2 <= {1{1'b0}};
-	Y_Reg_3 <= {1{1'b0}};
-      Cb_Reg_1 <= {1{1'b0}};
-      Cb_Reg_2 <= {1{1'b0}};
-      Cb_Reg_3 <= {1{1'b0}};
-      Cr_Reg_1 <= {1{1'b0}};
-      Cr_Reg_2 <= {1{1'b0}};
-      Cr_Reg_3 <= {1{1'b0}};
-      Y_Reg <= {1{1'b0}};
-      Cb_Reg <= {1{1'b0}};
-      Cr_Reg <= {1{1'b0}};
-    end else begin
-      Y_Reg_1 <= R_s * C_Y_1;
-      Y_Reg_2 <= G_s * C_Y_2;
-      Y_Reg_3 <= B_s * C_Y_3;
-      Cb_Reg_1 <= R_s * C_Cb_1;
-      Cb_Reg_2 <= G_s * C_Cb_2;
-      Cb_Reg_3 <= B_s * C_Cb_3;
-      Cr_Reg_1 <= R_s * C_Cr_1;
-      Cr_Reg_2 <= G_s * C_Cr_2;
-      Cr_Reg_3 <= B_s * C_Cr_3;
-      Y_Reg <= Y_Reg_1 + Y_Reg_2 + Y_Reg_3;
-	
-      //Cb_Reg <= Cb_Reg_1 + Cb_Reg_2 + Cb_Reg_3 + to_signed(128*16384, Cb_Reg'length);
-	Cb_Reg <= Cb_Reg_1 + Cb_Reg_2 + Cb_Reg_3 + (128*16384);
-      //Cr_Reg <= Cr_Reg_1 + Cr_Reg_2 + Cr_Reg_3 + to_signed(128*16384, Cr_Reg'length);
-	Cr_Reg <= Cr_Reg_1 + Cr_Reg_2 + Cr_Reg_3 + (128*16384);
+	    Y_Reg_3 <= {1{1'b0}};
+            Cb_Reg_1 <= {1{1'b0}};
+            Cb_Reg_2 <= {1{1'b0}};
+            Cb_Reg_3 <= {1{1'b0}};
+            Cr_Reg_1 <= {1{1'b0}};
+            Cr_Reg_2 <= {1{1'b0}};
+            Cr_Reg_3 <= {1{1'b0}};
+            Y_Reg <= {1{1'b0}};
+            Cb_Reg <= {1{1'b0}};
+            Cr_Reg <= {1{1'b0}};
+        end 
+	else begin
+            Y_Reg_1 <= R_s * C_Y_1;
+            Y_Reg_2 <= G_s * C_Y_2;
+            Y_Reg_3 <= B_s * C_Y_3;
+            Cb_Reg_1 <= R_s * C_Cb_1;
+            Cb_Reg_2 <= G_s * C_Cb_2;
+            Cb_Reg_3 <= B_s * C_Cb_3;
+            Cr_Reg_1 <= R_s * C_Cr_1;
+            Cr_Reg_2 <= G_s * C_Cr_2;
+            Cr_Reg_3 <= B_s * C_Cr_3;
+	    
+            Y_Reg <= Y_Reg_1 + Y_Reg_2 + Y_Reg_3;            	
+            Cb_Reg <= Cb_Reg_1 + Cb_Reg_2 + Cb_Reg_3 + (128*16384);
+            Cr_Reg <= Cr_Reg_1 + Cr_Reg_2 + Cr_Reg_3 + (128*16384);
+	end
     end
-  end
-
-  assign Y_8bit = (Y_Reg[21:14]);
-  assign Cb_8bit = (Cb_Reg[21:14]);
-  assign Cr_8bit = (Cr_Reg[21:14]);
+    
+    assign Y_8bit  = (Y_Reg[21:14]);
+    assign Cb_8bit = (Cb_Reg[21:14]);
+    assign Cr_8bit = (Cr_Reg[21:14]);
     
     //-----------------------------------------------------------------
     // DBUF
@@ -643,10 +670,10 @@ module FDCT
        .q      (dbuf_q     ) 
        );
     
-  assign dbuf_data = fifo1_q;
-  assign dbuf_we = fifo1_q_dval;
-  assign dbuf_waddr = {( ~zz_buf_sel),{yw_cnt,xw_cnt}};
-  assign dbuf_raddr = {zz_buf_sel,zz_rd_addr};
+  assign dbuf_data  = fifo1_q;
+  assign dbuf_we    = fifo1_q_dval;
+  assign dbuf_waddr = {( ~zz_buf_sel),{yw_cnt, xw_cnt}};
+  assign dbuf_raddr = {zz_buf_sel, zz_rd_addr};
     
 
 endmodule

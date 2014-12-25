@@ -214,7 +214,7 @@ begin
   bf_fifo_rd   <= bf_fifo_rd_s;
   
   -------------------------------------------------------------------
-  -- FRAM1
+  -- FRAM1 (Frame RAM, hold 16x8)
   -------------------------------------------------------------------
   U_FRAM1 : entity work.RAMZ
   generic map
@@ -233,13 +233,12 @@ begin
         q           => fram1_q
   );
   
-  fram1_we   <= bf_dval;
-  fram1_data <= bf_fifo_q;
-  
-  fram1_q_vld <= fram1_rd_d(5);
+  fram1_we    <= bf_dval;         -- moving a new block
+  fram1_data  <= bf_fifo_q;       -- data from BUF_FIFO
+  fram1_q_vld <= fram1_rd_d(5);   -- onto the next ...
   
   -------------------------------------------------------------------
-  -- FRAM1 process
+  -- FRAM1 address process
   -------------------------------------------------------------------
   p_fram1_acc : process(CLK, RST)
   begin
@@ -253,7 +252,7 @@ begin
   end process;
 
   -------------------------------------------------------------------
-  -- IRAM read process 
+  -- Intermidiate (I)RAM read process 
   -------------------------------------------------------------------
   p_counter1 : process(CLK, RST)
   begin
@@ -261,7 +260,7 @@ begin
       rd_en           <= '0';
       rd_en_d1        <= '0';
       x_pixel_cnt     <= (others => '0');
-      y_line_cnt     <= (others => '0');
+      y_line_cnt      <= (others => '0');
       input_rd_cnt    <= (others => '0');
       cmp_idx         <= (others => '0');
       cur_cmp_idx     <= (others => '0');
@@ -288,6 +287,7 @@ begin
       fram1_pix_cnt   <= (others => '0');
     elsif CLK'event and CLK = '1' then
       rd_en_d1 <= rd_en;
+      
       cur_cmp_idx_d1 <= cur_cmp_idx;
       cur_cmp_idx_d2 <= cur_cmp_idx_d1;
       cur_cmp_idx_d3 <= cur_cmp_idx_d2;
@@ -297,8 +297,8 @@ begin
       cur_cmp_idx_d7 <= cur_cmp_idx_d6;
       cur_cmp_idx_d8 <= cur_cmp_idx_d7;
       cur_cmp_idx_d9 <= cur_cmp_idx_d8;
-      start_int      <= '0';
       
+      start_int      <= '0';      
       bf_dval_m3     <= bf_fifo_rd_s;
       bf_dval_m2     <= bf_dval_m3;
       bf_dval_m1     <= bf_dval_m2;
@@ -306,7 +306,8 @@ begin
       
       fram1_rd_d     <= fram1_rd_d(fram1_rd_d'length-2 downto 0) & fram1_rd;
       start_int_d    <= start_int_d(start_int_d'length-2 downto 0) & start_int;
-    
+
+      ----------------------------------------------------------------
       -- SOF or internal self-start
       if (sof = '1' or start_int = '1') then
         input_rd_cnt <= (others => '0');
@@ -337,7 +338,8 @@ begin
         cur_cmp_idx     <= cmp_idx;
         
       end if;
-      
+
+      ----------------------------------------------------------------
       -- wait until FIFO becomes half full but only for component 0
       -- as we read buf FIFO only during component 0
       if rd_started = '1' and (bf_fifo_hf_full = '1' or cur_cmp_idx > 1) then
@@ -347,6 +349,8 @@ begin
       
       bf_fifo_rd_s   <= '0';
       fram1_rd       <= '0';
+
+      ----------------------------------------------------------------
       -- stall reading from input FIFO and writing to output FIFO 
       -- when output FIFO is almost full
       if rd_en = '1' and unsigned(fifo1_count) < 512-64 and 
@@ -369,6 +373,7 @@ begin
         fram1_rd <= '1';
       end if;
 
+      ----------------------------------------------------------------
       -- increment FRAM1 read address according to subsampling
       -- idea is to extract 8x8 from 16x8 block
       -- there are two luminance blocks left and right
@@ -433,17 +438,17 @@ begin
   -- FDCT with input level shift
   -------------------------------------------------------------------
   U_MDCT : entity work.MDCT
-	port map
-  (	  
-		clk          => CLK,
-		rst          => RST,
+        port map
+  (       
+                clk          => CLK,
+                rst          => RST,
     dcti         => mdct_data_in,
     idv          => mdct_idval,
     odv          => mdct_odval,
     dcto         => mdct_data_out,
     odv1         => odv1,
     dcto1        => dcto1
-	); 
+        ); 
   
   mdct_idval   <= fram1_rd_d(8);
   

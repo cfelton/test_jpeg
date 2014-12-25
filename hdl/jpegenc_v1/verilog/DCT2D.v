@@ -181,23 +181,23 @@ module DCT2D
     always @(posedge clk or posedge rst) begin	
 	if (rst == 1'b1) begin    
 	    stage2_cnt_reg <= {(((RAMADRR_W - 1))-((0))+1){1'b1}};	
-        	rmemsel_reg <= 1'b 0;
-        	stage1_reg <= 1'b 0;
-        	stage2_reg <= 1'b 0;
-        	colram_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
-        	rowram_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
-        	col_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
-        	row_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
+            rmemsel_reg <= 1'b 0;
+            stage1_reg <= 1'b 0;
+            stage2_reg <= 1'b 0;
+            colram_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
+            rowram_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
+            col_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
+            row_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
 
-	        for(ii=0; ii<N; ii=ii+1) begin
-        	    latchbuf_reg[ii]  <= 0; 
-            	    databuf_reg[ii]   <= 0;
-	        end
+	    for(ii=0; ii<N; ii=ii+1) begin
+        	latchbuf_reg[ii]  <= 0; 
+            	databuf_reg[ii]   <= 0;
+	    end
 	
-        	odv_d0 <= 1'b 0;
-        	colr_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
-        	rowr_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
-                dataready_2_reg <= 1'b 0;
+            odv_d0 <= 1'b0;
+            colr_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
+            rowr_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
+            dataready_2_reg <= 1'b 0;
         end 
 	else begin
 	    stage2_reg <= 1'b0;
@@ -249,7 +249,7 @@ module DCT2D
 	    if(stage2_cnt_reg < N) begin
 		stage2_cnt_reg <= stage2_cnt_reg + 1;
 		// output data valid
-		odv_d0 <= 1'b 1;
+		odv_d0 <= 1'b1;
 		// increment column counter
 		col_reg <= col_reg + 1;
 		// finished processing one input row
@@ -280,7 +280,7 @@ module DCT2D
     end
 
     always @(posedge clk or posedge rst) begin
-	if(rst == 1'b 1) begin
+	if(rst == 1'b1) begin
 	    even_not_odd <= 1'b 0;
 	    even_not_odd_d1 <= 1'b 0;
 	    even_not_odd_d2 <= 1'b 0;

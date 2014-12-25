@@ -4,16 +4,16 @@
 Current Status
 ==============
  
-   07-Dec-2014 : Neither encoder completes successfully a small image
-     test, currently debugging (design1 (v1) conversion complete need
-     to find any errors in conversion).  The test environment will 
-     stream the image in and complete shortly after the image has 
-     been streamed in.
+   **07-Dec-2014** : Neither encoder completes successfully with a 
+     small test image, currently debugging (design1 (v1) conversion 
+     complete need to find any errors in conversion).  The test 
+     environment will stream the image in and complete shortly after 
+     the image has been streamed in.
 
-   05-Dec-2014 : Design1 conversion to verilog is mostly complete, 
+   **05-Dec-2014** : Design1 conversion to verilog is mostly complete, 
      spending some time verifying.
 
-   09-Nov-2014 : The test environment will stream an image to both
+   **09-Nov-2014** : The test environment will stream an image to both
      the design1 and design2 encoders.  The output is not interrogated
      (yet).  Design1 conversion to verilog is incomplete.
 

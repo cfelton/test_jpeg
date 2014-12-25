@@ -212,8 +212,8 @@ module RLE_TOP(
     // output data valid
     //-----------------------------------------------------------------
     always @(posedge CLK or posedge RST) begin
-	if(RST == 1'b 1) begin
-	    huf_dval_p0 <= 1'b 0;
+	if(RST == 1'b1) begin
+	    huf_dval_p0 <= 1'b0;
 	    //huf_dval    <= '0';
 	end 
 	else begin

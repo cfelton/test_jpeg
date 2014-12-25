@@ -163,19 +163,19 @@ module MDCT
     // 1D DCT port map
     //----------------------------
     DCT2D U_DCT2D
-      (.clk          (clk                 ),
-       .rst          (rst		  ),
-       .romedatao_flat    (rome2datao_s_flat	  ),
-       .romodatao_flat    (romo2datao_s_flat	  ),
-       .ramdatao     (ramdatao_s	  ),
-       .dataready    (dataready_s	  ),
-       .odv          (odv		  ),
-       .dcto         (dcto		  ),
-       .romeaddro_flat    (rome2addro_s_flat	  ),
-       .romoaddro_flat    (romo2addro_s_flat	  ),
-       .ramraddro    (ramraddro_s	  ),
-       .rmemsel      (rmemsel_s		  ),
-       .datareadyack (datareadyack_s      ) 
+      (.clk             (clk                 ),
+       .rst             (rst		  ),
+       .romedatao_flat  (rome2datao_s_flat	  ),
+       .romodatao_flat  (romo2datao_s_flat	  ),
+       .ramdatao        (ramdatao_s	  ),
+       .dataready       (dataready_s	  ),
+       .odv             (odv		  ),
+       .dcto            (dcto		  ),
+       .romeaddro_flat  (rome2addro_s_flat	  ),
+       .romoaddro_flat  (romo2addro_s_flat	  ),
+       .ramraddro       (ramraddro_s	  ),
+       .rmemsel         (rmemsel_s		  ),
+       .datareadyack    (datareadyack_s      ) 
        );
     
     //----------------------------
@@ -203,9 +203,9 @@ module MDCT
        );
     
     // double buffer switch
-    assign ramwe1_s = memswitchwr_s == 1'b 0 ? ramwe_s : 1'b 0;
-    assign ramwe2_s = memswitchwr_s == 1'b 1 ? ramwe_s : 1'b 0;
-    assign ramdatao_s = memswitchrd_s == 1'b 0 ? ramdatao1_s : ramdatao2_s;
+    assign ramwe1_s = memswitchwr_s == 1'b0 ? ramwe_s : 1'b0;
+    assign ramwe2_s = memswitchwr_s == 1'b1 ? ramwe_s : 1'b0;
+    assign ramdatao_s = memswitchrd_s == 1'b0 ? ramdatao1_s : ramdatao2_s;
     
     //----------------------------
     // DBUFCTL

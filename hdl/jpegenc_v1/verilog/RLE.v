@@ -169,126 +169,129 @@ module rle
                 end
 	    end 
 	 
-      // input data valid
-      if(divalid == 1'b1) begin
-        wr_cnt <= wr_cnt + 1;
-        // first DCT coefficient received, DC data
-        if(wr_cnt == 0) begin
-          // differental coding of DC data per component
-          case(rss_cmp_idx)
-          3'b000, 3'b001 : begin
-            // @todo verify?
-            //acc_reg <= RESIZE(SIGNED(di),RAMDATA_W+1) - RESIZE(prev_dc_reg_0,RAMDATA_W+1);
-	     acc_reg <= $signed(di) - prev_dc_reg_0;	     
-             prev_dc_reg_0 <= (di);
-          end
-          3'b010 : begin
-            // @todo: verify?              
-            //acc_reg <= RESIZE(SIGNED(di),RAMDATA_W+1) - RESIZE(prev_dc_reg_1,RAMDATA_W+1);
-	     acc_reg <= $signed(di) - prev_dc_reg_1;
-             prev_dc_reg_1 <= (di);
-          end
-          3'b011 : begin
-            // @todo: verify?            
-            //acc_reg <= RESIZE(SIGNED(di),RAMDATA_W+1) - RESIZE(prev_dc_reg_2,RAMDATA_W+1);
-	     acc_reg <= $signed(di) - prev_dc_reg_2;	     
-             prev_dc_reg_2 <= (di);
-          end
-            default : begin
-            end
-          endcase
-           runlength_reg <= {4{1'b0}};
-           dovalid_reg <= 1'b 1;
-           // AC coefficient
-        end
-        else begin
-           // zero AC
-           if(((di)) == 0) begin
-              // EOB
-              if(wr_cnt == 63) begin
-		 acc_reg <= {(((RAMDATA_W))-((0))+1){1'b0}};
-                 runlength_reg <= {4{1'b0}};
-                 dovalid_reg <= 1'b1;
-                 // no EOB
-              end
-           else begin
-              zero_cnt <= zero_cnt + 1;
-           end
-            // non-zero AC
-        end
-          else begin
-            // normal RLE case
-            if(zero_cnt <= 15) begin
-              // @todo: verify?  
-		//acc_reg        <= RESIZE(SIGNED(di),RAMDATA_W+1);  
-		acc_reg <= $signed(di);             
-		runlength_reg <= zero_cnt[3:0];
+	    // input data valid
+	    if(divalid == 1'b1) begin
+		wr_cnt <= wr_cnt + 1;
+		// first DCT coefficient received, DC data
+		if(wr_cnt == 0) begin
+		    
+		    // differental coding of DC data per component
+		    case(rss_cmp_idx)
+		      3'b000, 3'b001 : begin
+			  // @todo verify?
+			  //acc_reg <= RESIZE(SIGNED(di),RAMDATA_W+1) - RESIZE(prev_dc_reg_0,RAMDATA_W+1);
+			  acc_reg <= $signed(di) - prev_dc_reg_0;	     
+			  prev_dc_reg_0 <= (di);
+		      end
+		      3'b010 : begin
+			  // @todo: verify?              
+			  //acc_reg <= RESIZE(SIGNED(di),RAMDATA_W+1) - RESIZE(prev_dc_reg_1,RAMDATA_W+1);
+			  acc_reg <= $signed(di) - prev_dc_reg_1;
+			  prev_dc_reg_1 <= (di);
+		      end
+		      3'b011 : begin
+			  // @todo: verify?            
+			  //acc_reg <= RESIZE(SIGNED(di),RAMDATA_W+1) - RESIZE(prev_dc_reg_2,RAMDATA_W+1);
+			  acc_reg <= $signed(di) - prev_dc_reg_2;	     
+			  prev_dc_reg_2 <= (di);
+		      end
+		      default : begin
+		      end
+		    endcase
+		    
+		    runlength_reg <= {4{1'b0}};
+		    dovalid_reg <= 1'b 1;
+		    // AC coefficient
+		end
+		else begin
+		    // zero AC
+		    if(((di)) == 0) begin
+			// EOB
+			if(wr_cnt == 63) begin
+			    acc_reg <= {(((RAMDATA_W))-((0))+1){1'b0}};
+			runlength_reg <= {4{1'b0}};
+			dovalid_reg <= 1'b1;
+			// no EOB
+		    end
+			else begin
+			    zero_cnt <= zero_cnt + 1;
+			end
+			// non-zero AC
+		    end
+		    else begin
+			// normal RLE case
+			if(zero_cnt <= 15) begin
+			    // @todo: verify?  
+			    //acc_reg        <= RESIZE(SIGNED(di),RAMDATA_W+1);  
+			    acc_reg <= $signed(di);             
+			    runlength_reg <= zero_cnt[3:0];
+			    zero_cnt <= {6{1'b0}};
+			    dovalid_reg <= 1'b1;
+			    // zero_cnt > 15
+			end
+			else begin
+			    // generate ZRL
+			    acc_reg <= {(((RAMDATA_W))-((0))+1){1'b0}};
+    		    	    runlength_reg <= 4'hF;
+			    zero_cnt <= zero_cnt - 16;
+			    dovalid_reg <= 1'b1;
+          		    // stall input until ZRL is handled
+    		   	    zrl_proc <= 1'b1;
+			    zrl_di <= di;
+			    divalid <= 1'b0;
+			    rd_cnt <= rd_cnt;
+		        end
+		    end
+		end
+	    end
+	  
+	    // ZRL processing
+	    if(zrl_proc == 1'b1) begin
+		if(zero_cnt <= 15) begin
+		    
+		    // @todo: verify
+		    //acc_reg        <= RESIZE(SIGNED(zrl_di),RAMDATA_W+1);
+		    acc_reg = $signed(zrl_di);	    
+		    runlength_reg <= zero_cnt[3:0];
+		    
+		    if(((zrl_di)) == 0) begin
+			//zero_cnt     <= to_unsigned(1,zero_cnt'length);
+			zero_cnt <= 1;
+		    end
+		    else begin
+			zero_cnt <= {6{1'b0}};
+		end
+		    
+		    dovalid_reg <= 1'b1;
+		    divalid <= divalid_en;
+		    // continue input handling
+		    zrl_proc <= 1'b0;
+		    // zero_cnt > 15
+		end
+		else begin
+		    // generate ZRL
+		    acc_reg <= {(((RAMDATA_W))-((0))+1){1'b0}};
+                    runlength_reg <= 4'hF;
+                    zero_cnt <= zero_cnt - 16;
+                    dovalid_reg <= 1'b1;
+                    divalid <= 1'b0;
+                    rd_cnt <= rd_cnt;
+                end
+	    end
+	  
+	    // start of 8x8 block processing
+	    if(start_pb == 1'b1) begin
 		zero_cnt <= {6{1'b0}};
-		dovalid_reg <= 1'b1;
-		// zero_cnt > 15
+                wr_cnt <= {6{1'b0}};
             end
-            else begin
-              // generate ZRL
-              acc_reg <= {(((RAMDATA_W))-((0))+1){1'b0}};
-              runlength_reg <= 4'hF;
-              zero_cnt <= zero_cnt - 16;
-              dovalid_reg <= 1'b1;
-              // stall input until ZRL is handled
-              zrl_proc <= 1'b1;
-              zrl_di <= di;
-              divalid <= 1'b0;
-              rd_cnt <= rd_cnt;
-            end
-          end
-        end
-      end
-	  
-	  // ZRL processing
-	  if(zrl_proc == 1'b1) begin
-              if(zero_cnt <= 15) begin
-		  
-		  // @todo: verify
-		  //acc_reg        <= RESIZE(SIGNED(zrl_di),RAMDATA_W+1);
-		  acc_reg = $signed(zrl_di);	    
-		  runlength_reg <= zero_cnt[3:0];
-	    
-		  if(((zrl_di)) == 0) begin
-		      //zero_cnt     <= to_unsigned(1,zero_cnt'length);
-		      zero_cnt <= 1;
-		  end
-		  else begin
-		      zero_cnt <= {6{1'b0}};
-              end
-		  dovalid_reg <= 1'b1;
-		  divalid <= divalid_en;
-		  // continue input handling
-		  zrl_proc <= 1'b0;
-		  // zero_cnt > 15
-              end
-              else begin
-		  // generate ZRL
-		  acc_reg <= {(((RAMDATA_W))-((0))+1){1'b0}};
-                  runlength_reg <= 4'hF;
-                  zero_cnt <= zero_cnt - 16;
-                  dovalid_reg <= 1'b1;
-                  divalid <= 1'b0;
-                  rd_cnt <= rd_cnt;
-              end
-	  end
-	  
-	  // start of 8x8 block processing
-	  if(start_pb == 1'b1) begin
-              zero_cnt <= {6{1'b0}};
-              wr_cnt <= {6{1'b0}};
-          end
-	  if(sof == 1'b1) begin
-              prev_dc_reg_0 <= {(((RAMDATA_W - 1))-((0))+1){1'b0}};
-              prev_dc_reg_1 <= {(((RAMDATA_W - 1))-((0))+1){1'b0}};
-              prev_dc_reg_2 <= {(((RAMDATA_W - 1))-((0))+1){1'b0}};
-              prev_dc_reg_3 <= {(((RAMDATA_W - 1))-((0))+1){1'b0}};
-          end
-      end
-  end
+	    if(sof == 1'b1) begin
+                prev_dc_reg_0 <= {(((RAMDATA_W - 1))-((0))+1){1'b0}};
+                prev_dc_reg_1 <= {(((RAMDATA_W - 1))-((0))+1){1'b0}};
+                 prev_dc_reg_2 <= {(((RAMDATA_W - 1))-((0))+1){1'b0}};
+                prev_dc_reg_3 <= {(((RAMDATA_W - 1))-((0))+1){1'b0}};
+             end
+	end
+    end
 
     //-----------------------------------------------------------------
     // Entropy Coder

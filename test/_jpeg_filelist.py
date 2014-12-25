@@ -27,6 +27,7 @@ filelist_v1 = [
     '../hdl/jpegenc_v1/verilog/RLE_TOP.v',
     '../hdl/jpegenc_v1/verilog/DCT1D.v',
     '../hdl/jpegenc_v1/verilog/DCT2D.v',
+    '../hdl/jpegenc_v1/verilog/m_fdct_read_proc_sm_monitor.v',
     '../hdl/jpegenc_v1/verilog/FDCT.v',
     '../hdl/jpegenc_v1/verilog/HostIF.v',
     '../hdl/jpegenc_v1/verilog/Huffman.v',

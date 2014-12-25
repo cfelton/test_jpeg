@@ -201,7 +201,7 @@ module BUF_FIFO
                 ramwaddr <= {((($clog2(C_MAX_LINE_WIDTH * C_NUM_LINES) - 1))-((0))+1){1'b0}};
                 memwr_line_cnt <= {((($clog2(C_NUM_LINES) - 1))-((0))+1){1'b0}};
                 wr_line_idx <= {16{1'b0}};
-                image_write_end <= 1'b 0;
+                image_write_end <= 1'b0;
             end
 	end
     end
@@ -211,20 +211,20 @@ module BUF_FIFO
     //-----------------------------------------------------------------
     always @(posedge CLK or posedge RST) begin
 	if (RST == 1'b1) begin
-	    fdct_fifo_hf_full <= 1'b 0;
-	    fifo_almost_full <= 1'b 0;
+	    fdct_fifo_hf_full <= 1'b0;
+	    fifo_almost_full <= 1'b0;
 	end 
 	else begin
 	    if((rd_line_idx + 8) <= wr_line_idx) begin
-		fdct_fifo_hf_full <= 1'b 1;
+		fdct_fifo_hf_full <= 1'b1;
 	    end
 	    else begin
-		fdct_fifo_hf_full <= 1'b 0;
+		fdct_fifo_hf_full <= 1'b0;
 	    end
-	    fifo_almost_full <= 1'b 0;
+	    fifo_almost_full <= 1'b0;
 	    if(wr_line_idx == (rd_line_idx + C_NUM_LINES - 1)) begin
 		if(pixel_cnt >= (((img_size_x)) - 1 - 1)) begin
-		    fifo_almost_full <= 1'b 1;
+		    fifo_almost_full <= 1'b1;
 		end
 	    end
 	    else if(wr_line_idx > (rd_line_idx + C_NUM_LINES - 1)) begin

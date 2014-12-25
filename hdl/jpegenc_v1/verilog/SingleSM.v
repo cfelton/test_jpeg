@@ -124,6 +124,7 @@ module SingleSM
 		      idle_o <= 1'b0;
 		  end
 	      end
+	      
 	      WAIT_FOR_BLK_RDY : begin
 		  // wait until processing block completes
 		  if(pb_rdy_i == 1'b1) begin
@@ -137,12 +138,14 @@ module SingleSM
 		      end
 		  end
 	      end
+	      
 	      WAIT_FOR_BLK_IDLE : begin
 		  if(idle_i == 1'b1) begin
 		      state <= IDLE;
 		      start_o <= 1'b1;
 		  end
 	      end
+	      
 	      default : begin
 		  idle_o <= 1'b0;
 		  start_o <= 1'b0;

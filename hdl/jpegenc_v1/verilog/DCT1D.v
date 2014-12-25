@@ -199,7 +199,7 @@ module DCT1D
     integer ii, jj;
     
     always @(posedge clk or posedge rst) begin
-	if(rst == 1'b 1) begin
+	if(rst == 1'b1) begin
 	    inpcnt_reg  <= 0; 
 	    
 	    for(ii=0; ii<IP_W; ii=ii+1) begin
@@ -218,13 +218,13 @@ module DCT1D
             col_2_reg      <= 0;  
 	end 
 	else begin
-	    stage2_reg <= 1'b 0;
-	    ramwe_s <= 1'b 0;
+	    stage2_reg <= 1'b0;
+	    ramwe_s <= 1'b0;
 	    
 	    //------------------------------
 	    // 1st stage
 	    //------------------------------
-	    if(idv == 1'b 1) begin
+	    if(idv == 1'b1) begin
 		inpcnt_reg <= inpcnt_reg + 1;
 
 		// the following loop achieves the same as the
@@ -245,7 +245,7 @@ module DCT1D
 		    databuf_reg[5] <= latchbuf_reg[2] - latchbuf_reg[7];
 		    databuf_reg[6] <= latchbuf_reg[3] - latchbuf_reg[6];
 		    databuf_reg[7] <= latchbuf_reg[4] - latchbuf_reg[5];
-		    stage2_reg <= 1'b 1;
+		    stage2_reg <= 1'b1;
 		end
 	    end
 	    
@@ -256,7 +256,7 @@ module DCT1D
 	    if(stage2_cnt_reg < N) begin
 		stage2_cnt_reg <= stage2_cnt_reg + 1;
 		// write RAM
-		ramwe_s <= 1'b 1;
+		ramwe_s <= 1'b1;
 		// reverse col/row order for transposition purpose
 		ramwaddro_s <= {col_2_reg,row_reg};
 		// increment column counter
@@ -272,7 +272,7 @@ module DCT1D
 		    end
 		end
 	    end
-	    if(stage2_reg == 1'b 1) begin	  
+	    if(stage2_reg == 1'b1) begin	  
 		stage2_cnt_reg <= 0; //{(((RAMADRR_W - 1))-((0))+1){1'b0}};	  
 		col_reg        <= 0; 
 		col_2_reg      <= 0; //{(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
@@ -308,7 +308,8 @@ module DCT1D
 	    dcto_3 <= {(((DA_W - 1))-((0))+1){1'b0}};
 	    dcto_4 <= {(((DA_W - 1))-((0))+1){1'b0}};
 	    
-	end else begin
+	end 
+	else begin
 	    even_not_odd    <= stage2_cnt_reg[0];
 	    even_not_odd_d1 <= even_not_odd;
 	    even_not_odd_d2 <= even_not_odd_d1;
