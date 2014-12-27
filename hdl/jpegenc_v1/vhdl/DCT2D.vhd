@@ -56,8 +56,8 @@ library IEEE;
 library WORK;
   use WORK.MDCT_PKG.all;
 
-entity DCT2D is	 
-	port(	  
+entity DCT2D is  
+        port(     
       clk          : in STD_LOGIC;  
       rst          : in std_logic;
       romedatao    : in T_ROM2DATAO;
@@ -72,8 +72,8 @@ entity DCT2D is
       ramraddro    : out STD_LOGIC_VECTOR(RAMADRR_W-1 downto 0);
       rmemsel      : out STD_LOGIC;
       datareadyack : out STD_LOGIC
-		
-		);
+                
+                );
 end DCT2D;
 
 architecture RTL of DCT2D is   
@@ -128,6 +128,7 @@ begin
   process(clk,rst)
   begin
     if rst = '1' then
+      
       stage2_cnt_reg       <= (others => '1');
       rmemsel_reg          <= '0';
       stage1_reg           <= '0';
@@ -142,7 +143,9 @@ begin
       colr_reg             <= (others => '0');
       rowr_reg             <= (others => '0'); 
       dataready_2_reg      <= '0';
+      
     elsif rising_edge(clk) then
+      
       stage2_reg    <= '0';
       odv_d0        <= '0';
       datareadyack  <= '0';
@@ -253,6 +256,7 @@ begin
       even_not_odd_d2 <= even_not_odd_d1;
       even_not_odd_d3 <= even_not_odd_d2;
       even_not_odd_d4 <= even_not_odd_d3;
+      
       odv_d1          <= odv_d0;
       odv_d2          <= odv_d1;
       odv_d3          <= odv_d2;
@@ -379,7 +383,7 @@ begin
       romodatao_d4   <= romodatao_d3;
     end if;
   end process;
-	
+        
 end RTL;
 --------------------------------------------------------------------------------
 

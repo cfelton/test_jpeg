@@ -91,10 +91,17 @@ module BUF_FIFO
 
     /// @todo: better home, these were in a global package in
     ///    the VHDL version.  Might need to use a header file,
-    ///    don't believe the 
-    parameter C_EXTRA_LINES = 8;
-    parameter C_MAX_LINE_WIDTH = 1280;
-    parameter C_NUM_LINES = 8 + C_EXTRA_LINES;
+    ///    don't believe the
+
+    // C_EXTRA_LINES should be a multiple of 8 (documents indicate
+    // 8 or 16) with 16 being the highest performance and 8 being
+    // lowest area (least amount BRAM required).
+    parameter C_EXTRA_LINES     = 16; //8;
+    parameter C_MAX_LINE_WIDTH  = 1280;
+    parameter C_NUM_LINES       = 8 + C_EXTRA_LINES;
+
+    localparam RAMADDR_W = $clog2(C_MAX_LINE_WIDTH*C_NUM_LINES);
+    localparam LINADDR_W = $clog2(C_NUM_LINES);
     
     
     reg [15:0] 			 pixel_cnt;
@@ -102,35 +109,34 @@ module BUF_FIFO
     wire [C_PIXEL_BITS - 1:0] 	 ramq;
     reg [C_PIXEL_BITS - 1:0] 	 ramd;
     
-    reg [$clog2(C_MAX_LINE_WIDTH * C_NUM_LINES) - 1:0] ramwaddr;
-    reg 					       ramenw;    
-    wire [$clog2(C_MAX_LINE_WIDTH * C_NUM_LINES) - 1:0] ramraddr;
+    reg [RAMADDR_W-1:0] ramwaddr;
+    reg 		ramenw;    
+    wire [RAMADDR_W-1:0] ramraddr;
     
-    reg [3:0] 						pix_inblk_cnt;
-    reg [3:0] 						pix_inblk_cnt_d1;
-    reg [2:0] 						line_inblk_cnt;
-    reg [12:0] 						read_block_cnt;
-    reg [12:0] 						read_block_cnt_d1;
-    wire [12:0] 					write_block_cnt;
+    reg [3:0] 		 pix_inblk_cnt;
+    reg [3:0] 		 pix_inblk_cnt_d1;
+    reg [2:0] 		 line_inblk_cnt;
+    reg [12:0] 		 read_block_cnt;
+    reg [12:0] 		 read_block_cnt_d1;
+    wire [12:0] 	 write_block_cnt;
     
-    reg [16 + $clog2(C_NUM_LINES) - 1:0] 		ramraddr_int;
-    reg [16 + $clog2(C_NUM_LINES) - 1:0] 		raddr_base_line;
-    reg [15:0] 						raddr_tmp;
-    reg [$clog2(C_MAX_LINE_WIDTH * C_NUM_LINES) - 1:0] 	ramwaddr_d1;
+    reg [16 + $clog2(C_NUM_LINES) - 1:0] ramraddr_int;
+    reg [16 + $clog2(C_NUM_LINES) - 1:0] raddr_base_line;
+    reg [15:0] 				 raddr_tmp;
+    reg [RAMADDR_W-1:0] 		 ramwaddr_d1;
     
-    wire [$clog2(C_NUM_LINES) - 1:0] 			line_lock;
-    reg [$clog2(C_NUM_LINES)  - 1:0] 			memwr_line_cnt;
-    reg [$clog2(C_NUM_LINES)  - 1 + 1:0] 		memrd_offs_cnt;
-    reg [$clog2(C_NUM_LINES)  - 1:0] 			memrd_line;
-    reg [15:0] 						wr_line_idx;
-    reg [15:0] 						rd_line_idx;
-    reg 						image_write_end;  
-   
+    wire [$clog2(C_NUM_LINES) - 1:0] 	 line_lock;
+    reg [$clog2(C_NUM_LINES)  - 1:0] 	 memwr_line_cnt;
+    reg [$clog2(C_NUM_LINES)  - 1 + 1:0] memrd_offs_cnt;
+    reg [$clog2(C_NUM_LINES)  - 1:0] 	 memrd_line;
+    reg [15:0] 				 wr_line_idx;
+    reg [15:0] 				 rd_line_idx;
+    reg 				 image_write_end;  
+    
    
     //-----------------------------------------------------------------
     // RAM for SUB_FIFOs
     //-----------------------------------------------------------------
-    localparam RAMADDR_W = $clog2(C_MAX_LINE_WIDTH*C_NUM_LINES);
     SUB_RAMZ
       #(.RAMADDR_W(RAMADDR_W),
 	.RAMDATA_W(C_PIXEL_BITS))

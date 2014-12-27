@@ -59,10 +59,10 @@ library WORK;
 --------------------------------------------------------------------------------
 -- ENTITY
 --------------------------------------------------------------------------------
-entity DCT1D is	 
-	port(	  
-		  clk          : in STD_LOGIC;  
-		  rst          : in std_logic;
+entity DCT1D is  
+        port(     
+                  clk          : in STD_LOGIC;  
+                  rst          : in std_logic;
       dcti         : in std_logic_vector(IP_W-1 downto 0);
       idv          : in STD_LOGIC;
       romedatao    : in T_ROM1DATAO;
@@ -75,8 +75,8 @@ entity DCT1D is
       ramwaddro    : out STD_LOGIC_VECTOR(RAMADRR_W-1 downto 0);
       ramdatai     : out STD_LOGIC_VECTOR(RAMDATA_W-1 downto 0);
       ramwe        : out STD_LOGIC;
-      wmemsel      : out STD_LOGIC		
-		);
+      wmemsel      : out STD_LOGIC              
+                );
 end DCT1D;
 
 --------------------------------------------------------------------------------
@@ -85,7 +85,9 @@ end DCT1D;
 architecture RTL of DCT1D is   
   
   type INPUT_DATA is array (N-1 downto 0) of SIGNED(IP_W downto 0);
-  
+
+  --**************************************************************
+  --**************************************************************  
   signal databuf_reg     : INPUT_DATA;
   signal latchbuf_reg    : INPUT_DATA;
   signal col_reg         : UNSIGNED(RAMADRR_W/2-1 downto 0):=(others=>'0');
@@ -93,34 +95,41 @@ architecture RTL of DCT1D is
   signal rowr_reg        : UNSIGNED(RAMADRR_W/2-1 downto 0):=(others=>'0');
   signal inpcnt_reg      : UNSIGNED(RAMADRR_W/2-1 downto 0):=(others=>'0');
   signal ramwe_s         : STD_LOGIC:='0';
-  signal wmemsel_reg     : STD_LOGIC:='0';	
+  signal wmemsel_reg     : STD_LOGIC:='0';      
   signal stage2_reg      : STD_LOGIC:='0'; 
   signal stage2_cnt_reg  : UNSIGNED(RAMADRR_W-1 downto 0):=(others=>'1');
   signal col_2_reg       : UNSIGNED(RAMADRR_W/2-1 downto 0):=(others=>'0'); 
   signal ramwaddro_s     : STD_LOGIC_VECTOR(RAMADRR_W-1 downto 0):=(others=>'0');
-  
+
+  --**************************************************************    
+  --**************************************************************  
   signal even_not_odd    : std_logic:='0';
   signal even_not_odd_d1 : std_logic:='0';
   signal even_not_odd_d2 : std_logic:='0';
   signal even_not_odd_d3 : std_logic:='0';
+  
   signal ramwe_d1        : STD_LOGIC:='0';
   signal ramwe_d2        : STD_LOGIC:='0';
   signal ramwe_d3        : STD_LOGIC:='0';
   signal ramwe_d4        : STD_LOGIC:='0';
+  
   signal ramwaddro_d1    : STD_LOGIC_VECTOR(RAMADRR_W-1 downto 0):=(others=>'0');
   signal ramwaddro_d2    : STD_LOGIC_VECTOR(RAMADRR_W-1 downto 0):=(others=>'0');
   signal ramwaddro_d3    : STD_LOGIC_VECTOR(RAMADRR_W-1 downto 0):=(others=>'0');
   signal ramwaddro_d4    : STD_LOGIC_VECTOR(RAMADRR_W-1 downto 0):=(others=>'0');
+  
   signal wmemsel_d1      : STD_LOGIC:='0';
   signal wmemsel_d2      : STD_LOGIC:='0';
   signal wmemsel_d3      : STD_LOGIC:='0';
   signal wmemsel_d4      : STD_LOGIC:='0';
+  
   signal romedatao_d1    : T_ROM1DATAO;
   signal romodatao_d1    : T_ROM1DATAO;
   signal romedatao_d2    : T_ROM1DATAO;
   signal romodatao_d2    : T_ROM1DATAO;
   signal romedatao_d3    : T_ROM1DATAO;
   signal romodatao_d3    : T_ROM1DATAO;
+  
   signal dcto_1          : STD_LOGIC_VECTOR(DA_W-1 downto 0):=(others=>'0');
   signal dcto_2          : STD_LOGIC_VECTOR(DA_W-1 downto 0):=(others=>'0');
   signal dcto_3          : STD_LOGIC_VECTOR(DA_W-1 downto 0):=(others=>'0');
@@ -128,11 +137,16 @@ architecture RTL of DCT1D is
   
 begin
 
+  --**************************************************************
+  --**************************************************************
+
   ramwaddro <= ramwaddro_d4;
   ramwe     <= ramwe_d4;
   ramdatai  <= dcto_4(DA_W-1 downto 12);
   wmemsel   <= wmemsel_d4;
- 
+
+  --**************************************************************
+  --**************************************************************
   process(clk,rst)
   begin
     if rst = '1' then

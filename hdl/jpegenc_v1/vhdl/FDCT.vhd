@@ -387,6 +387,7 @@ begin
       elsif start_int_d(4) = '1' then
         fram1_line_cnt  <= (others => '0');
         fram1_pix_cnt   <= (others => '0');
+        
         case cur_cmp_idx_d4 is
           -- Y1, Cr, Cb
           when "000" | "010" | "011" => 
@@ -397,8 +398,8 @@ begin
           when others =>
             null;
         end case;
-      elsif fram1_rd_d(4) = '1' then 
-      
+        
+      elsif fram1_rd_d(4) = '1' then       
         if fram1_pix_cnt = 8-1 then
           fram1_pix_cnt <= (others => '0');
           if fram1_line_cnt = 8-1 then
@@ -409,6 +410,7 @@ begin
         else
           fram1_pix_cnt <= fram1_pix_cnt + 1;
         end if;
+
         
         case cur_cmp_idx_d6 is
           when "000" | "001" => 
@@ -427,9 +429,9 @@ begin
             end if;
           when others =>
             null;
-        end case;
-      
+        end case;      
       end if;
+      ----------------------------------------------------------------
       
     end if;
   end process;
@@ -517,8 +519,7 @@ begin
       fifo1_rd_cnt <= (others => '0');
       fifo1_q_dval <= '0';
     elsif CLK'event and CLK = '1' then
-      fifo1_rd     <= '0';
-      
+      fifo1_rd     <= '0';      
       fifo1_q_dval <= fifo1_rd;
     
       if start_pb = '1' then
@@ -526,8 +527,7 @@ begin
         fifo1_rd_cnt <= (others => '0');
       end if;
       
-      if fifo_rd_arm = '1' then
-      
+      if fifo_rd_arm = '1' then      
         if fifo1_rd_cnt = 64-1 then
           fifo_rd_arm  <= '0';
           fifo1_rd     <= '1';

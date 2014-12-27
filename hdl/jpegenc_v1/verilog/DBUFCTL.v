@@ -92,7 +92,7 @@ module DBUFCTL
     assign memswitchrd_reg = rmemsel;
     
     always @(posedge clk or posedge rst) begin
-	if(rst == 1'b 1) begin
+	if(rst == 1'b1) begin
 	    memswitchwr_reg <= 1'b0;
 	    // initially mem 1 is selected
 	    dataready <= 1'b0;

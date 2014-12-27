@@ -89,10 +89,14 @@ module MDCT
 (
  input wire 		   clk,
  input wire 		   rst,
+ 
  input wire [IP_W - 1:0]   dcti,
  input wire 		   idv,
+ 
  output wire 		   odv,
  output wire [COE_W - 1:0] dcto,
+
+ // debug
  output wire 		   odv1,
  output wire [OP_W - 1:0]  dcto1
 );
@@ -142,20 +146,20 @@ module MDCT
     // 1D DCT port map
     //----------------------------
     DCT1D U_DCT1D
-      (.clk            (clk              ),  
-       .rst            (rst      	 ),
-       .dcti           (dcti   		 ),
-       .idv            (idv		 ),
+      (.clk            (clk               ),  
+       .rst            (rst      	  ),
+       .dcti           (dcti   		  ),
+       .idv            (idv		  ),
        .romedatao_flat (rome1datao_s_flat ),
        .romodatao_flat (romo1datao_s_flat ),
-       .odv            (odv1		 ),
-       .dcto           (dcto1		 ),
+       .odv            (odv1		  ),
+       .dcto           (dcto1		  ),
        .romeaddro_flat (rome1addro_s_flat ),
        .romoaddro_flat (romo1addro_s_flat ),
-       .ramwaddro      (ramwaddro_s	 ),
-       .ramdatai       (ramdatai_s	 ),
-       .ramwe          (ramwe_s		 ),
-       .wmemsel        (wmemsel_s        )
+       .ramwaddro      (ramwaddro_s	  ),
+       .ramdatai       (ramdatai_s	  ),
+       .ramwe          (ramwe_s		  ),
+       .wmemsel        (wmemsel_s         )
        );
 
     
@@ -163,19 +167,19 @@ module MDCT
     // 1D DCT port map
     //----------------------------
     DCT2D U_DCT2D
-      (.clk             (clk                 ),
-       .rst             (rst		  ),
-       .romedatao_flat  (rome2datao_s_flat	  ),
-       .romodatao_flat  (romo2datao_s_flat	  ),
-       .ramdatao        (ramdatao_s	  ),
-       .dataready       (dataready_s	  ),
-       .odv             (odv		  ),
-       .dcto            (dcto		  ),
-       .romeaddro_flat  (rome2addro_s_flat	  ),
-       .romoaddro_flat  (romo2addro_s_flat	  ),
-       .ramraddro       (ramraddro_s	  ),
-       .rmemsel         (rmemsel_s		  ),
-       .datareadyack    (datareadyack_s      ) 
+      (.clk             (clk               ),
+       .rst             (rst		   ),
+       .romedatao_flat  (rome2datao_s_flat ),
+       .romodatao_flat  (romo2datao_s_flat ),
+       .ramdatao        (ramdatao_s	   ),
+       .dataready       (dataready_s	   ),
+       .odv             (odv		   ),
+       .dcto            (dcto		   ),
+       .romeaddro_flat  (rome2addro_s_flat ),
+       .romoaddro_flat  (romo2addro_s_flat ),
+       .ramraddro       (ramraddro_s	   ),
+       .rmemsel         (rmemsel_s	   ),
+       .datareadyack    (datareadyack_s    ) 
        );
     
     //----------------------------

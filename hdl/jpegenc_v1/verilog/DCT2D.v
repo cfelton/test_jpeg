@@ -114,33 +114,37 @@ module DCT2D
     reg [RAMDATA_W:0] 		databuf_reg[N - 1:0];
     reg [RAMDATA_W:0] 		latchbuf_reg[N - 1:0];
     
-    reg [RAMADRR_W / 2 - 1:0] 	col_reg = 0;
-    reg [RAMADRR_W / 2 - 1:0] 	row_reg = 0;
-    reg [RAMADRR_W / 2 - 1:0] 	colram_reg = 0;
-    reg [RAMADRR_W / 2 - 1:0] 	rowram_reg = 0;
-    reg [RAMADRR_W / 2 - 1:0] 	colr_reg = 0;
-    reg [RAMADRR_W / 2 - 1:0] 	rowr_reg = 0;
-    reg 			rmemsel_reg = 1'b 0;
-    reg 			stage1_reg = 1'b 0;
-    reg 			stage2_reg = 1'b 0;
-    reg [RAMADRR_W - 1:0] 	stage2_cnt_reg = 1;
-    reg 			dataready_2_reg = 1'b 0;
-    reg 			even_not_odd = 1'b 0;
-    reg 			even_not_odd_d1 = 1'b 0;
-    reg 			even_not_odd_d2 = 1'b 0;
-    reg 			even_not_odd_d3 = 1'b 0;
-    reg 			even_not_odd_d4 = 1'b 0;
-    reg 			odv_d0 = 1'b 0;
-    reg 			odv_d1 = 1'b 0;
-    reg 			odv_d2 = 1'b 0;
-    reg 			odv_d3 = 1'b 0;
-    reg 			odv_d4 = 1'b 0;
-    reg 			odv_d5 = 1'b 0;
-    reg [DA2_W - 1:0] 		dcto_1 = 0;
-    reg [DA2_W - 1:0] 		dcto_2 = 0;
-    reg [DA2_W - 1:0] 		dcto_3 = 0;
-    reg [DA2_W - 1:0] 		dcto_4 = 0;
-    reg [DA2_W - 1:0] 		dcto_5 = 0;  
+    reg [RAMADRR_W / 2 - 1:0] 	col_reg;
+    reg [RAMADRR_W / 2 - 1:0] 	row_reg;
+    reg [RAMADRR_W / 2 - 1:0] 	colram_reg;
+    reg [RAMADRR_W / 2 - 1:0] 	rowram_reg;
+    reg [RAMADRR_W / 2 - 1:0] 	colr_reg;
+    reg [RAMADRR_W / 2 - 1:0] 	rowr_reg;
+    
+    reg 			rmemsel_reg;
+    reg 			stage1_reg;
+    reg 			stage2_reg;
+    reg [RAMADRR_W - 1:0] 	stage2_cnt_reg;
+    reg 			dataready_2_reg;
+    
+    reg 			even_not_odd;
+    reg 			even_not_odd_d1;
+    reg 			even_not_odd_d2;
+    reg 			even_not_odd_d3;
+    reg 			even_not_odd_d4;
+    
+    reg 			odv_d0;
+    reg 			odv_d1;
+    reg 			odv_d2;
+    reg 			odv_d3;
+    reg 			odv_d4;
+    reg 			odv_d5;
+    
+    reg [DA2_W - 1:0] 		dcto_1;
+    reg [DA2_W - 1:0] 		dcto_2;
+    reg [DA2_W - 1:0] 		dcto_3;
+    reg [DA2_W - 1:0] 		dcto_4;
+    reg [DA2_W - 1:0] 		dcto_5;  
 
 
     wire [ROMDATA_W-1:0] 	romedatao [0:10];
@@ -180,12 +184,14 @@ module DCT2D
     integer ii;
     always @(posedge clk or posedge rst) begin	
 	if (rst == 1'b1) begin    
-	    stage2_cnt_reg <= {(((RAMADRR_W - 1))-((0))+1){1'b1}};	
-            rmemsel_reg <= 1'b 0;
-            stage1_reg <= 1'b 0;
-            stage2_reg <= 1'b 0;
-            colram_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
-            rowram_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
+	    stage2_cnt_reg <= {(((RAMADRR_W - 1))-((0))+1){1'b1}};
+	
+            rmemsel_reg <= 1'b0;
+            stage1_reg  <= 1'b0;
+            stage2_reg  <= 1'b0;
+            colram_reg  <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
+            rowram_reg  <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
+	
             col_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
             row_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
 
@@ -197,18 +203,18 @@ module DCT2D
             odv_d0 <= 1'b0;
             colr_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
             rowr_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
-            dataready_2_reg <= 1'b 0;
+            dataready_2_reg <= 1'b0;
         end 
 	else begin
-	    stage2_reg <= 1'b0;
-	    odv_d0 <= 1'b0;
-	    datareadyack <= 1'b0;
+	    stage2_reg      <= 1'b0;
+	    odv_d0          <= 1'b0;
+	    datareadyack    <= 1'b0;
 	    dataready_2_reg <= dataready;
 	    
 	    //--------------------------------
-	    // read DCT 1D to barrel shifer
+	    // read DCT 1D to barrel shifter
 	    //--------------------------------
-	    if(stage1_reg == 1'b 1) begin
+	    if(stage1_reg == 1'b1) begin
 		latchbuf_reg[N-1] <= ramdatao;
 		for(ii=0; ii<N-1; ii=ii+1) begin
 		    latchbuf_reg[ii] <= latchbuf_reg[ii+1];
@@ -248,10 +254,13 @@ module DCT2D
 	    //------------------------------
 	    if(stage2_cnt_reg < N) begin
 		stage2_cnt_reg <= stage2_cnt_reg + 1;
+		
 		// output data valid
 		odv_d0 <= 1'b1;
+		
 		// increment column counter
 		col_reg <= col_reg + 1;
+		
 		// finished processing one input row
 		if(col_reg == (N - 1)) begin
 		    row_reg <= row_reg + 1;
@@ -259,8 +268,8 @@ module DCT2D
 	    end
 	    
 	    if(stage2_reg == 1'b1) begin
-		stage2_cnt_reg <= {(((RAMADRR_W - 1))-((0))+1){1'b0}};
-	        col_reg = 1;
+		stage2_cnt_reg <= 0;
+	        col_reg        <= 1;
 	    end
 	    
 	    //------------------------------
@@ -268,12 +277,12 @@ module DCT2D
 	    // wait for new data
 	    //--------------------------------
 	    // one of ram buffers has new data, process it
-	    if(dataready == 1'b 1 && dataready_2_reg == 1'b 0) begin
-		stage1_reg <= 1'b 1;
+	    if(dataready == 1'b1 && dataready_2_reg == 1'b0) begin
+		stage1_reg <= 1'b1;
 		// to account for 1T RAM delay, increment RAM address counter
-		colram_reg <= {(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
-		colr_reg <= 1;
-		datareadyack <= 1'b 1;
+		colram_reg   <= 0;
+		colr_reg     <= 1;
+		datareadyack <= 1'b1;
 	    end
 	    //--------------------------------
 	end
@@ -286,11 +295,13 @@ module DCT2D
 	    even_not_odd_d2 <= 1'b 0;
 	    even_not_odd_d3 <= 1'b 0;
 	    even_not_odd_d4 <= 1'b 0;
-	    odv_d1 <= 1'b 0;
-	    odv_d2 <= 1'b 0;
-	    odv_d3 <= 1'b 0;
-	    odv_d4 <= 1'b 0;
-	    odv_d5 <= 1'b 0;
+	    
+	    odv_d1 <= 1'b0;
+	    odv_d2 <= 1'b0;
+	    odv_d3 <= 1'b0;
+	    odv_d4 <= 1'b0;
+	    odv_d5 <= 1'b0;
+	    
 	    dcto_1 <= {(((DA2_W - 1))-((0))+1){1'b0}};
 	    dcto_2 <= {(((DA2_W - 1))-((0))+1){1'b0}};
 	    dcto_3 <= {(((DA2_W - 1))-((0))+1){1'b0}};
@@ -303,6 +314,7 @@ module DCT2D
 	    even_not_odd_d2 <= even_not_odd_d1;
 	    even_not_odd_d3 <= even_not_odd_d2;
 	    even_not_odd_d4 <= even_not_odd_d3;
+	    
 	    odv_d1 <= odv_d0;
 	    odv_d2 <= odv_d1;
 	    odv_d3 <= odv_d2;

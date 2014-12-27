@@ -30,7 +30,7 @@ def test_jpegenc(args):
     # save the bitstreams here
     v1_bic,v2_bic = [None],[None]
 
-    # clock generator
+    # clock generator (20 tick period)
     @always(delay(10))
     def tbclk():
         clock.next = not clock
@@ -121,7 +121,7 @@ def test_jpegenc(args):
                     yield clock.posedge   
                     # this is a debug mode, after all pixles streamed
                     # in continue simulation for some period of time ...
-                    for _ in range(400):
+                    for _ in range(600):
                         yield delay(1000)
             else:
                 yield jpgv1.get_jpeg(v1_bic)

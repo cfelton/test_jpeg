@@ -118,22 +118,23 @@ module DCT1D
  output wire 		       wmemsel
 );
 
+    //--**************************************************************
+    //--**************************************************************
     reg [IP_W:0] databuf_reg  [N - 1:0];
-    reg [IP_W:0] latchbuf_reg [N - 1:0];
-    
+    reg [IP_W:0] latchbuf_reg [N - 1:0];    
     reg  [(RAMADRR_W/2) - 1:0] col_reg         = 0;
     reg  [(RAMADRR_W/2) - 1:0] row_reg         = 0;
     wire [(RAMADRR_W/2) - 1:0] rowr_reg;
-    reg  [(RAMADRR_W/2) - 1:0] inpcnt_reg      = 0;
-    
+    reg  [(RAMADRR_W/2) - 1:0] inpcnt_reg      = 0;    
     reg 		       ramwe_s         = 1'b0;
     reg 		       wmemsel_reg     = 1'b0;
     reg 		       stage2_reg      = 1'b0;
-    reg [RAMADRR_W - 1 :0]     stage2_cnt_reg  = 1;
-    
+    reg [RAMADRR_W - 1 :0]     stage2_cnt_reg  = 1;    
     reg [(RAMADRR_W/2) - 1 :0] col_2_reg       = 0;
     reg [RAMADRR_W - 1 :0]     ramwaddro_s     = 0;
-    
+
+    //--**************************************************************
+    //--**************************************************************
     reg 		       even_not_odd    = 1'b0;
     reg 		       even_not_odd_d1 = 1'b0;
     reg 		       even_not_odd_d2 = 1'b0;
@@ -157,7 +158,21 @@ module DCT1D
     wire [ROMDATA_W-1:0]  romedatao [0:8];
     wire [ROMDATA_W-1:0]  romodatao [0:8];
     reg [ROMADDR_W-1:0]  romeaddro [0:8];
-    reg [ROMADDR_W-1:0]  romoaddro [0:8];
+    reg [ROMADDR_W-1:0]  romoaddro [0:8];    
+
+    reg [ROMDATA_W-1:0]  romedatao_d1 [0:8];
+    reg [ROMDATA_W-1:0]  romedatao_d2 [0:8];
+    reg [ROMDATA_W-1:0]  romedatao_d3 [0:8];
+    
+    reg [ROMDATA_W-1:0]  romodatao_d1 [0:8];
+    reg [ROMDATA_W-1:0]  romodatao_d2 [0:8];
+    reg [ROMDATA_W-1:0]  romodatao_d3 [0:8];
+    
+    
+    reg [DA_W - 1:0] 	 dcto_1 = 0;
+    reg [DA_W - 1:0] 	 dcto_2 = 0;
+    reg [DA_W - 1:0] 	 dcto_3 = 0;
+    reg [DA_W - 1:0] 	 dcto_4 = 0;
 
     /**
      * conversion note, in Verilog (not SV) 2D arrays cannot be
@@ -176,20 +191,8 @@ module DCT1D
 	end
     endgenerate
 
-
-    reg [ROMDATA_W-1:0]        romedatao_d1 [0:8];
-    reg [ROMDATA_W-1:0]        romedatao_d2 [0:8];
-    reg [ROMDATA_W-1:0]        romedatao_d3 [0:8];
-
-    reg [ROMDATA_W-1:0]        romodatao_d1 [0:8];
-    reg [ROMDATA_W-1:0]        romodatao_d2 [0:8];
-    reg [ROMDATA_W-1:0]        romodatao_d3 [0:8];
-
-    
-    reg [DA_W - 1:0] 	       dcto_1 = 0;
-    reg [DA_W - 1:0] 	       dcto_2 = 0;
-    reg [DA_W - 1:0] 	       dcto_3 = 0;
-    reg [DA_W - 1:0] 	       dcto_4 = 0;
+    //--**************************************************************
+    //--**************************************************************
 
     assign ramwaddro = ramwaddro_d4;
     assign ramwe = ramwe_d4;
@@ -197,7 +200,9 @@ module DCT1D
     assign wmemsel = wmemsel_d4;
 
     integer ii, jj;
-    
+
+    //--**************************************************************
+    //--**************************************************************
     always @(posedge clk or posedge rst) begin
 	if(rst == 1'b1) begin
 	    inpcnt_reg  <= 0; 
@@ -218,8 +223,9 @@ module DCT1D
             col_2_reg      <= 0;  
 	end 
 	else begin
+	    
 	    stage2_reg <= 1'b0;
-	    ramwe_s <= 1'b0;
+	    ramwe_s    <= 1'b0;
 	    
 	    //------------------------------
 	    // 1st stage
@@ -232,9 +238,9 @@ module DCT1D
 		//   latchbuf_reg[N - 2:0] <= latchbuf_reg[N - 1:1];
 		for(jj=0; jj<N-1; jj=jj+1) begin
 		    latchbuf_reg[jj] <= latchbuf_reg[jj+1];
-		end
-		
+		end		
 		latchbuf_reg[N - 1] <= ({1'b0,dcti}) - LEVEL_SHIFT;
+		
 		if(inpcnt_reg == (N - 1)) begin
 		    // after this sum databuf_reg is in range of -256 to 254 (min to max) 
 		    databuf_reg[0] <= latchbuf_reg[1] + ((({1'b0,dcti}) - LEVEL_SHIFT));
@@ -255,6 +261,7 @@ module DCT1D
 	    //------------------------------
 	    if(stage2_cnt_reg < N) begin
 		stage2_cnt_reg <= stage2_cnt_reg + 1;
+		
 		// write RAM
 		ramwe_s <= 1'b1;
 		// reverse col/row order for transposition purpose
@@ -262,6 +269,7 @@ module DCT1D
 		// increment column counter
 		col_reg <= col_reg + 1;
 		col_2_reg <= col_2_reg + 1;
+		
 		// finished processing one input row
 		if(col_reg == 0) begin
 		    row_reg <= row_reg + 1;
@@ -274,7 +282,7 @@ module DCT1D
 	    end
 	    if(stage2_reg == 1'b1) begin	  
 		stage2_cnt_reg <= 0; //{(((RAMADRR_W - 1))-((0))+1){1'b0}};	  
-		col_reg        <= 0; 
+		col_reg        <= 1; 
 		col_2_reg      <= 0; //{(((RAMADRR_W / 2 - 1))-((0))+1){1'b0}};
 	    end
 	    //--------------------------------   

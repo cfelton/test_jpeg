@@ -246,6 +246,7 @@ module FDCT
     // Intermidiate (I)RAM read process 
     //-----------------------------------------------------------------
 
+    // @todo: TEMP DEBUG remove
     m_fdct_read_proc_sm_monitor U_MON
       (.clock           (CLK),
        .reset           (RST),
@@ -380,7 +381,7 @@ module FDCT
 	    //--------------------------------------------------------
 	    // stall reading from input FIFO and writing to output FIFO 
 	    // when output FIFO is almost full
-	    if(rd_en == 1'b1 && ((fifo1_count)) < (512 - 64) && 
+	    if(rd_en == 1'b1 && (fifo1_count < (512 - 64)) && 
 	       (bf_fifo_hf_full == 1'b1 || cur_cmp_idx > 1)) begin
 		// read request goes to BUF_FIFO only for component 0. 
 		if(cur_cmp_idx < 2) begin

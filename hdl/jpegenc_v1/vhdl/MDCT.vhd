@@ -57,20 +57,22 @@ library WORK;
   use WORK.MDCT_PKG.all;
 
 
-entity MDCT is	
-	port(	  
-		clk          : in STD_LOGIC;  
-		rst          : in std_logic;
+entity MDCT is  
+  port(     
+    clk          : in STD_LOGIC;  
+    rst          : in std_logic;
+    
     dcti         : in std_logic_vector(IP_W-1 downto 0);
     idv          : in STD_LOGIC;
 
     odv          : out STD_LOGIC;
     dcto         : out std_logic_vector(COE_W-1 downto 0);
+    
     -- debug
     odv1         : out STD_LOGIC;
     dcto1        : out std_logic_vector(OP_W-1 downto 0)  
-		
-		);
+                
+                );
 end MDCT;
 
 architecture RTL of MDCT is   
@@ -112,7 +114,7 @@ begin
 -- 1D DCT port map
 ------------------------------
 U_DCT1D : entity work.DCT1D
-  port map(	  
+  port map(       
       clk          => clk,         
       rst          => rst,      
       dcti         => dcti,   
@@ -128,13 +130,13 @@ U_DCT1D : entity work.DCT1D
       ramdatai     => ramdatai_s,
       ramwe        => ramwe_s,
       wmemsel      => wmemsel_s
-		);
+      );
 
 ------------------------------
 -- 1D DCT port map
 ------------------------------
 U_DCT2D : entity work.DCT2D
-  port map(	  
+  port map(       
       clk          => clk,         
       rst          => rst,      
       romedatao    => rome2datao_s,
@@ -149,7 +151,7 @@ U_DCT2D : entity work.DCT2D
       ramraddro    => ramraddro_s,
       rmemsel      => rmemsel_s,
       datareadyack => datareadyack_s
-		);
+      );
 
 ------------------------------
 -- RAM1 port map
@@ -187,10 +189,10 @@ ramdatao_s   <= ramdatao1_s when memswitchrd_s = '0' else ramdatao2_s;
 ------------------------------
 -- DBUFCTL
 ------------------------------
-U_DBUFCTL : entity work.DBUFCTL 	
-	port map(	  
-		clk            => clk,
-		rst            => rst,
+U_DBUFCTL : entity work.DBUFCTL         
+  port map(       
+    clk            => clk,
+    rst            => rst,
     wmemsel        => wmemsel_s,
     rmemsel        => rmemsel_s,
     datareadyack   => datareadyack_s,
@@ -198,7 +200,7 @@ U_DBUFCTL : entity work.DBUFCTL
     memswitchwr    => memswitchwr_s,
     memswitchrd    => memswitchrd_s,
     dataready      => dataready_s
-		);  
+                );  
 
 ------------------------------
 -- 1st stage ROMs
@@ -243,5 +245,5 @@ G_ROM_ST2 : for i in 0 to 10 generate
   );
 
 end generate G_ROM_ST2;
-  	
+        
 end RTL;
