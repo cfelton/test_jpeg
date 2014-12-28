@@ -175,8 +175,8 @@ if __name__ == '__main__':
     # randomly select a test image
     ipth = "./test_images/color/"
     ifn = random.choice(os.listdir(ipth))
-    #ipth = os.path.join(ipth, ifn)
-    ipth = os.path.join(ipth, 'small3.png')
+    ipth = os.path.join(ipth, ifn)
+    #ipth = os.path.join(ipth, 'small3.png')
 
     # setup arguments for the test (future capture from CLI)
     vmod = 'tb_jpegenc'
@@ -188,17 +188,18 @@ if __name__ == '__main__':
         vtrace_module=vmod,    # Verilog VCD dumpvars module to trace
 
         imgfn=ipth,            # image to test compression
-        build_only=False,      # compile the V* only, not test
-        build_skip_v1=False,   # skip the V1 encoder compile
 
         # verification (debug) options
+        build_only=False,      # compile the V* only, not test
+        build_skip_v1=False,   # skip the V1 encoder compile
         nout=0,                # number of encoded outputs to capture (debug mode)
-        no_wait=True,          # don't wait for the encoder, exit after input
+        no_wait=False,         # don't wait for the encoder, exit after input
         dump_bitstreams=False, # dump full bitstreams at the end
     )
 
     args.start_time = datetime.datetime.now()
 
     # run the JPEG encoder test
+    print("Using image %s " % (ipyth,))
     test_jpegenc(args)
 

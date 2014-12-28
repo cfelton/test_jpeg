@@ -4,6 +4,10 @@
 Current Status
 ==============
  
+   **28-Dec-2014** : Conversion error was found in V1, V1 finishes
+     compressing the frame.  V2 has error with small images, this 
+     might be a design limitation.
+
    **07-Dec-2014** : Neither encoder completes successfully with a 
      small test image, currently debugging (design1 (v1) conversion 
      complete need to find any errors in conversion).  The test 
@@ -24,7 +28,7 @@ Things to be completed
    1. [ ] Check encoded bitstreams, determine metrics to compare 
           encoders.
 
-   1. [ ] Debug the small test image, neither encoder appears to
+   1. [X] Debug the small test image, neither encoder appears to
           finish.
 
    1. [X] Finish converting desing1 to Verilog.
@@ -75,6 +79,7 @@ To run the test the following need to be installed:
   ```
   
   * Python Imaging Library (e.g. pip install Pillow)
+
 
 The MyHDL VPI module needs to be built and copied to the  test 
 directory
