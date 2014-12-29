@@ -200,6 +200,6 @@ if __name__ == '__main__':
     args.start_time = datetime.datetime.now()
 
     # run the JPEG encoder test
-    print("Using image %s " % (ipyth,))
+    print("Using image %s " % (ipth,))
     test_jpegenc(args)
 
