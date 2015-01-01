@@ -48,9 +48,8 @@ class OPBBus(object):
             yield self.clock.posedge
             ack = self.XferAck
         #rval.append(self.DBus_in.val)
-        rval.next = self.DBus_in
+        rval.next = self.DBus_out
         self.ABus.next = 0
-        self.DBus_out.next = 0
         self.select.next = False
         self.BE.next = 0x0
         self.RNW.next = False

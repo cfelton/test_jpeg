@@ -174,7 +174,9 @@ if __name__ == '__main__':
 
     # randomly select a test image
     ipth = "./test_images/color/"
-    ifn = random.choice(os.listdir(ipth))
+    ifn = 'small'
+    while 'small' in ifn:
+        ifn = random.choice(os.listdir(ipth))
     ipth = os.path.join(ipth, ifn)
     #ipth = os.path.join(ipth, 'small3.png')
 

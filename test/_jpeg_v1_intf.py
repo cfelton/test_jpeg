@@ -36,7 +36,7 @@ class JPEGEncV1(JPEGEnc):
         self.frame_size = Signal(intbv(0)[24:])           # output
         
         self.opb = OPBBus(clock, reset)
-        self._enc_done = False   
+        self._enc_done = Signal(bool(0))
 
         # set the encoder parameters 
         self.block_size = (16,8,)
@@ -71,11 +71,23 @@ class JPEGEncV1(JPEGEnc):
       
     def check_done(self, done):        
         assert isinstance(done, SignalType)
-        rval = Signal(intbv(0)[32:])
+        dn = False
+        # read the status register
+        rval = Signal(intbv(0)[32:])        
         yield self.opb.read(0x0C, rval)
-        if rval == 0x02:
-            done.next = True
-            self._enc_done.next = True
+        
+        if (rval & 0x01) == 0x01:
+            dn = False
+        elif (rval & 0x02) == 0x02:
+            dn = True
+        else:
+            # hmmm, not done and not busy?
+            dn = True
+
+        done.next = dn
+        self._enc_done.next = dn
+        #print("%8d checked done %X %d->%d" % (now(), rval, 
+        #                                  self._enc_done.val, self._enc_done.next))
 
 
     def stream_img_in(self):
@@ -134,7 +146,7 @@ class JPEGEncV1(JPEGEnc):
                 self.iram_wdata.next = 0
                 cd = Signal(bool(0))
                 while not cd:
-                    self.check_done(cd)
+                    yield self.check_done(cd)
                     yield self.clock.posedge
 
         return t_bus_in

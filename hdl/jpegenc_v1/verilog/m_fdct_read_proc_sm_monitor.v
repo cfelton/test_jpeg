@@ -155,7 +155,18 @@ always @(posedge clock, posedge reset) begin: M_FDCT_READ_PROC_SM_MONITOR_MONCNT
                     ircnt <= 0;
                 end
             end
+
             if ((((ircnt + 1) == 80) && ((iccnt + 1) == 80))) begin
+                $write("II: ");
+                $write("%0d", (ipcnt + 1));
+                $write(", ");
+                $write("%0d", (ircnt + 1));
+                $write("x");
+                $write("%0d", (iccnt + 1));
+                $write("\n");
+            end
+
+            if ((((ircnt + 1) == img_size_y) && ((iccnt + 1) == img_size_x))) begin
                 $write("II: ");
                 $write("%0d", (ipcnt + 1));
                 $write(", ");
