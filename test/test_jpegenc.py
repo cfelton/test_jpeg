@@ -36,7 +36,7 @@ def test_jpegenc(args):
         clock.next = not clock
 
 
-    def _dump_bitstreams(v1_bic, v2_bic):
+    def _dump_bitstreams(v1_bic, v2_bic, args):
         """ dump the retrieved bitstreams
         """
         v1_non_zero = False
