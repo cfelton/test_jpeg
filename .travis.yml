@@ -6,7 +6,8 @@ python:
   
 # get some stuff to install
 before_install:
-  - sudo apt-get install icarus
+  - sudo apt-get install iverilog
+  - sudo apt-get install iverilog-vpi
   
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
 install:
