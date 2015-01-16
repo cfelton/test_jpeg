@@ -16,4 +16,4 @@ install:
   - pip install Pillow
 
 # command to run tests, e.g. python setup.py test
-script:  nosetests
+script:  cd test && nosetests
