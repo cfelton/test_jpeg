@@ -13,7 +13,7 @@ Verification Environment
 ========================
 A stimulus and verification environment was created with Python and
 MyHDL.  An image is streamed to the encoder and the output is captured.
-The hardware generated JPEG bitstream is compared to a sotware JPEG bistream 
+The hardware generated JPEG bitstream is compared to a software JPEG bitstream 
 with similar settings.
 
 In the future the output of the various encoders will be compared to 
