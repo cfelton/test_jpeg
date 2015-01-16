@@ -1,7 +1,7 @@
 #!/bin/sh
 
-hg clone https://bitbucket.org/jandecaluwe/myhdl tmp/myhdl
-cd tmp/myhdl && hg up -C 0.9-dev 
-cd tmp/myhdl && setup.py install
-cd tmp/myhdl/cosimulation/icarus/ && make
-cp tmp/myhdl/cosimulation/icarus/myhdl.vpi test/
+hg clone https://bitbucket.org/jandecaluwe/myhdl
+cd myhdl && hg up -C 0.9-dev 
+cd myhdl && setup.py install
+cd myhdl/cosimulation/icarus/ && make
+cp myhdl/cosimulation/icarus/myhdl.vpi test/
