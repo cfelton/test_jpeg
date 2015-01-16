@@ -4,8 +4,14 @@ python:
   - "2.6"
   - "pypy"
   
+# get some stuff to install
+before_install:
+  - sudo apt-get install icarus
+  
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
-#install: PLEASE CHANGE ME
+install:
+  - scripts/ci/install_myhdl_09.sh
+  - pip install Pillow
 
 # command to run tests, e.g. python setup.py test
 script:  nosetests
