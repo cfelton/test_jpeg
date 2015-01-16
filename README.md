@@ -3,7 +3,7 @@
 Introduction
 ============
 This repository contains a verification environment to functionally
-verify and compare a couple different hardware JPEG encoders.  The 
+verify and compare a various hardware JPEG encoders.  The 
 JPEG encoders used are the cores available at open-cores in addition
 to JPEG encoders being developed.
 
@@ -11,19 +11,19 @@ to JPEG encoders being developed.
 Verification Environment
 ========================
 A stimulus and verification environment was created with Python and
-MyHDL.  An image is streamed to the encoder and the output is captured
-the hardware JPEG bitstream is compared to a sotware JPEG bistream with
-similar settings.
+MyHDL.  An image is streamed to the encoder and the output is captured.
+The hardware generated JPEG bitstream is compared to a sotware JPEG bistream 
+with similar settings.
 
 In the future the output of the various encoders will be compared to 
-each other.
+each other as well as the encoder performance (.e.g. max fps).
 
 
 JPEG Encoders
 =============
 
-   - jpegenc_v1: is the VHDL JPEG encoder converted to Verilog
-   - jpegenc_v2: is the Verilog JPEG encoder.
+   - jpegenc_v1: [VHDL JPEG encoder](http://opencores.org/project,mkjpeg) converted to Verilog
+   - jpegenc_v2: [OC Verilog JPEG](http://opencores.org/project,jpegencode) encoder.
    - jpegenc_v3: WIP design3 jpeg encoder
    - jpegenc_v4: <future> jpeg2k encoder
 
