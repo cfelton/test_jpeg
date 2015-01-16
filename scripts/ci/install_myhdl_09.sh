@@ -1,4 +1,4 @@
-#!/usr/bin/sh
+#!/bin/sh
 
 hg clone https://bitbucket.org/jandecaluwe/mhydl tmp/myhdl
 cd tmp/myhdl && hg up -C 0.9-dev 
