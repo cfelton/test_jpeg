@@ -1,4 +1,5 @@
 
+[![Build Status](https://travis-ci.org/cfelton/test_jpeg.svg?branch=master)](https://travis-ci.org/cfelton/test_jpeg)
 
 Introduction
 ============
