@@ -16,7 +16,7 @@ from _jpeg_prep_cosim import prep_cosim
 from _jpeg_v1_intf import JPEGEncV1
 from _jpeg_v2_intf import JPEGEncV2
 
-def test_jpegenc(args):
+def testbench(args):
 
     clock = Signal(bool(0))
     reset = ResetSignal(1, active=1, async=True)
@@ -169,9 +169,7 @@ def test_jpegenc(args):
     # run the simulation
     Simulation((gt, tbdut,)).run()
 
-
-if __name__ == '__main__':
-
+def test_jpegenc():
     # randomly select a test image
     ipth = "./test_images/color/"
     ifn = 'small'
@@ -185,7 +183,7 @@ if __name__ == '__main__':
     args = Namespace(
         # tracing arguments
         trace=False,           # enable tracing (debug)
-        vtrace=True,           # enable VCD tracing in Verilog cosim
+        vtrace=False,          # enable VCD tracing in Verilog cosim
         vtrace_level=0,        # Verilog VCD dumpvars level
         vtrace_module=vmod,    # Verilog VCD dumpvars module to trace
 
@@ -203,5 +201,9 @@ if __name__ == '__main__':
 
     # run the JPEG encoder test
     print("Using image %s " % (ipth,))
-    test_jpegenc(args)
+    testbench(args)
+    
+if __name__ == '__main__':
+    test_jpegenc()
+    
 
