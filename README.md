@@ -1,44 +1,11 @@
 
-**work in progess - don't be suprised if nothing works**
-
-Current Status
-==============
- 
-   **28-Dec-2014** : Conversion error was found in V1, V1 finishes
-     compressing the frame.  V2 has error with small images, this 
-     might be a design limitation.
-
-   **07-Dec-2014** : Neither encoder completes successfully with a 
-     small test image, currently debugging (design1 (v1) conversion 
-     complete need to find any errors in conversion).  The test 
-     environment will stream the image in and complete shortly after 
-     the image has been streamed in.
-
-   **05-Dec-2014** : Design1 conversion to verilog is mostly complete, 
-     spending some time verifying.
-
-   **09-Nov-2014** : The test environment will stream an image to both
-     the design1 and design2 encoders.  The output is not interrogated
-     (yet).  Design1 conversion to verilog is incomplete.
-
-
-Things to be completed
-----------------------
-
-   1. [ ] Check encoded bitstreams, determine metrics to compare 
-          encoders.
-
-   1. [X] Debug the small test image, neither encoder appears to
-          finish.
-
-   1. [X] Finish converting desing1 to Verilog.
-
 
 Introduction
 ============
 This repository contains a verification environment to functionally
 verify and compare a couple different hardware JPEG encoders.  The 
-JPEG encoders used are the cores available at open-cores.
+JPEG encoders used are the cores available at open-cores in addition
+to JPEG encoders being developed.
 
 
 Verification Environment
@@ -72,6 +39,7 @@ To run the test the following need to be installed:
   * Python (currently using 2.7)
   
   * MyHDL
+  * 
   ```
   >> hg clone https://bitbucket.org/jandecaluwe/myhdl
   >> cd myhdl
@@ -82,7 +50,7 @@ To run the test the following need to be installed:
 
 
 The MyHDL VPI module needs to be built and copied to the  test 
-directory
+directory.
 
 ```
 >> cd myhdl/cosimulation/icarus
@@ -107,7 +75,6 @@ MyHDL has some inefficiencies with Icarus
 ([Icarus Cosimulation](http://docs.myhdl.org/en/latest/manual/cosimulation.html#icarus-verilog)).
 -->
 
-
 <!--
     limited capture no tracing
     10:  
@@ -123,20 +90,25 @@ MyHDL has some inefficiencies with Icarus
     1000:
 -->
 
-|    PID   COMMAND      %CPU TIME     MEM    
-|    3061  vvp          82.7 09:45.51 8200K  
-|    3048  Python       18.7 02:16.07 14M   
+```
+    PID   COMMAND      %CPU TIME     MEM    
+    3061  vvp          82.7 09:45.51 8200K  
+    3048  Python       18.7 02:16.07 14M   
+```
 
 Cosimulation time for a 80x80 pixel image and not VCD tracing.
  
-|    CPython execution time:
-|    pypy execution time:
+``` 
+    CPython execution time:
+    pypy execution time:
+```
 
 Cosimulation time for a 80x80 pixel image and VCD tracing.
 
-|    CPython execution time:
-|    pypy execution time:
-
+```
+    CPython execution time:
+    pypy execution time:
+```
 
 As mentioned, majority of the time is spent in the Verilog 
 simulator the Python run-time has little effect.
@@ -160,5 +132,39 @@ awesomely ...
 Performance
 -----------
 and fast ... correct?
+
+
+Progress Log
+==============
+ 
+   **28-Dec-2014** : Conversion error was found in V1, V1 finishes
+     compressing the frame.  V2 has error with small images, this 
+     might be a design limitation.
+
+   **07-Dec-2014** : Neither encoder completes successfully with a 
+     small test image, currently debugging (design1 (v1) conversion 
+     complete need to find any errors in conversion).  The test 
+     environment will stream the image in and complete shortly after 
+     the image has been streamed in.
+
+   **05-Dec-2014** : Design1 conversion to verilog is mostly complete, 
+     spending some time verifying.
+
+   **09-Nov-2014** : The test environment will stream an image to both
+     the design1 and design2 encoders.  The output is not interrogated
+     (yet).  Design1 conversion to verilog is incomplete.
+
+
+Things to be completed
+----------------------
+
+   1. [ ] Check encoded bitstreams, determine metrics to compare 
+          encoders.
+
+   1. [X] Debug the small test image, neither encoder appears to
+          finish.
+
+   1. [X] Finish converting desing1 to Verilog.
+
 
 
