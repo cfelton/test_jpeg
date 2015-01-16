@@ -1,10 +1,14 @@
 #!/bin/sh
 
 pwd
-hg clone https://bitbucket.org/jandecaluwe/myhdl
+mkdir tmp
+hg clone https://bitbucket.org/jandecaluwe/myhdl tmp/myhdl
 ls .
-ls myhdl
-cd myhdl && hg up -C 0.9-dev 
-cd myhdl && python setup.py install
-cd myhdl/cosimulation/icarus/ && make
-cp myhdl/cosimulation/icarus/myhdl.vpi test/
+ls tmp/myhdl
+cd tmp/myhdl
+hg up -C 0.9-dev 
+python setup.py install
+cd cosimulation/icarus/ 
+make
+# copy the VPI to the test directory
+cp myhdl.vpi ../../../../test/
