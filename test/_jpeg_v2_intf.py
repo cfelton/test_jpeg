@@ -108,7 +108,7 @@ class JPEGEncV2(JPEGEnc):
                     self._bitstream.append(int(self.jpeg_bitstream))
                     ii += 1
                     if ii%Ncyc == 0: 
-                        print("V2: %d output, latest %08X" % (int(ii, self.jpeg_bitstream,)))                        
+                        print("V2: %4d output, latest %08X" % (ii, int(self.jpeg_bitstream,)))
 
                 if ((self.nout > 0 and ii >= self.nout) or 
                     self.eof_data_partial_ready):

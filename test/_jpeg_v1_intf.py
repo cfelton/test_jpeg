@@ -167,7 +167,7 @@ class JPEGEncV1(JPEGEnc):
                     self._bitstream.append(int(self.ram_byte))
                     ii += 1
                     if ii%Ncyc == 0: 
-                        print("V1: %d output, latest %08X" % (ii, int(self.jpeg_bitstream,)))                        
+                        print("V1: %4d output, latest %08X" % (ii, int(self.ram_byte,)))                        
                 #if ii > 10:
                 if ((self.nout > 0 and ii >= self.nout) or self._enc_done):
                     yield self._outq.put(self._bitstream)
