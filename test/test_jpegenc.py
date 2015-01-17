@@ -175,27 +175,36 @@ def test_jpegenc():
     ifn = 'small'
     while 'small' in ifn:
         ifn = random.choice(os.listdir(ipth))
-    ipth = os.path.join(ipth, ifn)
-    #ipth = os.path.join(ipth, 'small3.png')
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--random_image', action='store_true', default=False,
+                        help="use small3.png as test file")
+    parser.add_argument('--vtrace', action='store_true', default=False,
+                        help="enable Verilog simulator tracing")
+
+    args = parser.parse_args()
+
+    if args.random_image:
+        ipth = os.path.join(ipth, ifn)
+    else:
+        ipth = os.path.join(ipth, 'small2.png')
 
     # setup arguments for the test (future capture from CLI)
     vmod = 'tb_jpegenc'
-    args = Namespace(
-        # tracing arguments
-        trace=False,           # enable tracing (debug)
-        vtrace=False,          # enable VCD tracing in Verilog cosim
-        vtrace_level=0,        # Verilog VCD dumpvars level
-        vtrace_module=vmod,    # Verilog VCD dumpvars module to trace
-
-        imgfn=ipth,            # image to test compression
-
-        # verification (debug) options
-        build_only=False,      # compile the V* only, not test
-        build_skip_v1=False,   # skip the V1 encoder compile
-        nout=0,                # number of encoded outputs to capture (debug mode)
-        no_wait=False,         # don't wait for the encoder, exit after input
-        dump_bitstreams=False, # dump full bitstreams at the end
-    )
+    # tracing arguments
+    args.trace=False            # enable tracing (debug)
+    args.vtrace=True            # enable VCD tracing in Verilog cosim
+    args.vtrace_level=0         # Verilog VCD dumpvars level
+    args.vtrace_module=vmod     # Verilog VCD dumpvars module to trace
+    
+    args.imgfn=ipth             # image to test compression
+    
+    # verification (debug) options
+    args.build_only=False       # compile the V* only, not test
+    args.build_skip_v1=False    # skip the V1 encoder compile
+    args.nout=0                 # number of encoded outputs to capture (debug mode)
+    args.no_wait=False          # don't wait for the encoder, exit after input
+    args.dump_bitstreams=False  # dump full bitstreams at the end
 
     args.start_time = datetime.datetime.now()
 
