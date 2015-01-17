@@ -16,7 +16,7 @@ from _jpeg_prep_cosim import prep_cosim
 from _jpeg_v1_intf import JPEGEncV1
 from _jpeg_v2_intf import JPEGEncV2
 
-def testbench(args):
+def runbench(args):
 
     clock = Signal(bool(0))
     reset = ResetSignal(1, active=1, async=True)
@@ -187,7 +187,7 @@ def test_jpegenc():
     if args.random_image:
         ipth = os.path.join(ipth, ifn)
     else:
-        ipth = os.path.join(ipth, 'small2.png')
+        ipth = os.path.join(ipth, 'small4.png')
 
     # setup arguments for the test (future capture from CLI)
     vmod = 'tb_jpegenc'
@@ -210,7 +210,7 @@ def test_jpegenc():
 
     # run the JPEG encoder test
     print("Using image %s " % (ipth,))
-    testbench(args)
+    runbench(args)
     
 if __name__ == '__main__':
     test_jpegenc()

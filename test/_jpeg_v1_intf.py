@@ -160,12 +160,14 @@ class JPEGEncV1(JPEGEnc):
         def t_bus_out():
             ii = 0
             do_capture = True
+            Ncyc = 25
             while do_capture:
                 yield self.clock.posedge
                 if self.ram_wren:
                     self._bitstream.append(int(self.ram_byte))
                     ii += 1
-
+                    if ii%Ncyc == 0: 
+                        print("V1: %d output, latest %08X" % (ii, int(self.jpeg_bitstream,)))                        
                 #if ii > 10:
                 if ((self.nout > 0 and ii >= self.nout) or self._enc_done):
                     yield self._outq.put(self._bitstream)

@@ -47,6 +47,7 @@ class JPEGEncV2(JPEGEnc):
         
         @instance
         def t_bus_in():
+
             while True:
                 imglst = [None]
                 yield self._inq.get(imglst, block=True)
@@ -99,12 +100,15 @@ class JPEGEncV2(JPEGEnc):
         def t_bus_out():
             ii = 0
             do_capture = True
+            Ncyc = 100
             while do_capture:
                 yield self.clock.posedge
                 #yield self.data_ready.posedge
                 if self.data_ready:
                     self._bitstream.append(int(self.jpeg_bitstream))
                     ii += 1
+                    if ii%Ncyc == 0: 
+                        print("V2: %d output, latest %08X" % (int(ii, self.jpeg_bitstream,)))                        
 
                 if ((self.nout > 0 and ii >= self.nout) or 
                     self.eof_data_partial_ready):
