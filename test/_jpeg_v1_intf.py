@@ -21,6 +21,7 @@ class JPEGEncV1(JPEGEnc):
         """
 
         JPEGEnc.__init__(self, clock, reset, args=args)
+        self.args = args
 
         # ---[encoder interface]---
         # these are the encoder v1 interface signals
@@ -160,14 +161,28 @@ class JPEGEncV1(JPEGEnc):
         def t_bus_out():
             ii = 0
             do_capture = True
-            Ncyc = 25
+            Ncyc = self.args.ncyc
+            word = 0
+            nwords = 0
+
+            # capture the output from the encoder
             while do_capture:
                 yield self.clock.posedge
                 if self.ram_wren:
-                    self._bitstream.append(int(self.ram_byte))
+                    # put in 32bit values, first in time MSB
+                    nb = int(self.ram_byte)
+                    word = (word << 8) | nb
+
+                    # when 4 bytes received save it
+                    if (ii%4) ==  3:
+                        self._bitstream.append(word)
+                        word = 0
+                        nwords += 1
+
                     ii += 1
-                    if ii%Ncyc == 0: 
-                        print("V1: %4d output, latest %08X" % (ii, int(self.ram_byte,)))                        
+                    if ii%Ncyc == nwords: 
+                        print("V1: %4d output, latest %08X" % (ii, self._bitstream[-1],))
+
                 #if ii > 10:
                 if ((self.nout > 0 and ii >= self.nout) or self._enc_done):
                     yield self._outq.put(self._bitstream)

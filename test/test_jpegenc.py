@@ -205,6 +205,7 @@ def test_jpegenc():
     args.nout=0                 # number of encoded outputs to capture (debug mode)
     args.no_wait=False          # don't wait for the encoder, exit after input
     args.dump_bitstreams=False  # dump full bitstreams at the end
+    args.ncyc = 200             # generate some prints
 
     args.start_time = datetime.datetime.now()
 

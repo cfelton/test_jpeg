@@ -19,6 +19,7 @@ class JPEGEncV2(JPEGEnc):
         """
 
         JPEGEnc.__init__(self, clock, reset, args=args)
+        self.args = args
 
         # ---[encoder interface]---
         # the default interface (Signals) to the jpeg encoder
@@ -47,7 +48,7 @@ class JPEGEncV2(JPEGEnc):
         
         @instance
         def t_bus_in():
-
+            
             while True:
                 imglst = [None]
                 yield self._inq.get(imglst, block=True)
@@ -100,7 +101,9 @@ class JPEGEncV2(JPEGEnc):
         def t_bus_out():
             ii = 0
             do_capture = True
-            Ncyc = 100
+            Ncyc = self.args.ncyc
+            
+            # capture the output from the encoder
             while do_capture:
                 yield self.clock.posedge
                 #yield self.data_ready.posedge
@@ -108,7 +111,7 @@ class JPEGEncV2(JPEGEnc):
                     self._bitstream.append(int(self.jpeg_bitstream))
                     ii += 1
                     if ii%Ncyc == 0: 
-                        print("V2: %4d output, latest %08X" % (ii, int(self.jpeg_bitstream,)))
+                        print("V2: %4d output, latest %08X" % (ii, self._bitstream[-1],))
 
                 if ((self.nout > 0 and ii >= self.nout) or 
                     self.eof_data_partial_ready):
