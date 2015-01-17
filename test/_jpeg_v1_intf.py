@@ -180,7 +180,7 @@ class JPEGEncV1(JPEGEnc):
                         nwords += 1
 
                     ii += 1
-                    if ii%Ncyc == nwords: 
+                    if nwords%Ncyc == 0 and nwords > 1:
                         print("V1: %4d output, latest %08X" % (ii, self._bitstream[-1],))
 
                 #if ii > 10:
