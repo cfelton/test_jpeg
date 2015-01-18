@@ -120,6 +120,7 @@ class JPEGEncV1(JPEGEnc):
 
                 # stream the image to the encoder
                 print("V1: encode image %s %d x %d" % (str(img), nx, ny,))
+                self.encode_start_time = now()
                 for yy in xrange(0, ny):
                     for xx in xrange(0, nx):
                         self.iram_wren.next = False
@@ -150,6 +151,14 @@ class JPEGEncV1(JPEGEnc):
                     yield self.check_done(cd)
                     yield self.clock.posedge
 
+                # at this point the next frame can be sent
+                self.encode_end_time = now()
+                # display the max frame rate
+                dt = self.encode_end_time - self.encode_start_time
+                self.max_frame_rate = 1/(dt * 1e-9)
+                print("V1: max frame rate %8.3f frames/sec" % (self.max_frame_rate,))
+                
+
         return t_bus_in
 
 
@@ -172,16 +181,14 @@ class JPEGEncV1(JPEGEnc):
                     # put in 32bit values, first in time MSB
                     nb = int(self.ram_byte)
                     word = (word << 8) | nb
-
+                    ii += 1
                     # when 4 bytes received save it
-                    if (ii%4) ==  3:
+                    if (ii%4) ==  0:
                         self._bitstream.append(word)
                         word = 0
                         nwords += 1
-
-                    ii += 1
-                    if nwords%Ncyc == 0 and nwords > 1:
-                        print("V1: %4d output, latest %08X" % (ii, self._bitstream[-1],))
+                        if nwords%Ncyc == 0:
+                            print("V1: %6d output, latest %08X" % (nwords, self._bitstream[-1],))
 
                 #if ii > 10:
                 if ((self.nout > 0 and ii >= self.nout) or self._enc_done):

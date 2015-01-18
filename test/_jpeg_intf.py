@@ -16,6 +16,7 @@ class JPEGEnc(object):
         # @todo: the following parameters should be part of the args
         self.pixel_nbits = 24
         self.block_size  = (8,8,)
+        self.max_frame_rate = 0
 
         self.clock = clock
         self.reset = reset

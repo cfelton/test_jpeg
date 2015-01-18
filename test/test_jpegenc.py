@@ -49,12 +49,14 @@ def runbench(args):
             print("  [%6d]  %08X" % (ii, int(bb),))
             if ii > 4 and not args.dump_bitstreams:
                 break;
+        print("V1 max frame rate %8.3f" % (jpgv1.max_frame_rate,))
 
         print("V2 bitstream, len %d" % (len(v2_bic),))
         for ii,bb in enumerate(v2_bic):
             print("  [%6d]  %08X" % (ii, int(bb),))
             if ii > 4 and not args.dump_bitstreams:
                 break
+        print("V2 max frame rate %8.3f" % (jpgv2.max_frame_rate,))
 
 
     def _test():
