@@ -117,9 +117,10 @@ class JPEGEncV1(JPEGEnc):
                 # write a start request, RGB=11, sof=1
                 yield self.opb.write(0x00, 0x07)
 
-
                 # stream the image to the encoder
                 print("V1: encode image %s %d x %d" % (str(img), nx, ny,))
+                self.img_size = img.size
+
                 self.encode_start_time = now()
                 for yy in xrange(0, ny):
                     for xx in xrange(0, nx):
@@ -137,7 +138,8 @@ class JPEGEncV1(JPEGEnc):
 
                 self.iram_wren.next = False
                 self.iram_wdata.next = 0     
-                # writing is complete
+
+                # writing is complete (not ready for next frame yet)
                 self.pxl_done.next = True       
                 end_time = datetime.datetime.now()
                 dt = end_time - self.start_time

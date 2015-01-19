@@ -56,6 +56,9 @@ class JPEGEncV2(JPEGEnc):
                 img = imglst[0]
                 nx,ny = img.size
                 print("V2: encode image %s %d x %d" % (str(img), nx, ny,))
+                self.img_size = img.size
+
+                self.encode_start_time = now()
                 for yy in xrange(0, ny, 8):
                     for xx in xrange(0, nx, 8):
                         self.enable.next = True
@@ -82,9 +85,17 @@ class JPEGEncV2(JPEGEnc):
                         yield self.clock.posedge                                        
                         
 
+                # at this point the next frame can be sent
+                self.encode_end_time = now()
+                dt = self.encode_end_time - self.encode_start_time
+                self.max_frame_rate = 1/(dt * 1e-9)
+                print("V2: max frame rate %8.3f frames/sec" % (self.max_frame_rate,))
+                
                 self.pxl_done.next = True
                 self.data_in.next = 0
                 self.end_of_file_signal.next = False
+                
+                # keep track of the simulation time
                 end_time = datetime.datetime.now()
                 dt = end_time - self.start_time
                 print("V2: end pixel stream %s " % (dt,))
