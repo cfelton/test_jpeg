@@ -16,4 +16,8 @@ install:
   - pip install Pillow
 
 # command to run tests, e.g. python setup.py test
-script:  cd test && nosetests -s test_jpegenc.py
+# travis-ci currently suppresses all ouput from nose (even when nose 
+# locally doesn't i.e. -s used), nose currently not used until this 
+# is resolved
+#script:  cd test && nosetests -s test_jpegenc.py
+script: cd test && python test_jpegenc.py
