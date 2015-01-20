@@ -1,5 +1,12 @@
 
 [![Build Status](https://travis-ci.org/cfelton/test_jpeg.svg?branch=master)](https://travis-ci.org/cfelton/test_jpeg)
+^^^ note, the build error is not accurate.  If you clone this repo you will 
+be able to run the tests (>> nosetests) without error.  The problem is 
+the test take considerable time (default ~12min on travis-CI) because it is
+an HDL simualtion (as shown below most of the time is spent in the Verilog 
+simulator).  I have not figured out how to enable the output on the travis-CI
+*script* step, according to the travis-CI output the timeout can be avoid 
+if travis-CI detects output.  
 
 Introduction
 ============
