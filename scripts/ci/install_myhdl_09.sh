@@ -2,7 +2,7 @@
 
 pwd
 mkdir tmp
-hg clone https://bitbucket.org/jandecaluwe/myhdl tmp/myhdl
+git clone https://github.com/jandecaluwe/myhdl tmp/myhdl
 ls .
 ls tmp/myhdl
 cd tmp/myhdl
