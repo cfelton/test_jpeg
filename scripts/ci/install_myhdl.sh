@@ -1,6 +1,7 @@
 #!/bin/sh
 git clone https://github.com/jandecaluwe/myhdl
-python myhdl/setup.py install
-make -C myhdl/cosimulation/icarus
+cd myhdl
+python setup.py install
+make -C cosimulation/icarus
 # copy the VPI to the test directory
-cp myhdl/cosimulation/icarus/myhdl.vpi ../../test/
+cp cosimulation/icarus/myhdl.vpi ../test/
