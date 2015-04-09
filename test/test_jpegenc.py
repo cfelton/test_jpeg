@@ -7,6 +7,7 @@ import random
 import datetime
 import argparse
 from argparse import Namespace
+from fnmatch import fnmatch
 
 from PIL import Image
 from myhdl import *
@@ -177,10 +178,10 @@ def test_jpegenc():
     print("T1: prints work here!"); sys.stdout.flush()
     # randomly select a test image
     ipth = "./test_images/color/"
-    ifn = 'small'
-    while 'small' in ifn:
-        ifn = random.choice(os.listdir(ipth))
-
+    files = os.listdir(ipth)
+    files = [ff for ff in files if fnmatch(ff, '*small*')]
+    ifn = random.choice(files)
+    
     print("T2: prints do not work here?"); sys.stdout.flush()
     parser = argparse.ArgumentParser()
     parser.add_argument('--random_image', action='store_true', default=False,
