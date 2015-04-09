@@ -7,29 +7,14 @@ python:
 before_install:
   - sudo apt-get install iverilog
 
-# command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
+# command to install dependencies
 install:
   - pwd
   - chmod +x ./scripts/ci/install_myhdl.sh
   - ./scripts/ci/install_myhdl.sh
   - pip install Pillow
 
-# command to run tests, e.g. python setup.py test
-# travis-ci currently suppresses all ouput from nose (even when nose 
-# locally doesn't i.e. -s used), nose currently not used until this 
-# is resolved
-#script: 
-#  - cd scripts/ci
-#  - python pyprint.py
-#  - cd ../../test
-#  - ls
-#  - python test_jpegenc.py
-  
-#script:
-#  - cd test
-#  - ls
-#  - nosetests -s
-
+# run the test
 script:
    - python --version
    - make -C test/
