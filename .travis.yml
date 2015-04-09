@@ -19,8 +19,9 @@ install:
 # locally doesn't i.e. -s used), nose currently not used until this 
 # is resolved
 script: 
-  - python scripts/ci/pyprint.py
-  - cd test
+  - cd scripts/ci
+  - python pyprint.py
+  - cd ../../test
   - ls
   - python test_jpegenc.py
   
