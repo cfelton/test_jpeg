@@ -18,3 +18,6 @@ install:
 script:
    - python --version
    - make -C test/
+
+notifications:
+  email: false
