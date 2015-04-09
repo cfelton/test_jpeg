@@ -31,4 +31,5 @@ install:
 #  - nosetests -s
 
 script:
-   - nosetests -s
+   - python --version
+   - make -C test/
