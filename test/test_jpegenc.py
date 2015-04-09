@@ -25,9 +25,9 @@ def runbench(args):
     jpgv2 = JPEGEncV2(clock, reset, args=args)
 
     # prepare the cosimulation
-    print("R1: prints do not work here?", flush=True)
+    print("R1: prints do not work here?"); sys.stdout.flush()
     tbdut = prep_cosim(clock, reset, jpgv1, jpgv2, args=args)   
-    print("R2: prints do not work here?", flush=True)
+    print("R2: prints do not work here?"); sys.stdout.flush()
     
     # save the bitstreams here
     v1_bic,v2_bic = [None],[None]
@@ -174,14 +174,14 @@ def runbench(args):
     Simulation((gt, tbdut,)).run()
 
 def test_jpegenc():
-    print("T1: prints work here!", flush=True)
+    print("T1: prints work here!"); sys.stdout.flush()
     # randomly select a test image
     ipth = "./test_images/color/"
     ifn = 'small'
     while 'small' in ifn:
         ifn = random.choice(os.listdir(ipth))
 
-    print("T2: prints do not work here?", flush=True)
+    print("T2: prints do not work here?"); ; sys.stdout.flush()
     parser = argparse.ArgumentParser()
     parser.add_argument('--random_image', action='store_true', default=False,
                         help="use small3.png as test file")
@@ -195,7 +195,7 @@ def test_jpegenc():
     else:
         ipth = os.path.join(ipth, 'small4.png')
 
-    print("T3: prints do not work here?", flush=True)
+    print("T3: prints do not work here?"); sys.stdout.flush()
     # setup arguments for the test (future capture from CLI)
     vmod = 'tb_jpegenc'
     # tracing arguments
@@ -214,11 +214,11 @@ def test_jpegenc():
     args.dump_bitstreams=False  # dump full bitstreams at the end
     args.ncyc = 200             # generate some prints
 
-    print("T4: prints do not work here?", flush=True)
+    print("T4: prints do not work here?"); sys.stdout.flush()
     args.start_time = datetime.datetime.now()
 
     # run the JPEG encoder test
-    print("Using image %s " % (ipth,), flush=True)
+    print("Using image %s " % (ipth,)); sys.stdout.flush()
     runbench(args)
     
 if __name__ == '__main__':
