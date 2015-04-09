@@ -6,3 +6,7 @@ def test_print():
   # when iverilog is used that the python stdout is redirected?
   print("do you see me travis?")
   print("If not why?")
+  
+  
+if __name__ == '__main__':
+  test_print()
