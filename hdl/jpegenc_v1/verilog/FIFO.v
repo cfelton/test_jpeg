@@ -54,7 +54,6 @@ module FIFO
 #(
   parameter [31:0] DATA_WIDTH=12,
   parameter [31:0] ADDR_WIDTH=2
-
 )  
 (
  input  wire rst,
@@ -67,7 +66,6 @@ module FIFO
  output wire emptyo,
  output wire [ADDR_WIDTH:0] count
 );
-
 
     reg [ADDR_WIDTH - 1:0]  raddr_reg;
     reg [ADDR_WIDTH - 1:0]  waddr_reg;
@@ -180,5 +178,4 @@ module FIFO
 	end
     end
     
-
 endmodule
