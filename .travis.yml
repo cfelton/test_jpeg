@@ -18,9 +18,12 @@ install:
 # travis-ci currently suppresses all ouput from nose (even when nose 
 # locally doesn't i.e. -s used), nose currently not used until this 
 # is resolved
-#script:  cd test && nosetests -s test_jpegenc.py
-#script: cd test && python test_jpegenc.py
-script:
+script: 
   - cd test
   - ls
-  - nosetests -s
+  - python test_jpegenc.py
+  
+#script:
+#  - cd test
+#  - ls
+#  - nosetests -s
