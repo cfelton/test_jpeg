@@ -172,6 +172,7 @@ def runbench(args):
     Simulation((gt, tbdut,)).run()
 
 def test_jpegenc():
+    print("prints do not work here?")
     # randomly select a test image
     ipth = "./test_images/color/"
     ifn = 'small'
