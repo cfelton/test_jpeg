@@ -181,7 +181,7 @@ def test_jpegenc():
     while 'small' in ifn:
         ifn = random.choice(os.listdir(ipth))
 
-    print("T2: prints do not work here?"); ; sys.stdout.flush()
+    print("T2: prints do not work here?"); sys.stdout.flush()
     parser = argparse.ArgumentParser()
     parser.add_argument('--random_image', action='store_true', default=False,
                         help="use small3.png as test file")
