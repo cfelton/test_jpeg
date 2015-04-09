@@ -25,8 +25,10 @@ def runbench(args):
     jpgv2 = JPEGEncV2(clock, reset, args=args)
 
     # prepare the cosimulation
-    tbdut = prep_cosim(clock, reset, jpgv1, jpgv2, args=args)   
-
+    print("1: prints do not work here?")
+    #tbdut = prep_cosim(clock, reset, jpgv1, jpgv2, args=args)   
+    #print("2: prints do not work here?")
+    
     # save the bitstreams here
     v1_bic,v2_bic = [None],[None]
 
@@ -172,7 +174,6 @@ def runbench(args):
     Simulation((gt, tbdut,)).run()
 
 def test_jpegenc():
-    print("prints do not work here?")
     # randomly select a test image
     ipth = "./test_images/color/"
     ifn = 'small'
