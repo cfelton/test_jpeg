@@ -1,6 +1,6 @@
 // File ../design/FIFO_c.vhd translated with vhd2vl v2.4 VHDL to Verilog RTL translator
 // vhd2vl settings:
-//  * Verilog Module Declaration Style: 1995
+//   Verilog Module Declaration Style: 1995
 
 // vhd2vl is Free (libre) Software:
 //   Copyright (C) 2001 Vincenzo Liguori - Ocean Logic Pty Ltd
@@ -26,9 +26,9 @@
 // /// Redistribution and use in source and binary forms, with or without modification, 
 // /// are permitted provided that the following conditions are met:
 // ///
-// ///  * Redistributions of source code must retain the above copyright notice, 
+// ///  - Redistributions of source code must retain the above copyright notice, 
 // ///    this list of conditions and the following disclaimer.
-// ///  * Redistributions in binary form must reproduce the above copyright notice, 
+// ///  - Redistributions in binary form must reproduce the above copyright notice, 
 // ///    this list of conditions and the following disclaimer in the documentation and/or 
 // ///    other materials provided with the distribution.
 // ///
@@ -44,17 +44,17 @@
 // ///   POSSIBILITY OF SUCH DAMAGE.
 // ///
 // ///
-// ///  * http://opensource.org/licenses/MIT
-// ///  * http://copyfree.org/licenses/mit/license.txt
+// ///  - http://opensource.org/licenses/MIT
+// ///  - http://copyfree.org/licenses/mit/license.txt
 // ///
 // //////////////////////////////////////////////////////////////////////////////
 // no timescale needed
 
 module FIFO
 #(
-  parameter [31:0] DATA_WIDTH=12,
-  parameter [31:0] ADDR_WIDTH=2
-)  
+  parameter DATA_WIDTH = 12,
+  parameter ADDR_WIDTH = 2
+)
 (
  input  wire rst,
  input  wire clk,

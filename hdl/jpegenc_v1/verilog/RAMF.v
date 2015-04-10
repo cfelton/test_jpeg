@@ -22,18 +22,18 @@
 // no timescale needed
 
 module RAMF
-  #(
-    parameter RAMD_W=12,
-    parameter RAMA_W=6
-    )
-   (
-    input wire [RAMD_W - 1:0] d,
-    input wire [RAMA_W - 1:0] waddr,
-    input wire [RAMA_W - 1:0] raddr,
-    input wire 		      we,
-    input wire 		      clk,
-    output reg [RAMD_W - 1:0] q
-   );     
+#(
+  parameter RAMD_W = 12,
+  parameter RAMA_W = 6
+  )
+ (
+  input wire [RAMD_W - 1:0] d,
+  input wire [RAMA_W - 1:0] waddr,
+  input wire [RAMA_W - 1:0] raddr,
+  input wire 		      we,
+  input wire 		      clk,
+  output reg [RAMD_W - 1:0] q
+ );     
 
    //type mem_type is array ((2**RAMA_W)-1 downto 0) of 
    //                            STD_LOGIC_VECTOR(RAMD_W-1 downto 0);
