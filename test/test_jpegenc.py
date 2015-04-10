@@ -12,10 +12,10 @@ from fnmatch import fnmatch
 from PIL import Image
 from myhdl import *
 
-from _jpeg_prep_cosim import prep_cosim
-# the interfaces to the encoders
-from _jpeg_v1_intf import JPEGEncV1
-from _jpeg_v2_intf import JPEGEncV2
+from support import prep_cosim
+from support import JPEGEncV1
+from support import JPEGEncV2
+
 
 def runbench(args):
 

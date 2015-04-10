@@ -49,7 +49,7 @@ def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
 
     print("cosimulation setup ...")
     dstr = "-lxt2 " if args.vtrace else "-none "
-    cmd = "vvp -v -l - -m ./myhdl.vpi jpegenc %s" % (dstr)
+    cmd = "vvp -m ./myhdl.vpi jpegenc %s" % (dstr)
 
     gcosim = Cosimulation(
         cmd,
