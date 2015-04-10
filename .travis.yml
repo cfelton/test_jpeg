@@ -12,15 +12,14 @@ install:
   - pwd
   - chmod +x ./scripts/ci/install_myhdl.sh
   - ./scripts/ci/install_myhdl.sh
+  - pip install coverage
+  - pip install coveralls
   - pip install Pillow
 
-# run the test
+# run the test, nosetests can be used
 script:
-   - python --version
-   - iverilog -V
    - cd test
    - python test_jpegenc.py
-   #- make -C test/
 
 notifications:
   email: false
