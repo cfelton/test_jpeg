@@ -167,6 +167,11 @@ Things to be completed
           finish.
 
    1. [X] Finish converting desing1 to Verilog.
+    
+   
+Last MyHDL master version tested
+--------------------------------
+   - 7c7bb58: 27-Apr-2015
 
 
 
