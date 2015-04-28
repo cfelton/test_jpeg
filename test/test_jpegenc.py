@@ -192,7 +192,7 @@ def test_jpegenc():
     else:
         ipth = os.path.join(ipth, 'small4.png')
 
-    # setup arguments for the test (future capture from CLI)
+    # setup arguments for the test
     vmod = 'tb_jpegenc'
     # tracing arguments
     args.trace=False            # enable tracing (debug)

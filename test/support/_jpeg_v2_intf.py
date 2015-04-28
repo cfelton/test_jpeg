@@ -3,6 +3,7 @@ from __future__ import division
 from __future__ import print_function
 
 import datetime 
+import struct
 
 from PIL import Image
 
@@ -108,6 +109,10 @@ class JPEGEncV2(JPEGEnc):
         """ capture the encoded bitstream
         """
         
+        # @todo: if multiple frames received?
+        # save the raw bitstream to a file
+        jfp = open('jpegv2.jpg', 'wb')
+
         @instance
         def t_bus_out():
             ii = 0
@@ -119,10 +124,15 @@ class JPEGEncV2(JPEGEnc):
                 yield self.clock.posedge
                 #yield self.data_ready.posedge
                 if self.data_ready:
-                    self._bitstream.append(int(self.jpeg_bitstream))
+                    word = int(self.jpeg_bitstream)
+                    self._bitstream.append(word)
                     ii += 1
                     if ii%Ncyc == 0: 
                         print("V2: %6d output, latest %08X" % (ii, self._bitstream[-1],))
+                        
+                    fword = struct.pack('>L', word)
+                    #print("V2: {:08X}, {}".format(word, fword))
+                    jfp.write(fword)
 
                 if ((self.nout > 0 and ii >= self.nout) or 
                     self.eof_data_partial_ready):
@@ -133,6 +143,7 @@ class JPEGEncV2(JPEGEnc):
                     dt = end_time - self.start_time
                     print("V2: end of bitstream %s " % (dt,))
                     self.enc_done.next = True
+                    jfp.close()
 
         return t_bus_out
 

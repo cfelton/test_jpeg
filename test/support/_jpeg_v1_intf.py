@@ -3,6 +3,7 @@ from __future__ import division
 from __future__ import print_function
 
 import datetime
+import struct
 
 from PIL import Image
 
@@ -25,7 +26,6 @@ class JPEGEncV1(JPEGEnc):
 
         # ---[encoder interface]---
         # these are the encoder v1 interface signals
-        #self.mmbus = OPBBus()
         pixel_nbits = self.pixel_nbits
         self.iram_wdata = Signal(intbv(0)[pixel_nbits:])  # input
         self.iram_wren = Signal(bool(0))                  # input
@@ -96,8 +96,7 @@ class JPEGEncV1(JPEGEnc):
         A transactor to take an image and stream it to the jpeg encoder.
         
         This encoder (design1) requires a 12x8 block to be streamed in,
-        the pixels are streamed into the FIFO until the FIFO is full 
-        (the encoder actually handles extracting the 12x8?).
+        the pixels are streamed into the FIFO until the FIFO is full.
         """
 
         @instance
@@ -145,7 +144,6 @@ class JPEGEncV1(JPEGEnc):
                 dt = end_time - self.start_time
                 print("V1: end pixel stream %s " % (dt,))
 
-                # what to do at the end??
                 # wait for the encoder to be completed
                 self.iram_wdata.next = 0
                 cd = Signal(bool(0))
@@ -167,6 +165,8 @@ class JPEGEncV1(JPEGEnc):
     def stream_jpg_out(self):
         """ capture the encoded bitstream
         """
+        # save the raw bitstream to a file
+        jfp = open('jpegv1.jpg', 'wb')
 
         @instance
         def t_bus_out():
@@ -187,10 +187,15 @@ class JPEGEncV1(JPEGEnc):
                     # when 4 bytes received save it
                     if (ii%4) ==  0:
                         self._bitstream.append(word)
-                        word = 0
                         nwords += 1
                         if nwords%Ncyc == 0:
                             print("V1: %6d output, latest %08X" % (nwords, self._bitstream[-1],))
+
+                        # write this word to the file
+                        fword = struct.pack('>L', word)
+                        #print("V1: {:08X}, {}".format(word, fword))
+                        jfp.write(fword)
+                        word = 0
 
                 #if ii > 10:
                 if ((self.nout > 0 and ii >= self.nout) or self._enc_done):
@@ -201,6 +206,7 @@ class JPEGEncV1(JPEGEnc):
                     dt = end_time - self.start_time
                     print("V1: end of bitstream %s " % (dt,))
                     self.enc_done.next = True
+                    jfp.close()
 
         return t_bus_out
 
