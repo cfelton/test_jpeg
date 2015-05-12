@@ -15,8 +15,8 @@ def print_matrix(matrix):
 		print_list(matrix[i])
 
 def test():
-	output = [Signal(0) for _ in range(8)]
-	input = Signal(0)
+	output = PixelLine()
+	input = Signal(intbv(0)[8:])
 	enable_in, enable_out, clk, reset = [Signal(False) for _ in range(4)]
 
 	@always(delay(10))
@@ -27,7 +27,7 @@ def test():
 	def stimulus():
 		for i in RANGE1_8:
 			yield clk.posedge
-			input.next = 1
+			input.next = 0
 			enable_in.next = True
 
 		# reset.next = True if (randrange(6) == 0) else False
@@ -39,7 +39,7 @@ def test():
 			print "\t".join(['en_out', 'input', 'en_in', 'reset', ' clk', '  now'])
 			print "\t".join(["  %d"]*6) % (enable_out, input, enable_in, reset, clk, now())
 			print "-" * 72
-			print_list(output)
+			print_list(output.pixels)
 			print "-" * 72
 			yield delay(19)
 
@@ -47,7 +47,5 @@ def test():
 
 	sim = Simulation(clkgen, dct_inst, stimulus, monitor)
 	sim.run(20 * 8 + 1)
-
-	# toVerilog(dct1SinPout, output, enable_out, input, enable_in, clk, reset)
 
 if __name__ == '__main__': test()
