@@ -44,8 +44,8 @@ def test():
             yield delay(11)
             print "\t".join(['en_out', 'input', 'en_in', 'reset',
                              ' clk', '  now'])
-            print "\t".join(["  %d"]*6) % (enable_out, pixelValue, enable_in, 
-                                            reset, clk, now())
+            print "\t".join(["  %d"]*6) % (enable_out, pixelValue, enable_in,
+                                           reset, clk, now())
             print "-" * 72
             print "-" * 72
             print_list(pixelLine.pixels)

@@ -4,6 +4,19 @@ from dctconstructs import *
 
 
 def dct1SinPout(pixelLine, enable_out, pixelValue, enable_in, clk, reset):
+    """ A DCT1 Serial-in Parallel-out calculator with reset.
+
+    I/O pins:
+    --------
+    pixelLine   : output array of 12-bit signed value
+    enable_out  : output ACTIVE_HIGH when output is available
+    pixelValue  : input 8-bit unsigned value in range of 0-255
+    enable_in   : input ACTIVE_HIGH when input is available
+    clk         : input clock boolean signal
+    reset       : input reset boolean signal
+
+    """
+
     temp_nbits = PRECISION_FACTOR + pixelLine.bitLength()
 
     @instance

@@ -4,6 +4,19 @@ from dctconstructs import *
 
 
 def dct1PinPout(pixelBlock, enable_out, pixelLine, enable_in, clk, reset):
+    """ A DCT1 Parallel-in Parallel-out calculator with reset.
+
+    I/O pins:
+    --------
+    pixelBlock  : output array of array of 12-bit signed value
+    enable_out  : output ACTIVE_HIGH when output is available
+    pixelLine   : input array of 12-bit signed value
+    enable_in   : input ACTIVE_HIGH when input is available
+    clk         : input clock boolean signal
+    reset       : input reset boolean signal
+
+    """
+
     temp_nbits = PRECISION_FACTOR + pixelBlock.bitLength()
 
     @instance
