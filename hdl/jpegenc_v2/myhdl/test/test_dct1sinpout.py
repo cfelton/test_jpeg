@@ -17,10 +17,12 @@ def print_matrix(matrix):
     for i in RANGE1_8:
         print_list(matrix[i])
 
+data = [154, 123, 123, 123, 123, 123, 123, 136]
+
 
 def test():
-    output = PixelLine()
-    input = Signal(intbv(0)[8:])
+    pixelLine = PixelLine()
+    pixelValue = Signal(intbv(0)[8:])
 
     enable_in, enable_out, clk = [Signal(INACTIVE_LOW) for _ in range(3)]
     reset = Signal(INACTIVE_HIGH)
@@ -31,25 +33,9 @@ def test():
 
     @instance
     def stimulus():
-        input.next = 0
         enable_in.next = ACTIVE_HIGH
-        yield clk.negedge
-
-        input.next = 0
-        yield clk.negedge
-
-        input.next = 0
-        yield clk.negedge
-
-        reset.next = ACTIVE_LOW
-        yield clk.negedge
-
-        reset.next = ACTIVE_LOW
-        yield clk.negedge
-
-        reset.next = INACTIVE_HIGH
         for i in RANGE1_8:
-            input.next = 0
+            pixelValue.next = data[i]
             yield clk.negedge
 
     @instance
@@ -58,18 +44,19 @@ def test():
             yield delay(11)
             print "\t".join(['en_out', 'input', 'en_in', 'reset',
                              ' clk', '  now'])
-            print "\t".join(["  %d"]*6) % (enable_out, input, enable_in, reset,
-                                           clk, now())
+            print "\t".join(["  %d"]*6) % (enable_out, pixelValue, enable_in, 
+                                            reset, clk, now())
             print "-" * 72
             print "-" * 72
-            print_list(output.pixels)
+            print_list(pixelLine.pixels)
             print "-" * 72
             yield delay(9)
 
-    dct_inst = dct1SinPout(output, enable_out, input, enable_in, clk, reset)
+    dct_inst = dct1SinPout(
+        pixelLine, enable_out, pixelValue, enable_in, clk, reset)
 
     sim = Simulation(clkgen, dct_inst, stimulus, monitor)
-    sim.run(20 * 8 + 20*5 + 1)
+    sim.run(20 * 8 + 1)
 
 if __name__ == '__main__':
     test()

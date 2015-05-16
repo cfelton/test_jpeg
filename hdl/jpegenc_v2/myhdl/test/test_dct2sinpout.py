@@ -1,5 +1,6 @@
 #!/bin/python
 from myhdl import *
+from dctconstructs import *
 from dct2sinpout import *
 from random import randrange
 
@@ -12,7 +13,7 @@ def print_list(signalList):
 
 def print_matrix(matrix):
 	for i in RANGE1_8:
-		print_list(matrix[i])
+		print_list(matrix.pixelLine(i).pixels)
 
 da = [
 	[154, 123, 123, 123, 123, 123, 123, 136],
@@ -27,10 +28,11 @@ da = [
 
 
 def test():
-	output = [[Signal(0) for x in range(8)] for x in range(8)]
-	input = Signal(0)
+	pixelBlock = PixelBlock()
+	pixelVal = Signal(intbv(0)[8:])
 
-	enable_out, enable_in, clk, reset = [Signal(False) for _ in range(4)]
+	enable_in, enable_out, clk = [Signal(INACTIVE_LOW) for _ in range(3)]
+	reset = Signal(INACTIVE_HIGH)
 
 	@always(delay(10))
 	def clkgen():
@@ -40,24 +42,22 @@ def test():
 	def stimulus():
 		for i in RANGE1_8:
 			for j in RANGE1_8:
-				yield clk.posedge
-				input.next = da[i][j]
-				enable_in.next = True
-
-		# reset.next = True if (randrange(6) == 0) else False
+				pixelVal.next = da[i][j]
+				enable_in.next = ACTIVE_HIGH
+				yield clk.negedge
 
 	@instance
 	def monitor():
 		while True:
-			yield delay(1)
+			yield delay(11)
 			print "\t".join(['input', 'en_out', 'en_in', 'reset', 'clk', 'now'])
-			print "\t".join(["%d"]*6) % (input, enable_out, enable_in, reset, clk, now())
+			print "\t".join(["%d"]*6) % (pixelVal, enable_out, enable_in, reset, clk, now())
 			print "-" * 70
-			print_matrix(output)
+			print_matrix(pixelBlock)
 			print "-" * 70
-			yield delay(19)
+			yield delay(9)
 
-	dct_inst = dct2SinPout(output, enable_out, input, enable_in, clk, reset)
+	dct_inst = dct2SinPout(pixelBlock, enable_out, pixelVal, enable_in, clk, reset)
 
 	sim = Simulation(clkgen, dct_inst, stimulus, monitor)
 	sim.run(20 * (8 * 8 + 1) + 1)
