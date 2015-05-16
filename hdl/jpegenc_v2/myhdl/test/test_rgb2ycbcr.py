@@ -10,7 +10,8 @@ def test():
     ycbcr = YCbCr()
     rgb = RGB()
 
-    clk, reset = Signal(True), ResetSignal(1, active=ACTIVE_LOW, async=True)
+    clk, enable_in, enable_out = [Signal(False) for _ in range(3)]
+    reset = ResetSignal(1, active=ACTIVE_LOW, async=True)
 
     @always(delay(10))
     def clkgen():
@@ -27,20 +28,23 @@ def test():
     @always(clk.negedge)
     def stimulus():
         rgb.next(randrange(256), randrange(256), randrange(256))
+        enable_in.next = False if randrange(6) == 0 else True
 
     @instance
     def monitor():
         print "\t".join(
-            ['red', 'green', 'blue', 'y', 'cb', 'cr', 'reset', 'clk', 'now'])
+            ['red', 'green', 'blue', 'e_in', 'y', 'cb', 'cr',
+             'e_out', 'reset', 'clk', 'now'])
         print "-" * 70
         while True:
             yield delay(11)
-            print "\t".join(["%d"] * 9) % \
-                (rgb.red, rgb.green, rgb.blue, ycbcr.y,
-                 ycbcr.cb, ycbcr.cr, reset, clk, now())
+            print "\t".join(["%d"] * 11) % \
+                (rgb.red, rgb.green, rgb.blue, enable_in,
+                    ycbcr.y, ycbcr.cb, ycbcr.cr, enable_out,
+                    reset, clk, now())
             yield delay(9)
 
-    rgb2ycbcr_inst = rgb2ycbcr(ycbcr, rgb, clk, reset)
+    rgb2ycbcr_inst = rgb2ycbcr(ycbcr, enable_out, rgb, enable_in, clk, reset)
 
     sim = Simulation(clkgen, rgb2ycbcr_inst, stimulus, monitor, resetOnStart)
     sim.run(500)
