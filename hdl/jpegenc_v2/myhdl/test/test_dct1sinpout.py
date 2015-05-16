@@ -1,12 +1,10 @@
 #!/bin/python
-from myhdl import *
-from dct1sinpout import *
 from random import randrange
+from myhdl import *
+from dctconstructs import *
+from dct1sinpout import *
 
 RANGE1_8 = range(8)
-
-ACTIVE_LOW, INACTIVE_HIGH = False, True
-INACTIVE_LOW, ACTIVE_HIGH = False, True
 
 
 def print_list(signalList):
@@ -23,6 +21,7 @@ def print_matrix(matrix):
 def test():
     output = PixelLine()
     input = Signal(intbv(0)[8:])
+
     enable_in, enable_out, clk = [Signal(INACTIVE_LOW) for _ in range(3)]
     reset = Signal(INACTIVE_HIGH)
 
