@@ -1,5 +1,6 @@
 #!/bin/python
 from myhdl import *
+from commons import *
 from dctconstructs import *
 from dct1pinpout import *
 from random import randrange
