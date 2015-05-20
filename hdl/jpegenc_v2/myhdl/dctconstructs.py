@@ -1,8 +1,6 @@
 #!/bin/python
 from myhdl import *
-
-ACTIVE_LOW, INACTIVE_HIGH = False, True
-INACTIVE_LOW, ACTIVE_HIGH = False, True
+from commons import *
 
 PRECISION_FACTOR = 18
 
@@ -21,21 +19,6 @@ MULT_MAT = [
 A_OFFSET = 128 * 8 * A
 
 
-def sintbv(value, nbits):
-    nbits -= 1
-    min_value = -1 << nbits
-    max_value = -min_value + 1
-
-    return intbv(value, min_value, max_value)
-
-
-def round_signed(val, msb, lsb):
-    if val[lsb - 1]:
-        return val[msb:lsb].signed() + 1
-
-    return val[msb:lsb].signed()
-
-
 class PixelLine(object):
 
     def __init__(self, nbits=12):
@@ -45,6 +28,7 @@ class PixelLine(object):
     def pixel(self, index): return self.pixels[index]
 
     def bitLength(self): return self.nbits
+
 
 class PixelBlock(object):
 

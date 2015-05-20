@@ -1,16 +1,15 @@
 #!/bin/python
 from myhdl import *
-from rgb2ycbcr import *
 from random import randrange
-
-ACTIVE_LOW, INACTIVE_HIGH = 0, 1
+from commons import *
+from rgb2ycbcr import *
 
 
 def test():
     ycbcr = YCbCr()
     rgb = RGB()
 
-    clk, enable_in, enable_out = [Signal(False) for _ in range(3)]
+    clk, enable_in, enable_out = [Signal(INACTIVE_LOW) for _ in range(3)]
     reset = ResetSignal(1, active=ACTIVE_LOW, async=True)
 
     @always(delay(10))
@@ -28,7 +27,7 @@ def test():
     @always(clk.negedge)
     def stimulus():
         rgb.next(randrange(256), randrange(256), randrange(256))
-        enable_in.next = False if randrange(6) == 0 else True
+        enable_in.next = INACTIVE_LOW if randrange(6) == 0 else ACTIVE_HIGH
 
     @instance
     def monitor():

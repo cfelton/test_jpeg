@@ -1,5 +1,6 @@
 #!/bin/python
 from myhdl import *
+from commons import *
 from dctconstructs import *
 from dct1sinpout import dct1SinPout
 from dct1pinpout import dct1PinPout
