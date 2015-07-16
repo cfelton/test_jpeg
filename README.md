@@ -171,7 +171,8 @@ Things to be completed
    
 Last MyHDL master version tested
 --------------------------------
-   - 7c7bb58: 27-Apr-2015
+   - `80b1864`: 16-Jul-2015
+   - `7c7bb58`: 27-Apr-2015
 
 
 
