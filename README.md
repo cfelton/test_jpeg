@@ -5,9 +5,10 @@
 Introduction
 ============
 This repository contains a verification environment to functionally
-verify and compare a various hardware JPEG encoders.  The 
+verify and compare various hardware JPEG encoders.  The 
 JPEG encoders used are the cores available at open-cores in addition
-to JPEG encoders being developed.
+to JPEG encoders being developed.  This is a WIP and not fully 
+complete.
 
 
 Verification Environment
@@ -29,12 +30,12 @@ JPEG Encoders
    - jpegenc_v3: WIP design3 jpeg encoder
    - jpegenc_v4: <future> jpeg2k encoder
 
-(@todo: the above need better names?)
+<!-- (@todo: the above need better names?) -->
 
 
 Getting Started
 ===============
-To run the test the following need to be installed:
+To run the test the following needs to be installed:
 
   * Icarus Verilog
   
@@ -70,7 +71,7 @@ be run.
 
 Depending on the test file the test can take significant time to run.
 Majority of the time is spent in the Verilog simulator (as seen from
-top).  
+*top*).  
 
 <!-- 
 MyHDL has some inefficiencies with Icarus
