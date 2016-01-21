@@ -134,7 +134,10 @@ def convert():
 
 convert()
 
+#TODO
 
+#enable_out fix timing
+#round-up and clipping
 
 
 
