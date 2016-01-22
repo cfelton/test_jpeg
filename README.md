@@ -4,19 +4,26 @@
 
 Introduction
 ============
-This repository contains a verification environment to functionally
-verify and compare various hardware JPEG encoders.  The 
-JPEG encoders used are the cores available at open-cores in addition
-to JPEG encoders being developed.  This is a WIP and not fully 
-complete.
+This repository is a development sandbox.  The respository 
+contains three related development efforts:
+
+1. VHDL to Verilog conversion of the first JPEG-encoder reference 
+   (rational explained below).
+2. MyHDL verification and co-simulation environment, tests will 
+   functionally verify and compare the reference JPEG-encoders.
+3. A MyHDL implementation of a JPEG-encoder.
+
+The JPEG encoders used are the cores available at open-cores in 
+addition to JPEG encoders being developed.  This is a WIP and not 
+fully complete.
 
 
 Verification Environment
 ========================
 A stimulus and verification environment was created with Python and
 MyHDL.  An image is streamed to the encoder and the output is captured.
-The hardware generated JPEG bitstream is compared to a software JPEG bitstream 
-with similar settings.
+The hardware generated JPEG bitstream is compared to a software JPEG 
+bitstream with similar settings.
 
 In the future the output of the various encoders will be compared to 
 each other as well as the encoder performance (.e.g. max fps).
@@ -25,10 +32,10 @@ each other as well as the encoder performance (.e.g. max fps).
 JPEG Encoders
 =============
 
-   - jpegenc_v1: [VHDL JPEG encoder](http://opencores.org/project,mkjpeg) converted to Verilog
-   - jpegenc_v2: [OC Verilog JPEG](http://opencores.org/project,jpegencode) encoder.
-   - jpegenc_v3: WIP design3 jpeg encoder
-   - jpegenc_v4: <future> jpeg2k encoder
+   - hdl/jpegenc_v1: [VHDL JPEG encoder](http://opencores.org/project,mkjpeg) converted to Verilog
+   - hdl/jpegenc_v2: [OC Verilog JPEG](http://opencores.org/project,jpegencode) encoder.
+   - jpegenc: A fresh (non-ported) MyHDL implementation, `jpegenc` is a Python package
+     being developed.
 
 <!-- (@todo: the above need better names?) -->
 
@@ -38,21 +45,12 @@ Getting Started
 To run the test the following needs to be installed:
 
   * Icarus Verilog
-  
   * Python (currently using 2.7)
-  
   * MyHDL
-  * 
-  ```
-  >> hg clone https://bitbucket.org/jandecaluwe/myhdl
-  >> cd myhdl
-  >> hg up -C 0.9-dev
-  ```
-  
   * Python Imaging Library (e.g. pip install Pillow)
 
 
-The MyHDL VPI module needs to be built and copied to the  test 
+The MyHDL VPI module needs to be built and copied to the test 
 directory.
 
 ```
@@ -161,6 +159,8 @@ Progress Log
 Things to be completed
 ----------------------
 
+   1. [ ] Use Python3 as the default python verson.
+   
    1. [ ] Check encoded bitstreams, determine metrics to compare 
           encoders.
 
