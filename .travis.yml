@@ -19,6 +19,7 @@ cache:
       
 # get some stuff to install
 before_install:
+  - export PATH=$PATH:$HOME/iverilog/bin/
   - chmod +x ./scripts/ci/install_iverilog.sh
   - ./scripts/ci/install_iverilog.sh
 
