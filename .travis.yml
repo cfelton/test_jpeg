@@ -6,6 +6,13 @@ python:
   - "2.7"
   - "pypy"
 
+addons:
+  apt:
+    packages:
+      - build-essential
+      - autoconf
+      - gperf
+      
 cache:
   directories:
   - $HOME/iverilog
