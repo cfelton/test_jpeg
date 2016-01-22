@@ -1,11 +1,19 @@
+# http://docs.travis-ci.com/user/workers/container-based-infrastructure/
+sudo: false
+
 language: python
 python:
   - "2.7"
   - "pypy"
-  
+
+cache:
+  directories:
+  - $HOME/iverilog
+      
 # get some stuff to install
 before_install:
-  - sudo apt-get install iverilog
+  - chmod +x ./scripts/ci/install_iverilog.sh
+  - ./scripts/ci/install_iverilog.sh
 
 # command to install dependencies
 install:
