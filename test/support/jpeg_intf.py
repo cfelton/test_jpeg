@@ -1,10 +1,9 @@
-from __future__ import division
-from __future__ import print_function
+from __future__ import division, print_function, absolute_import
 
 from PIL import Image
 
 from myhdl import *
-from _SignalQueue import SignalQueue
+from .signal_queue import SignalQueue
     
                  
 class JPEGEnc(object):
@@ -15,7 +14,7 @@ class JPEGEnc(object):
 
         # @todo: the following parameters should be part of the args
         self.pixel_nbits = 24
-        self.block_size  = (8,8,)
+        self.block_size = (8, 8,)
         self.max_frame_rate = 0
 
         self.clock = clock
@@ -44,16 +43,18 @@ class JPEGEnc(object):
         self.pxl_done = Signal(bool(0))  # streaming pixels in finished
         self.enc_done = Signal(bool(0))  # encoder is done encoding
 
+        self.img_size = None
+        self.encode_start_time = 0
+        self.encode_end_time = 0
 
     def _ext(self, img, N=16):
         """ extend an image to be a multiple of N pixels
         """
-        w,h = img.size
-        we,he = w+(N-w%N), h+(N-h%N)
+        w, h = img.size
+        we, he = w+(N-w%N), h+(N-h%N)
         nimg = Image.new("RGB", (we,he,))
         nimg.paste(img, (0,0,))
         return nimg
-
 
     def put_image(self, img):
         """ put an image to stream into the encoder
@@ -64,13 +65,11 @@ class JPEGEnc(object):
         yield self._inq.put(nimg)
         yield self.clock.posedge
 
-
     def get_jpeg(self, bic):
         """ retrieve the encoded bitstream
         """
         assert isinstance(bic, list)
         yield self._outq.get(bic, block=True)
-
 
     # the specific interfaces need to define: 
     #  - stream_img_in 
@@ -87,4 +86,4 @@ class JPEGEnc(object):
     def get_gens(self):
         d = self.stream_img_in()
         m = self.stream_jpg_out()
-        return d,m
+        return d, m

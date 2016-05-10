@@ -36,8 +36,8 @@ def test_block_buffer():
             yield delay(13)
             yield clock.posedge
 
-            for ii in range(100):
-                yield delay(100)
+            for ii in range(200):
+                yield delay(1000)
                 yield clock.posedge
 
             print("end simulation ...")

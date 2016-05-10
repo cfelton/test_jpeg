@@ -36,8 +36,7 @@ def runbench(args):
     def tbclk():
         clock.next = not clock
 
-
-    def _dump_bitstreams(v1_bic, v2_bic, args):
+    def dump_bitstreams(v1_bic, v2_bic, args):
         """ dump the retrieved bitstreams
         """
         v1_non_zero = False
@@ -45,22 +44,21 @@ def runbench(args):
             if bb != 0:
                 v1_non_zero = True
         
-        print("V1 bitstream, len %d (more than zeros %s)" % (len(v1_bic),v1_non_zero,))
-        for ii,bb in enumerate(v1_bic):
+        print("V1 bitstream, len %d (more than zeros %s)" % (len(v1_bic), v1_non_zero,))
+        for ii, bb in enumerate(v1_bic):
             print("  [%6d]  %08X" % (ii, int(bb),))
             if ii > 4 and not args.dump_bitstreams:
                 break;
         print("V1 max frame rate %8.3f @ %s" % (jpgv1.max_frame_rate, str(jpgv2.img_size),))
 
         print("V2 bitstream, len %d" % (len(v2_bic),))
-        for ii,bb in enumerate(v2_bic):
+        for ii, bb in enumerate(v2_bic):
             print("  [%6d]  %08X" % (ii, int(bb),))
             if ii > 4 and not args.dump_bitstreams:
                 break
         print("V2 max frame rate %8.3f @ %s" % (jpgv2.max_frame_rate, str(jpgv2.img_size),))
 
-
-    def _test():
+    def test():
         # get the bus adapters to the encoders
         tbintf = (jpgv1.get_gens(), jpgv2.get_gens(),)
         finished = [Signal(bool(0)) for _ in range(2)]
@@ -93,15 +91,14 @@ def runbench(args):
                 yield clock.posedge
                 
             if not args.no_wait:
-                _dump_bitstreams(v1_bic[0], v2_bic[0], args)
-
+                dump_bitstreams(v1_bic[0], v2_bic[0], args)
 
             end_time = datetime.datetime.now()
             dt = end_time - args.start_time
             print("end simulation %s" % (dt,))
             raise StopSimulation
             
-        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # stimulate V1 (design1) 
         @instance
         def tbstimv1():
@@ -131,7 +128,7 @@ def runbench(args):
             
             finished[0].next = True
 
-        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # stimulate V2 (design2) 
         @instance
         def tbstimv2():  
@@ -158,19 +155,19 @@ def runbench(args):
 
         return tbclk, tbstim, tbintf, tbstimv1, tbstimv2
 
-
     if args.trace:
-        traceSignals.name = 'vcd/_test_jpegenc'
+        traceSignals.name = 'vcd/test_jpegenc'
         traceSignals.timescale = '1ns'    
         fn = traceSignals.name + '.vcd'
         if os.path.isfile(fn):
             os.remove(fn)
-        gt = traceSignals(_test)
+        gt = traceSignals(test)
     else:
-        gt = _test()
+        gt = test()
 
     # run the simulation
     Simulation((gt, tbdut,)).run()
+
 
 def test_jpegenc():
     # randomly select a test image
@@ -215,7 +212,8 @@ def test_jpegenc():
     # run the JPEG encoder test
     print("Using image %s " % (ipth,))
     runbench(args)
-    
+
+
 if __name__ == '__main__':
     test_jpegenc()
     

@@ -1,5 +1,4 @@
-from __future__ import division
-from __future__ import print_function
+from __future__ import division, print_function
 
 from PIL import Image
 
@@ -10,4 +9,4 @@ def compare_bitstreams(ipth, bitstreams):
     software generated JPEG bitstream from the original file.
     """
     pass
-    
+

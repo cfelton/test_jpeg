@@ -49,9 +49,9 @@ module tb_jpegenc;
 
 `ifdef VTRACE		
    initial begin
-      $dumpfile("vcd/_tb_jpegenc.vcd");
+      $dumpfile("vcd/tb_jpegenc.vcd");
       //$dumpvars(0, tb_jpegenc);
-       $dumpvars(`VTRACE_LEVEL, `VTRACE_MODULE);
+      $dumpvars(`VTRACE_LEVEL, `VTRACE_MODULE);
    end
 `endif    
       

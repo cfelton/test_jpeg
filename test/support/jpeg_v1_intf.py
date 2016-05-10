@@ -1,6 +1,5 @@
 
-from __future__ import division
-from __future__ import print_function
+from __future__ import division, print_function, absolute_import
 
 import datetime
 import struct
@@ -8,11 +7,11 @@ import struct
 from PIL import Image
 
 from myhdl import *
-from _SignalQueue import SignalQueue
 
-from _opb import OPBBus
-from _jpeg_intf import JPEGEnc
-from _jpeg_roms import rom_lum, rom_chr
+from .signal_queue import SignalQueue
+from .opb import OPBBus
+from .jpeg_intf import JPEGEnc
+from .jpeg_roms import rom_lum, rom_chr
 
 
 class JPEGEncV1(JPEGEnc):
@@ -45,7 +44,6 @@ class JPEGEncV1(JPEGEnc):
         self.nout = args.nout
         self.start_time = args.start_time
 
-
     def initialize(self, luminance=1, chrominance=1):
         """ initialize the encoder 
 
@@ -61,15 +59,14 @@ class JPEGEncV1(JPEGEnc):
         # program the luminance table
         for ii,off in enumerate(range(lbase,lbase+64)):
             addr = 0x00000100 + ii*4
-            #print("[%8d] V1 init %8X --> %8X" % (now(), addr, rom_lum[off]))
+            # print("[%8d] V1 init %8X --> %8X" % (now(), addr, rom_lum[off]))
             yield self.opb.write(addr, rom_lum[off])
 
         # program the chrominace table
-        for ii,off in enumerate(range(cbase,cbase+64)):  
+        for ii, off in enumerate(range(cbase, cbase+64)):
             addr = 0x00000200 + ii*4
             yield self.opb.write(addr, rom_chr[off])
-            
-      
+
     def check_done(self, done):        
         assert isinstance(done, SignalType)
         dn = False
@@ -87,9 +84,8 @@ class JPEGEncV1(JPEGEnc):
 
         done.next = dn
         self._enc_done.next = dn
-        #print("%8d checked done %X %d->%d" % (now(), rval, 
-        #                                  self._enc_done.val, self._enc_done.next))
-
+        # print("%8d checked done %X %d->%d" % (now(), rval,
+        #                                   self._enc_done.val, self._enc_done.next))
 
     def stream_img_in(self):
         """
@@ -107,7 +103,7 @@ class JPEGEncV1(JPEGEnc):
                 yield self._inq.get(imglst, block=True)
                 self.pxl_done.next = False
                 img = imglst[0]
-                nx,ny = img.size
+                nx, ny = img.size
 
                 # this encoder needs some commands via the control bus (memmap)
                 # to start encoding, need to program in the requested (?) x and y 
@@ -121,14 +117,14 @@ class JPEGEncV1(JPEGEnc):
                 self.img_size = img.size
 
                 self.encode_start_time = now()
-                for yy in xrange(0, ny):
-                    for xx in xrange(0, nx):
+                for yy in range(0, ny):
+                    for xx in range(0, nx):
                         self.iram_wren.next = False
                         while self.iram_fifo_afull:
                             yield self.clock.posedge
 
                         # clear to write a pixel in
-                        r,g,b = img.getpixel((xx,yy,))
+                        r, g, b = img.getpixel((xx,yy,))
                         self.iram_wren.next = True
                         self.iram_wdata.next[24:16] = b
                         self.iram_wdata.next[16:8] = g
@@ -157,10 +153,8 @@ class JPEGEncV1(JPEGEnc):
                 dt = self.encode_end_time - self.encode_start_time
                 self.max_frame_rate = 1/(dt * 1e-9)
                 print("V1: max frame rate %8.3f frames/sec" % (self.max_frame_rate,))
-                
 
         return t_bus_in
-
 
     def stream_jpg_out(self):
         """ capture the encoded bitstream
@@ -209,6 +203,3 @@ class JPEGEncV1(JPEGEnc):
                     jfp.close()
 
         return t_bus_out
-
-                            
-                

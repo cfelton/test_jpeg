@@ -123,6 +123,6 @@ def mdl_block_buffer(pxl, bmem):
     @always(pxl.clock.posedge)
     def mdl_output():
         # @todo: translate row,col to linear address
-        bmem.pixel.next = 0xAAA
+        bmem.pixel.next = 0x555AAA
 
     return mdl_input_capture, mdl_output

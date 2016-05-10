@@ -1,6 +1,5 @@
 
-from __future__ import division
-from __future__ import print_function
+from __future__ import division, print_function, absolute_import
 
 import datetime 
 import struct
@@ -8,13 +7,12 @@ import struct
 from PIL import Image
 
 from myhdl import *
-from _SignalQueue import SignalQueue
 
-from _jpeg_intf import JPEGEnc
+from .signal_queue import SignalQueue
+from .jpeg_intf import JPEGEnc
 
 
 class JPEGEncV2(JPEGEnc):
-    
     def __init__(self, clock, reset, args=None):
         """
         """
@@ -36,7 +34,6 @@ class JPEGEncV2(JPEGEnc):
         self.block_size = (8,8,)
         self.nout = args.nout
         self.start_time = args.start_time
-
 
     def stream_img_in(self):
         """ 
@@ -60,17 +57,17 @@ class JPEGEncV2(JPEGEnc):
                 self.img_size = img.size
 
                 self.encode_start_time = now()
-                for yy in xrange(0, ny, 8):
-                    for xx in xrange(0, nx, 8):
+                for yy in range(0, ny, 8):
+                    for xx in range(0, nx, 8):
                         self.enable.next = True
                         
-                        #print("   sending block %3d,%3d out of %3d,%3d" % (xx, yy, nx, ny))
+                        # print("   sending block %3d,%3d out of %3d,%3d" % (xx, yy, nx, ny))
                         if yy >= ny-8 and xx >= nx-8:
                             self.end_of_file_signal.next = True
 
                         # send the 8x8 block
-                        for yb in xrange(8):
-                            for xb in xrange(8):                                
+                        for yb in range(8):
+                            for xb in range(8):
                                 r,g,b = img.getpixel((xx+xb,yy+yb,))
                                 self.data_in.next[24:16] = b
                                 self.data_in.next[16:8] = g
@@ -79,12 +76,11 @@ class JPEGEncV2(JPEGEnc):
 
                         # after each 8x8 block the encoder requires
                         # 33 clocks before the next block
-                        for ii in xrange(33):
+                        for ii in range(33):
                             yield self.clock.posedge
 
                         self.enable.next = False
                         yield self.clock.posedge                                        
-                        
 
                 # at this point the next frame can be sent
                 self.encode_end_time = now()
@@ -101,9 +97,7 @@ class JPEGEncV2(JPEGEnc):
                 dt = end_time - self.start_time
                 print("V2: end pixel stream %s " % (dt,))
 
-
         return t_bus_in
-
 
     def stream_jpg_out(self):
         """ capture the encoded bitstream
@@ -122,16 +116,16 @@ class JPEGEncV2(JPEGEnc):
             # capture the output from the encoder
             while do_capture:
                 yield self.clock.posedge
-                #yield self.data_ready.posedge
+                # yield self.data_ready.posedge
                 if self.data_ready:
                     word = int(self.jpeg_bitstream)
                     self._bitstream.append(word)
                     ii += 1
-                    if ii%Ncyc == 0: 
+                    if ii % Ncyc == 0:
                         print("V2: %6d output, latest %08X" % (ii, self._bitstream[-1],))
                         
                     fword = struct.pack('>L', word)
-                    #print("V2: {:08X}, {}".format(word, fword))
+                    # print("V2: {:08X}, {}".format(word, fword))
                     jfp.write(fword)
 
                 if ((self.nout > 0 and ii >= self.nout) or 
@@ -146,5 +140,3 @@ class JPEGEncV2(JPEGEnc):
                     jfp.close()
 
         return t_bus_out
-
-

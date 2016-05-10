@@ -1,9 +1,12 @@
 
+from __future__ import print_function, division, absolute_import
+
 import os
 from argparse import Namespace
 from myhdl import *
-from _jpeg_filelist import filelist_v1
-from _jpeg_filelist import filelist_v2
+from .jpeg_filelist import filelist_v1
+from .jpeg_filelist import filelist_v2
+
 
 def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
     """
@@ -40,7 +43,6 @@ def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
     print("compiling testbench ...")
     os.system(cmd)
 
-
     if not os.path.exists('vcd'):
         os.makedirs('vcd')
 
@@ -53,8 +55,8 @@ def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
 
     gcosim = Cosimulation(
         cmd,
-        clock = clock,
-        reset = reset,
+        clock=clock,
+        reset=reset,
         
         # encoder 1 (V1, design1)
         j1_iram_wdata      = jpgv1.iram_wdata,
@@ -94,12 +96,12 @@ def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
 
 if __name__ == '__main__':
     args = Namespace(
-        build_only=True,            # build only
-        build_skip_v1=False,        # skip design 1
-        build_skip_v2=False,        # skip design 2
-        vtrace=True,                # enable VCD tracing in Verilog cosim
-        vtrace_level=0,             # Verilog VCD dumpvars level
-        vtrace_module='tb_jpegenc', # Verilog VCD dumpvars module to trace
+        build_only=True,             # build only
+        build_skip_v1=False,         # skip design 1
+        build_skip_v2=False,         # skip design 2
+        vtrace=True,                 # enable VCD tracing in Verilog cosim
+        vtrace_level=0,              # Verilog VCD dumpvars level
+        vtrace_module='tb_jpegenc',  # Verilog VCD dumpvars module to trace
     )
     
     prep_cosim(Signal(bool(0)), 
