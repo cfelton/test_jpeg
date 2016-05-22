@@ -1,0 +1,1 @@
+-e git://github.com/jandecaluwe/myhdl.git#egg=myhdl-1.0dev0
