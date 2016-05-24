@@ -1,0 +1,7 @@
+1) implement analyze_convert in the main module
+2) implement verify_convert in the testbench
+3) write more tests
+4) write comments
+5) make code readable 
+6) PEP8 code refactor
+7) write a documentation about the module
