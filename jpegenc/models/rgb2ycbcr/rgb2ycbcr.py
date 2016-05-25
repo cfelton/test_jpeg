@@ -26,11 +26,6 @@ class RGB(object):
         self.green = Signal(intbv(0)[nbits:])
         self.blue = Signal(intbv(0)[nbits:])
 
-    def next(self, r, g, b):
-        self.red.next = r
-        self.green.next = g
-        self.blue.next = b
-
     def bitLength(self): return self.nbits
 
 
@@ -132,7 +127,7 @@ def rgb2ycbcr(ycbcr, enable_out, rgb, enable_in, clk, reset):
 
             enable_out.next=INACTIVE_LOW
 
-    return instances()
+    return logic,logic2
 
 
 def convert():
