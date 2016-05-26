@@ -616,11 +616,11 @@ always @(posedge clk, negedge reset) begin: TEST_RGB2YCBCR_1_LOGIC
 
             rgb2ycbcr_1_Y_reg[1] <= (rgb2ycbcr_1_G_s * rgb2ycbcr_1_Y2_s);
             rgb2ycbcr_1_Y_reg[2] <= (rgb2ycbcr_1_B_s * rgb2ycbcr_1_Y3_s);
-            rgb2ycbcr_1_Cb_reg[0] <= -(rgb2ycbcr_1_R_s * rgb2ycbcr_1_Cb1_s);
-            rgb2ycbcr_1_Cb_reg[1] <= -(rgb2ycbcr_1_G_s * rgb2ycbcr_1_Cb2_s);
+            rgb2ycbcr_1_Cb_reg[0] <= (rgb2ycbcr_1_R_s * rgb2ycbcr_1_Cb1_s);
+            rgb2ycbcr_1_Cb_reg[1] <= (rgb2ycbcr_1_G_s * rgb2ycbcr_1_Cb2_s);
             rgb2ycbcr_1_Cb_reg[2] <= (rgb2ycbcr_1_B_s * rgb2ycbcr_1_Cb3_s);
             rgb2ycbcr_1_Cr_reg[0] <= (rgb2ycbcr_1_R_s * rgb2ycbcr_1_Cr1_s);
-            rgb2ycbcr_1_Cr_reg[1] <= -(rgb2ycbcr_1_G_s * rgb2ycbcr_1_Cr2_s);
+            rgb2ycbcr_1_Cr_reg[1] <= (rgb2ycbcr_1_G_s * rgb2ycbcr_1_Cr2_s);
            
             /*
             $write("\n");
@@ -632,10 +632,10 @@ always @(posedge clk, negedge reset) begin: TEST_RGB2YCBCR_1_LOGIC
             $write("\n");
             */
 
-            rgb2ycbcr_1_Cr_reg[2] <= -(rgb2ycbcr_1_B_s * rgb2ycbcr_1_Cr3_s);
+            rgb2ycbcr_1_Cr_reg[2] <= (rgb2ycbcr_1_B_s * rgb2ycbcr_1_Cr3_s);
             rgb2ycbcr_1_Y_sum <= (((rgb2ycbcr_1_Y_reg[0] + rgb2ycbcr_1_Y_reg[1]) + rgb2ycbcr_1_Y_reg[2]) + rgb2ycbcr_1_offset_y);
-            rgb2ycbcr_1_Cb_sum <= (((rgb2ycbcr_1_Cb_reg[0] + rgb2ycbcr_1_Cb_reg[1]) + rgb2ycbcr_1_Cb_reg[2]) + rgb2ycbcr_1_offset_cb);
-            rgb2ycbcr_1_Cr_sum <= (((rgb2ycbcr_1_Cr_reg[0] + rgb2ycbcr_1_Cr_reg[1]) + rgb2ycbcr_1_Cr_reg[2]) + rgb2ycbcr_1_offset_cr);
+            rgb2ycbcr_1_Cb_sum <= (((-rgb2ycbcr_1_Cb_reg[0] - rgb2ycbcr_1_Cb_reg[1]) + rgb2ycbcr_1_Cb_reg[2]) + rgb2ycbcr_1_offset_cb);
+            rgb2ycbcr_1_Cr_sum <= (((rgb2ycbcr_1_Cr_reg[0] - rgb2ycbcr_1_Cr_reg[1]) - rgb2ycbcr_1_Cr_reg[2]) + rgb2ycbcr_1_offset_cr);
             // the part which must be checked for rounding is the partm from signal[fract_bits + nbits:fract_bits]
             a = (14 + 8);
             b = 14;
