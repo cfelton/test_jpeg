@@ -66,7 +66,6 @@ def test():
     def stimulus():
         yield clk.negedge
 
-        #rgb.next(input_list[0][0], input_list[0][1], input_list[0][2])
         rgb.red.next=input_red[0]
         rgb.green.next=input_green[0]
         rgb.blue.next=input_blue[0]
@@ -107,7 +106,7 @@ def testbench():
    instance.config_sim(trace=False)
    instance.run_sim()
 
-   verify.simulator='iverilog'
+   verify.simulator='ghdl'
    assert test().verify_convert() == 0
 
 if __name__ == '__main__':
