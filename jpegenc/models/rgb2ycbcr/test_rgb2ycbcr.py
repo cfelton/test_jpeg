@@ -20,8 +20,8 @@ def test():
     ycbcr = YCbCr()
     rgb = RGB()
 
-    clk, enable_in, enable_out = [Signal(INACTIVE_LOW) for _ in range(3)]
-    reset = ResetSignal(1, active=ACTIVE_LOW, async=True)
+    clk, enable_in, enable_out = [Signal(bool(0)) for _ in range(3)]
+    reset = ResetSignal(1, active=1, async=True)
 
     rgb2ycbcr_inst = rgb2ycbcr(ycbcr, enable_out, rgb, enable_in, clk, reset)
 
@@ -58,42 +58,37 @@ def test():
 
     @instance
     def resetOnStart():
-        reset.next = ACTIVE_LOW
+        reset.next = 1
         yield clk.negedge
-        reset.next = INACTIVE_HIGH
+        reset.next = 0
 
     @instance
     def stimulus():
         yield clk.negedge
 
-        rgb.red.next=input_red[0]
-        rgb.green.next=input_green[0]
-        rgb.blue.next=input_blue[0]
+        enable_in.next = 1
 
-        enable_in.next = ACTIVE_HIGH
+        for i in range(samples):
 
-        #enable_in.next = INACTIVE_LOW if randrange(6) == 0 else ACTIVE_HIGH
-        for i in range(1,samples):
-            yield clk.negedge
             yield clk.negedge
 
             rgb.red.next=input_red[i]
             rgb.green.next=input_green[i]
             rgb.blue.next=input_blue[i]
-            yield clk.negedge
 
+            if i > 2:
 
-            output_y_s.next=output_y[i-1]
-            output_cb_s.next=output_cb[i-1]
-            output_cr_s.next=output_cr[i-1]
+                output_y_s.next=output_y[i-3]
+                output_cb_s.next=output_cb[i-3]
+                output_cr_s.next=output_cr[i-3]
 
-            yield delay(1)
-            print "Output should be: %d %d %d---Real output is: %d %d %d"%(output_y_s,output_cb_s,output_cr_s,
-                ycbcr.y,ycbcr.cb,ycbcr.cr)
+                yield delay(1)
+                print "Output should be: %d %d %d---Real output is: %d %d %d"%(output_y_s,output_cb_s,output_cr_s,
+                       ycbcr.y,ycbcr.cb,ycbcr.cr)
 
-            assert output_y_s== ycbcr.y
-            assert output_cb_s== ycbcr.cb
-            assert output_cr_s== ycbcr.cr
+                assert output_y_s== ycbcr.y
+                assert output_cb_s== ycbcr.cb
+                assert output_cr_s== ycbcr.cr
 
         raise StopSimulation
 

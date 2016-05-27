@@ -80,7 +80,7 @@ def rgb2ycbcr(ycbcr, enable_out, rgb, enable_in, clk, reset):
     def logic():
 
 
-        if enable_in == ACTIVE_HIGH:
+        if enable_in == 1:
 
 
            Y_reg[0].next=R_s*Y1_s
@@ -128,7 +128,7 @@ def rgb2ycbcr(ycbcr, enable_out, rgb, enable_in, clk, reset):
 
         else:
 
-            enable_out.next=INACTIVE_LOW
+            enable_out.next = 0
 
     return logic,logic2
 
@@ -137,8 +137,8 @@ def convert():
     ycbcr = YCbCr()
     rgb = RGB()
 
-    clk, enable_in, enable_out = [Signal(INACTIVE_LOW) for _ in range(3)]
-    reset = ResetSignal(1, active=ACTIVE_LOW, async=True)
+    clk, enable_in, enable_out = [Signal(bool(0)) for _ in range(3)]
+    reset = ResetSignal(1, active=1, async=True)
     #instance=rgb2ycbcr(ycbcr, enable_out, rgb, enable_in, clk, reset)
     #instance.convert(hdl='VHDL')
 
