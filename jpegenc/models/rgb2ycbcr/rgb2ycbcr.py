@@ -2,11 +2,15 @@
 from myhdl import *
 from commons import *
 from math import *
-
+from myhdl.conversion import *
 
 #Fixed point representation with 1 sign bit and 14 fractional bits
 fract_bits=14
 nbits=8
+
+a=fract_bits + nbits
+b=fract_bits
+
 
 Y_COEFF=[0.2999,0.587,0.114]
 CB_COEFF=[-0.1687,-0.3313,0.5]
@@ -102,8 +106,7 @@ def rgb2ycbcr(ycbcr, enable_out, rgb, enable_in, clk, reset):
            """
            the part which must be checked for rounding is the partm from signal[fract_bits + nbits:fract_bits]
            """
-           a=fract_bits + nbits
-           b=fract_bits
+
 
            if(Y_sum[b - 1]==1 and Y_sum[a:b]!=(2**nbits)):
               ycbcr.y.next=Y_sum[a:b]+1
@@ -136,8 +139,12 @@ def convert():
 
     clk, enable_in, enable_out = [Signal(INACTIVE_LOW) for _ in range(3)]
     reset = ResetSignal(1, active=ACTIVE_LOW, async=True)
-    instance=rgb2ycbcr(ycbcr, enable_out, rgb, enable_in, clk, reset)
-    instance.convert(hdl='VHDL')
+    #instance=rgb2ycbcr(ycbcr, enable_out, rgb, enable_in, clk, reset)
+    #instance.convert(hdl='VHDL')
+
+
+    analyze.simulator= 'ghdl'
+    assert rgb2ycbcr(ycbcr, enable_out, rgb, enable_in, clk, reset).analyze_convert() == 0
 
 if __name__ == '__main__':
     convert()
