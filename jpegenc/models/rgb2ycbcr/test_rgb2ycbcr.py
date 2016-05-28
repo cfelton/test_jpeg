@@ -1,10 +1,8 @@
 #!/bin/python
-from myhdl import *
+from myhdl import StopSimulation, block, Signal, ResetSignal, intbv, delay, instance, always_comb, always_seq
 from random import randrange
-from commons import *
 from rgb2ycbcr import *
-from myhdl.conversion import *
-
+from myhdl.conversion import verify
 
 def rgb_to_ycbcr(r, g, b):
 
@@ -102,6 +100,8 @@ def test():
             rgb.blue.next = input_blue[i]
 
             if i > 2:
+
+                assert enable_out == 1
 
                 output_y_s.next = output_y[i-3]
                 output_cb_s.next = output_cb[i-3]

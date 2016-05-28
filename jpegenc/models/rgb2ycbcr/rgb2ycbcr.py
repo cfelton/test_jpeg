@@ -1,8 +1,7 @@
 #!/bin/python
-from myhdl import *
-from commons import *
-from math import *
-from myhdl.conversion import *
+from myhdl import block, Signal, ResetSignal, intbv, delay, instance, always_comb, always_seq
+from myhdl.conversion import analyze
+
 
 #Fixed point representation with 1 sign bit and 14 fractional bits
 fract_bits=14
@@ -104,7 +103,7 @@ def rgb2ycbcr(ycbcr, enable_out, rgb, enable_in, clk, reset):
            #rounding
 
            """
-           the part which must be checked for rounding is the partm from signal[fract_bits + nbits:fract_bits]
+           the part which must be checked for rounding is the part from signal[fract_bits + nbits:fract_bits]
            """
 
 
