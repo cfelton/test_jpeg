@@ -7,10 +7,6 @@ from myhdl.conversion import analyze
 fract_bits=14
 nbits=8
 
-a=fract_bits + nbits
-b=fract_bits
-
-
 Y_COEFF=[0.2999,0.587,0.114]
 CB_COEFF=[-0.1687,-0.3313,0.5]
 CR_COEFF=[0.5,-0.4187,-0.0813]
@@ -43,8 +39,10 @@ class YCbCr(object):
     def bitLength(self): return self.nbits
 
 @block
-def rgb2ycbcr(ycbcr, enable_out, rgb, enable_in, clk, reset):
+def rgb2ycbcr(ycbcr, enable_out, rgb, enable_in, clk, reset, fract_bits = 14, nbits = 8):
 
+    a=fract_bits + nbits
+    b=fract_bits
 
     #Ranges for multiplication and addition signals
     #to find the bit width required for a multiplication: 2*fract_bits + 2*sign_bits + 2*sign_bits
@@ -143,7 +141,7 @@ def convert():
 
 
     analyze.simulator= 'ghdl'
-    assert rgb2ycbcr(ycbcr, enable_out, rgb, enable_in, clk, reset).analyze_convert() == 0
+    assert rgb2ycbcr(ycbcr, enable_out, rgb, enable_in, clk, reset, fract_bits, nbits).analyze_convert() == 0
 
 if __name__ == '__main__':
     convert()

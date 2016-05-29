@@ -46,7 +46,7 @@ def test():
     clk, enable_in, enable_out = [Signal(bool(0)) for _ in range(3)]
     reset = ResetSignal(1, active=1, async=True)
 
-    rgb2ycbcr_inst = rgb2ycbcr(ycbcr, enable_out, rgb, enable_in, clk, reset)
+    rgb2ycbcr_inst = rgb2ycbcr(ycbcr, enable_out, rgb, enable_in, clk, reset, fract_bits = 14, nbits = 8)
 
     # create the test input values and the output values
     input_red, input_green, input_blue, output_y, output_cb, output_cr = [
