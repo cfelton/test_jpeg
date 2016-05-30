@@ -38,7 +38,7 @@ def rgb_to_ycbcr(r, g, b):
 
 
 @block
-def test():
+def test(samples, fract_bits, nbits):
 
     ycbcr = YCbCr()
     rgb = RGB()
@@ -46,12 +46,11 @@ def test():
     clk, enable_in, enable_out = [Signal(bool(0)) for _ in range(3)]
     reset = ResetSignal(1, active=1, async=True)
 
-    rgb2ycbcr_inst = rgb2ycbcr(ycbcr, enable_out, rgb, enable_in, clk, reset, fract_bits = 14, nbits = 8)
+    rgb2ycbcr_inst = rgb2ycbcr(ycbcr, enable_out, rgb, enable_in, clk, reset, fract_bits , nbits)
 
     # create the test input values and the output values
     input_red, input_green, input_blue, output_y, output_cb, output_cr = [
         [] for _ in range(6)]
-    samples = 50
     for i in range(samples):
         r, g, b = [randrange(256) for _ in range(3)]
         input_red.append(r)
@@ -87,6 +86,11 @@ def test():
 
     @instance
     def stimulus():
+
+        print "Fractional Bits: %d"%fract_bits
+        print "Pixel Bits: %d"%nbits
+        MSE=0
+
         yield clk.negedge
 
         enable_in.next = 1
@@ -111,10 +115,15 @@ def test():
                 print "Output should be: %d %d %d---Real output is: %d %d %d" % (output_y_s, output_cb_s, output_cr_s,
                                                                                  ycbcr.y, ycbcr.cb, ycbcr.cr)
 
+
+                #MEAN SQUARED ERROR
+
+                #MSE = MSE + (1/float(samples)) * ((output_y_s - ycbcr.y)**2 + (output_cb_s - ycbcr.cb)**2 + (output_cr_s - ycbcr.cr)**2)
+
                 assert output_y_s == ycbcr.y
                 assert output_cb_s == ycbcr.cb
                 assert output_cr_s == ycbcr.cr
-
+        #print "Mean Squared Error: %f"% MSE
         raise StopSimulation
 
     return stimulus, resetOnStart, clkgen, rgb2ycbcr_inst
@@ -122,12 +131,16 @@ def test():
 
 def testbench():
 
-    instance = test()
+    samples= 50
+    fract_bits = 14
+    nbits = 8
+
+    instance = test(samples, fract_bits, nbits)
     instance.config_sim(trace=False)
     instance.run_sim()
 
     verify.simulator = 'ghdl'
-    assert test().verify_convert() == 0
+    assert test(samples, fract_bits, nbits).verify_convert() == 0
 
 if __name__ == '__main__':
     testbench()

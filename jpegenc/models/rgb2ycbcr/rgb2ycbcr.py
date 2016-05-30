@@ -2,20 +2,20 @@
 from myhdl import block, Signal, ResetSignal, intbv, delay, instance, always_comb, always_seq
 from myhdl.conversion import analyze
 
-
-#Fixed point representation with 1 sign bit and 14 fractional bits
-fract_bits=14
-nbits=8
-
 Y_COEFF=[0.2999,0.587,0.114]
 CB_COEFF=[-0.1687,-0.3313,0.5]
 CR_COEFF=[0.5,-0.4187,-0.0813]
 OFFSET=[0,128,128]
 
-Y=[int(round(Y_COEFF[i]*(2**fract_bits )))for i in range(3)]
-Cb=[int(round(CB_COEFF[i]*(2**fract_bits ))) for i in range(3)]
-Cr=[int(round(CR_COEFF[i]*(2**fract_bits ))) for i in range(3)]
-Offset=[int(round(OFFSET[i]*(2**fract_bits ))) for i in range(3)]
+def build_coeffs(fract_bits):
+
+    Y=[int(round(Y_COEFF[i]*(2**fract_bits )))for i in range(3)]
+    Cb=[int(round(CB_COEFF[i]*(2**fract_bits ))) for i in range(3)]
+    Cr=[int(round(CR_COEFF[i]*(2**fract_bits ))) for i in range(3)]
+    Offset=[int(round(OFFSET[i]*(2**fract_bits ))) for i in range(3)]
+
+    return Y,Cb,Cr,Offset
+
 
 class RGB(object):
 
@@ -40,6 +40,9 @@ class YCbCr(object):
 
 @block
 def rgb2ycbcr(ycbcr, enable_out, rgb, enable_in, clk, reset, fract_bits = 14, nbits = 8):
+
+
+    Y,Cb,Cr,Offset = build_coeffs(fract_bits)
 
     a=fract_bits + nbits
     b=fract_bits
@@ -141,7 +144,7 @@ def convert():
 
 
     analyze.simulator= 'ghdl'
-    assert rgb2ycbcr(ycbcr, enable_out, rgb, enable_in, clk, reset, fract_bits, nbits).analyze_convert() == 0
+    assert rgb2ycbcr(ycbcr, enable_out, rgb, enable_in, clk, reset, fract_bits = 14, nbits = 8).analyze_convert() == 0
 
 if __name__ == '__main__':
     convert()
