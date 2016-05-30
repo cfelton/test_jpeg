@@ -38,15 +38,15 @@ def rgb_to_ycbcr(r, g, b):
 
 
 @block
-def test(samples, fract_bits, nbits, verification):
+def test(samples, num_fractional_bits, pixel_bits, verification):
 
-    ycbcr = YCbCr()
-    rgb = RGB()
+    ycbcr = YCbCr(pixel_bits)
+    rgb = RGB(pixel_bits)
 
-    clk, enable_in, enable_out = [Signal(bool(0)) for _ in range(3)]
-    reset = ResetSignal(1, active=1, async=True)
+    clock =  Signal(bool(0))
+    reset = ResetSignal(1, active=True, async=True)
 
-    rgb2ycbcr_inst = rgb2ycbcr(ycbcr, enable_out, rgb, enable_in, clk, reset, fract_bits , nbits)
+    rgb2ycbcr_inst = rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits)
 
     # create the test input values and the output values
     input_red, input_green, input_blue, output_y, output_cb, output_cr = [
@@ -69,35 +69,35 @@ def test(samples, fract_bits, nbits, verification):
     output_cr = tuple(output_cr)
 
     output_y_s, output_cb_s, output_cr_s = [
-        Signal(intbv(0)[nbits:]) for _ in range(3)]
+        Signal(intbv(0)[pixel_bits:]) for _ in range(3)]
 
     @instance
     def clkgen():
-        clk.next = 0
+        clock.next = 0
         while True:
             yield delay(10)
-            clk.next = not clk
+            clock.next = not clock
 
     @instance
     def resetOnStart():
-        reset.next = 1
-        yield clk.negedge
-        reset.next = 0
+        reset.next = True
+        yield clock.negedge
+        reset.next = False
 
     @instance
     def stimulus():
 
-        print "Fractional Bits: %d"%fract_bits
-        print "Pixel Bits: %d"%nbits
+        print "Fractional Bits: %d"%num_fractional_bits
+        print "Pixel Bits: %d"%pixel_bits
         MSE=0
 
-        yield clk.negedge
+        yield clock.negedge
 
-        enable_in.next = 1
+        rgb.data_valid.next = True
 
         for i in range(samples):
 
-            yield clk.negedge
+            yield clock.negedge
 
             rgb.red.next = input_red[i]
             rgb.green.next = input_green[i]
@@ -105,7 +105,7 @@ def test(samples, fract_bits, nbits, verification):
 
             if i > 2:
 
-                assert enable_out == 1
+                assert ycbcr.data_valid == True
 
                 output_y_s.next = output_y[i-3]
                 output_cb_s.next = output_cb[i-3]
@@ -134,7 +134,7 @@ def test(samples, fract_bits, nbits, verification):
 def testbench():
 
     samples= 50
-    fract_bits = 11
+    fract_bits = 16
     nbits = 8
 
     instance = test(samples, fract_bits, nbits, verification = False)
