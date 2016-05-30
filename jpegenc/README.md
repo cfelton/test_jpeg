@@ -13,17 +13,18 @@ patterns.
 The envisioned Python package structure:
 
 ```
-    jpegenc
-       docs
-       jpegenc
-           models
-           hdl
+    test_jpeg              # repository name
+       docs/               # all documents
+       jpegenc             # package name
+           models/
+           subblocks/
+	requirements.txt
         setup.py
-        test
+        test/              # all tests
 ```  
 
 This directory is being used as a development sandbox because
 the tests for the V* verification can be utilized and extended.
 At some point in the future if the MyHDL implementation is 
-complete it should have it own repository for the python only
+complete it could have it own repository for the python only
 package.

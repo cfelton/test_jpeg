@@ -4,3 +4,6 @@ __pycache__/
 *.o
 *.vpi
 *.vcd
+*.png
+*.jpg
+*.tiff
