@@ -173,29 +173,29 @@ module CtrlSM
     reg 		    out_mux_ctrl_s2;  
     
     // settings from the host interface
-    assign fdct_sm_setting_x_cnt   = Reg_x_cnt[1];
-    assign fdct_sm_setting_y_cnt   = Reg_y_cnt[1];
-    assign fdct_sm_setting_cmp_idx = Reg_cmp_idx[1];
+    assign fdct_sm_settings_x_cnt   = Reg_x_cnt[1];
+    assign fdct_sm_settings_y_cnt   = Reg_y_cnt[1];
+    assign fdct_sm_settings_cmp_idx = Reg_cmp_idx[1];
 
-    assign zig_sm_setting_x_cnt    = Reg_x_cnt[2];
-    assign zig_sm_setting_y_cnt    = Reg_y_cnt[2];
-    assign zig_sm_setting_cmp_idx  = Reg_cmp_idx[2];
+    assign zig_sm_settings_x_cnt    = Reg_x_cnt[2];
+    assign zig_sm_settings_y_cnt    = Reg_y_cnt[2];
+    assign zig_sm_settings_cmp_idx  = Reg_cmp_idx[2];
 
-    assign qua_sm_setting_x_cnt    = Reg_x_cnt[3];
-    assign qua_sm_setting_y_cnt    = Reg_y_cnt[3];
-    assign qua_sm_setting_cmp_idx  = Reg_cmp_idx[3];
+    assign qua_sm_settings_x_cnt    = Reg_x_cnt[3];
+    assign qua_sm_settings_y_cnt    = Reg_y_cnt[3];
+    assign qua_sm_settings_cmp_idx  = Reg_cmp_idx[3];
 
-    assign rle_sm_setting_x_cnt    = Reg_x_cnt[4];
-    assign rle_sm_setting_y_cnt    = Reg_y_cnt[4];
-    assign rle_sm_setting_cmp_idx  = Reg_cmp_idx[4];
+    assign rle_sm_settings_x_cnt    = Reg_x_cnt[4];
+    assign rle_sm_settings_y_cnt    = Reg_y_cnt[4];
+    assign rle_sm_settings_cmp_idx  = Reg_cmp_idx[4];
 
-    assign huf_sm_setting_x_cnt    = Reg_x_cnt[5];
-    assign huf_sm_setting_y_cnt    = Reg_y_cnt[5];
-    assign huf_sm_setting_cmp_idx  = Reg_cmp_idx[5];
+    assign huf_sm_settings_x_cnt    = Reg_x_cnt[5];
+    assign huf_sm_settings_y_cnt    = Reg_y_cnt[5];
+    assign huf_sm_settings_cmp_idx  = Reg_cmp_idx[5];
     
-    assign bs_sm_setting_x_cnt     = Reg_x_cnt[6];
-    assign bs_sm_setting_y_cnt     = Reg_y_cnt[6];
-    assign bs_sm_setting_cmp_idx   = Reg_cmp_idx[6];
+    assign bs_sm_settings_x_cnt     = Reg_x_cnt[6];
+    assign bs_sm_settings_y_cnt     = Reg_y_cnt[6];
+    assign bs_sm_settings_cmp_idx   = Reg_cmp_idx[6];
 
     //
     assign fdct_start  = start_PB[1];

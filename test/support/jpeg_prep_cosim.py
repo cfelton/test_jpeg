@@ -21,8 +21,10 @@ def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
         cmd = "iverilog -g2001 -o jpegenc_v1 %s" % (" ".join(filelist_v1))
         print("compiling v1 ...")
         os.system(cmd)
-        cmd = "iverilog -g2001 -t vhdl -o jpegenc_v1.vhd %s" % (" ".join(filelist_v1))
-        os.system(cmd)
+
+        # @todo: remove the following for good
+        # cmd = "iverilog -g2001 -t vhdl -o jpegenc_v1.vhd %s" % (" ".join(filelist_v1))
+        # os.system(cmd)
 
     # build the second JPEG encoder
     # @todo: use subprocess, check the return and the "log"
