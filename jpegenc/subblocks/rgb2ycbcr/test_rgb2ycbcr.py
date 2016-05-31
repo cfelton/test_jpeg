@@ -87,8 +87,9 @@ def test(samples, num_fractional_bits, pixel_bits, verification):
     @instance
     def stimulus():
 
-        print "Fractional Bits: %d"%num_fractional_bits
-        print "Pixel Bits: %d"%pixel_bits
+        print("Fractional Bits: %d"%num_fractional_bits)
+        print("Pixel Bits: %d"%pixel_bits)
+
         MSE=0
 
         yield clock.negedge
