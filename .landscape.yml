@@ -1,0 +1,12 @@
+
+doc-warnings: yes
+strictness: high
+uses:
+   - myhdl
+   - Pillow
+ignore-paths:
+   - hdl/jpegenc_v2/myhdl
+pep8:
+   - full: true
+python-targets:
+   - 3
