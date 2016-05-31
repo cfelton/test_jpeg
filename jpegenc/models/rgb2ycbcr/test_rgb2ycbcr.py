@@ -17,9 +17,9 @@ def rgb_to_ycbcr(r, g, b):
               OFFSET[0]))
     ycbcr[1] = int(
         round(
-            CB_COEFF[0] *
+            -CB_COEFF[0] *
             float(r) +
-            CB_COEFF[1] *
+            -CB_COEFF[1] *
             float(g) +
             CB_COEFF[2] *
             float(b) +
@@ -28,9 +28,9 @@ def rgb_to_ycbcr(r, g, b):
         round(
             CR_COEFF[0] *
             float(r) +
-            CR_COEFF[1] *
+            -CR_COEFF[1] *
             float(g) +
-            CR_COEFF[2] *
+            -CR_COEFF[2] *
             float(b) +
             OFFSET[2]))
 
@@ -134,14 +134,14 @@ def test(samples, num_fractional_bits, pixel_bits, verification):
 def testbench():
 
     samples= 50
-    fract_bits = 16
+    fract_bits = 14
     nbits = 8
 
     instance = test(samples, fract_bits, nbits, verification = False)
     instance.config_sim(trace=False)
     instance.run_sim()
 
-    verify.simulator = 'ghdl'
+    verify.simulator = 'iverilog'
     assert test(samples, fract_bits, nbits, verification = True).verify_convert() == 0
 
 if __name__ == '__main__':

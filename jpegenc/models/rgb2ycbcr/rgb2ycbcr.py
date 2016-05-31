@@ -3,8 +3,8 @@ from myhdl import block, Signal, ResetSignal, intbv, always_comb, always_seq
 from myhdl.conversion import analyze
 
 Y_COEFF = [0.2999, 0.587, 0.114]
-CB_COEFF = [-0.1687, -0.3313, 0.5]
-CR_COEFF = [0.5, -0.4187, -0.0813]
+CB_COEFF = [0.1687, 0.3313, 0.5]
+CR_COEFF = [0.5, 0.4187, 0.0813]
 OFFSET = [0, 128, 128]
 
 
@@ -98,8 +98,8 @@ def rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits=14):
             Cr_reg[2].next = B_s*Cr3_s
 
             Y_sum.next = Y_reg[0]+Y_reg[1]+Y_reg[2]+offset_y
-            Cb_sum.next = Cb_reg[0]+Cb_reg[1]+Cb_reg[2]+offset_cb
-            Cr_sum.next = Cr_reg[0]+Cr_reg[1]+Cr_reg[2]+offset_cr
+            Cb_sum.next =- Cb_reg[0]-Cb_reg[1]+Cb_reg[2]+offset_cb
+            Cr_sum.next = Cr_reg[0]-Cr_reg[1]-Cr_reg[2]+offset_cr
 
             # rounding
 
