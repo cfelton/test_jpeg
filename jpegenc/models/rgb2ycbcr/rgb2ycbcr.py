@@ -2,6 +2,14 @@
 from myhdl import block, Signal, ResetSignal, intbv, always_comb, always_seq
 from myhdl.conversion import analyze
 
+
+"""
+The coefficient which used in the color space
+conversion are standard and are defined
+in the JFIF Standard
+https://en.wikipedia.org/wiki/YCbCr
+"""
+
 Y_COEFF = [0.2999, 0.587, 0.114]
 CB_COEFF = [0.1687, 0.3313, 0.5]
 CR_COEFF = [0.5, 0.4187, 0.0813]
