@@ -1,23 +1,23 @@
-from __future__ import division
-from __future__ import print_function
+from __future__ import division, print_function
 
-import sys
+# import sys
 import os
-import random
+# import random
 import datetime
-import argparse
-from argparse import Namespace
-from fnmatch import fnmatch
+# import argparse
+# from argparse import Namespace
+# from fnmatch import fnmatch
 
 from PIL import Image
 from myhdl import *
 
-from support import prep_cosim
-from support import JPEGEncV1
-from support import JPEGEncV2
+# local test support package
+from support import (prep_cosim, JPEGEncV1, JPEGEncV2, 
+                     set_default_args, get_cli_args)
 
 
-def runbench(args):
+def test_jpegenc(args=None):
+    args = set_default_args(args)
 
     clock = Signal(bool(0))
     reset = ResetSignal(1, active=1, async=True)
@@ -66,7 +66,7 @@ def runbench(args):
         # open the image for testing
         img = Image.open(args.imgfn)
 
-        def _pulse_reset():
+        def pulse_reset():
             reset.next = reset.active
             yield delay(13)
             reset.next = reset.active
@@ -78,7 +78,7 @@ def runbench(args):
         @instance
         def tbstim():
             print("start simulation ...")
-            yield _pulse_reset()
+            yield pulse_reset()
 
             wait = True
             while wait:
@@ -169,52 +169,53 @@ def runbench(args):
     Simulation((gt, tbdut,)).run()
 
 
-def test_jpegenc():
-    # randomly select a test image
-    ipth = "./test_images/color/"
-    files = os.listdir(ipth)
-    files = [ff for ff in files if fnmatch(ff, '*small*')]
-    ifn = random.choice(files)
-    
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--random_image', action='store_true', default=False,
-                        help="use small3.png as test file")
-    parser.add_argument('--vtrace', action='store_true', default=False,
-                        help="enable Verilog simulator tracing")
-
-    args = parser.parse_args()
-
-    if args.random_image:
-        ipth = os.path.join(ipth, ifn)
-    else:
-        ipth = os.path.join(ipth, 'small4.png')
-
-    # setup arguments for the test
-    vmod = 'tb_jpegenc'
-    # tracing arguments
-    args.trace=False            # enable tracing (debug)
-    args.vtrace=True            # enable VCD tracing in Verilog cosim
-    args.vtrace_level=0         # Verilog VCD dumpvars level
-    args.vtrace_module=vmod     # Verilog VCD dumpvars module to trace
-    
-    args.imgfn=ipth             # image to test compression
-    
-    # verification (debug) options
-    args.build_only=False       # compile the V* only, not test
-    args.build_skip_v1=False    # skip the V1 encoder compile
-    args.nout=0                 # number of encoded outputs to capture (debug mode)
-    args.no_wait=False          # don't wait for the encoder, exit after input
-    args.dump_bitstreams=False  # dump full bitstreams at the end
-    args.ncyc = 200             # generate some prints
-
-    args.start_time = datetime.datetime.now()
-
-    # run the JPEG encoder test
-    print("Using image %s " % (ipth,))
-    runbench(args)
+# def test_jpegenc():
+#     # randomly select a test image
+#     ipth = "./test_images/color/"
+#     files = os.listdir(ipth)
+#     files = [ff for ff in files if fnmatch(ff, '*small*')]
+#     ifn = random.choice(files)
+#     
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument('--random_image', action='store_true', default=False,
+#                         help="use small3.png as test file")
+#     parser.add_argument('--vtrace', action='store_true', default=False,
+#                         help="enable Verilog simulator tracing")
+# 
+#     args = parser.parse_args()
+# 
+#     if args.random_image:
+#         ipth = os.path.join(ipth, ifn)
+#     else:
+#         ipth = os.path.join(ipth, 'small4.png')
+# 
+#     # setup arguments for the test
+#     vmod = 'tb_jpegenc'
+#     # tracing arguments
+#     args.trace=False            # enable tracing (debug)
+#     args.vtrace=True            # enable VCD tracing in Verilog cosim
+#     args.vtrace_level=0         # Verilog VCD dumpvars level
+#     args.vtrace_module=vmod     # Verilog VCD dumpvars module to trace
+#     
+#     args.imgfn=ipth             # image to test compression
+#     
+#     # verification (debug) options
+#     args.build_only=False       # compile the V* only, not test
+#     args.build_skip_v1=False    # skip the V1 encoder compile
+#     args.nout=0                 # number of encoded outputs to capture (debug mode)
+#     args.no_wait=False          # don't wait for the encoder, exit after input
+#     args.dump_bitstreams=False  # dump full bitstreams at the end
+#     args.ncyc = 200             # generate some prints
+# 
+#     args.start_time = datetime.datetime.now()
+# 
+#     # run the JPEG encoder test
+#     print("Using image %s " % (ipth,))
+#     runbench(args)    
 
 
 if __name__ == '__main__':
-    test_jpegenc()
+    args = get_cli_args()
+    test_jpegenc(args)
     
 

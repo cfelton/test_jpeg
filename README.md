@@ -1,5 +1,8 @@
 
 [![Build Status](https://travis-ci.org/cfelton/test_jpeg.svg?branch=master)](https://travis-ci.org/cfelton/test_jpeg)
+[![Code Health](https://landscape.io/github/cfelton/test_jpeg/master/landscape.svg?style=flat-square)](https://landscape.io/github/cfelton/test_jpeg/master)
+[![Documentation Status](https://readthedocs.org/projects/jpegenc/badge/?version=latest)](http://jpegenc.readthedocs.io/en/latest/?badge=latest)
+
  
 
 Introduction

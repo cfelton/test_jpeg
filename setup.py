@@ -3,9 +3,9 @@
 from setuptools import setup
 
 setup(
-    name='JPEG Encoder',
+    name='jpegenc',
     version='0.1dev',
-    author='Merkourios Katsimpris', 'Christopher Felton', 'Vikram Raigur'
+    author='Merkourios Katsimpris, Christopher Felton, Vikram Raigur',
     author_email='merkourioskatsimpris@gmail.com',
     url='https://github.com/cfelton/test_jpeg',
     packages=['jpegenc'],

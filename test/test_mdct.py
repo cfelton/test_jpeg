@@ -1,12 +1,14 @@
-from __future__ import division
-from __future__ import print_function
+from __future__ import division, print_function
 
 import sys
 import os
 from random import randint
 
-from myhdl import *
+import myhdl
+from myhdl import (Signal, ResetSignal, intbv, always, delay, instance,
+                   StopSimulation)
 
+from support import get_cli_args
 
 class DataBus(object):
     def __init__(self, w=8):
@@ -30,18 +32,18 @@ def prep_cosim(clock, reset, datai, datao, args=None):
     os.system(cmd)
 
     cmd = "vvp -m ./myhdl.vpi -lxt2 mdct"
-    gcosim = Cosimulation(cmd, 
-                          clock=clock,
-                          reset=reset,
-                          dcti=datai.data,
-                          idv=datai.dv,
-                          dcto=datao.data,
-                          odv=datao.dv)
+    gcosim = myhdl.Cosimulation(cmd, 
+                                clock=clock,
+                                reset=reset,
+                                dcti=datai.data,
+                                idv=datai.dv,
+                                dcto=datao.data,
+                                odv=datao.dv)
 
     return gcosim
 
     
-def runbench(args):
+def test_mdct(args=None):
     """ A simple test to exercise the MDCT block
     """
 
@@ -58,8 +60,7 @@ def runbench(args):
     def tbclk():
         clock.next = not clock
 
-    def test():
-        
+    def bench_mdct():
         numin_s  = Signal(0)
         numout_s = Signal(0)
 
@@ -97,23 +98,25 @@ def runbench(args):
         def tbstim():
             yield pulse_reset()
             
+            # @todo: use or remove
             # stream data in at max rate, 80x80x4 (4 components)
-            #for row in range(80):
-            #    for col in range(80):
-            #        for cmp in range(4):
-            #            datai.data.next = randint(0, 255)
-            #            datai.dv.next = True
-            #            yield clock.posedge
+            # for row in range(80):
+            #     for col in range(80):
+            #         for cmp in range(4):
+            #             datai.data.next = randint(0, 255)
+            #             datai.dv.next = True
+            #             yield clock.posedge
 
+            # @todo: use or remove
             # stream data in at a slow rate (does all the output come out)
-            #for ii in range(100):
-            #    for jj in range(64):
-            #        for cmp in range(4):
-            #            datai.data.next = randint(0, 255)
-            #            datai.dv.next = True
-            #            yield clock.posedge
-            #    datai.dv.next = False
-            #    yield delay(2000)
+            # for ii in range(100):
+            #     for jj in range(64):
+            #         for cmp in range(4):
+            #             datai.data.next = randint(0, 255)
+            #             datai.dv.next = True
+            #             yield clock.posedge
+            #     datai.dv.next = False
+            #     yield delay(2000)
 
             # only do 64 sample blocks 
             for ii in range(200):     # 400
@@ -145,13 +148,10 @@ def runbench(args):
 
         return tbclk, tbmon, tbstim
 
-    gt = test()
-    Simulation((gt, tbdut,)).run()
+    gt = bench_mdct()
+    myhdl.Simulation((gt, tbdut,)).run()
                         
 
-def test_mdct():
-    runbench(None)
-
-
 if __name__ == '__main__':
-    test_mdct()
+    args = get_cli_args()
+    test_mdct(args)
