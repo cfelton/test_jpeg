@@ -1,14 +1,10 @@
 
+from __future__ import print_function, division
 
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
+import myhdl
+from myhdl import Signal, ResetSignal, always, delay, instance, StopSimulation
 
-from myhdl import *
-
-from _block_buffer import PixelStream
-from _block_buffer import ImageBlock
-from _block_buffer import mdl_block_buffer
+from jpegenc.models.buffers import PixelStream, ImageBlock, mdl_block_buffer
 
 
 def test_block_buffer():
@@ -18,7 +14,7 @@ def test_block_buffer():
     pxl = PixelStream()
     bmem = ImageBlock(pxl, )
 
-    def _test():
+    def bench_block_buffers():
         pxl.clock = clock
         tbdut = mdl_block_buffer(pxl, bmem)
         tbpxl = pxl.generate_stream()
@@ -46,8 +42,8 @@ def test_block_buffer():
         return tbdut, tbpxl, tbclk, tbstim
 
 
-    g = traceSignals(_test)
-    Simulation(g).run()
+    g = myhdl.traceSignals(bench_block_buffers)
+    myhdl.Simulation(g).run()
 
 
 if __name__ == '__main__':

@@ -1,6 +1,7 @@
 
+import myhdl
+from myhdl import Signal, intbv, always, always_comb
 
-from myhdl import *
 
 def HeaderRam(d, waddr, raddr, we, clk, q):
     
@@ -41,8 +42,9 @@ def convert():
     clk = Signal(bool(0))
     we = Signal(bool(0))
     HeaderRam(d, waddr, raddr, we, clk, q)
-    toVHDL.numeric_ports = False
-    toVHDL(HeaderRam, d, waddr, raddr, we, clk, q)
+    myhdl.toVHDL.numeric_ports = False
+    myhdl.toVHDL(HeaderRam, d, waddr, raddr, we, clk, q)
+
 
 if __name__ == '__main__':
     convert()

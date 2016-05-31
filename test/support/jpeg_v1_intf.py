@@ -54,10 +54,10 @@ class JPEGEncV1(JPEGEnc):
         """
         # lum address
         offset = {1: 0x00, .85: 0x40, .75: 0x80, .50: 0xC0}
-        lbase,cbase = 64*offset[luminance], 64*offset[chrominance]
+        lbase, cbase = 64*offset[luminance], 64*offset[chrominance]
 
         # program the luminance table
-        for ii,off in enumerate(range(lbase,lbase+64)):
+        for ii, off in enumerate(range(lbase,lbase+64)):
             addr = 0x00000100 + ii*4
             # print("[%8d] V1 init %8X --> %8X" % (now(), addr, rom_lum[off]))
             yield self.opb.write(addr, rom_lum[off])
