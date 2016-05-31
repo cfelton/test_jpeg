@@ -1,6 +1,7 @@
 
 [![Build Status](https://travis-ci.org/cfelton/test_jpeg.svg?branch=master)](https://travis-ci.org/cfelton/test_jpeg)
 [![Code Health](https://landscape.io/github/cfelton/test_jpeg/master/landscape.svg?style=flat-square)](https://landscape.io/github/cfelton/test_jpeg/master)
+[![Coverage Status](https://coveralls.io/repos/github/cfelton/test_jpeg/badge.svg?branch=master)](https://coveralls.io/github/cfelton/test_jpeg?branch=master)
 [![Documentation Status](https://readthedocs.org/projects/jpegenc/badge/?version=latest)](http://jpegenc.readthedocs.io/en/latest/?badge=latest)
 
  
