@@ -19,7 +19,9 @@ def build_coeffs(fract_bits):
 
 
 class RGB(object):
-
+    """
+    Red, Green, Blue Signals with nbits bitwidth for RGB input
+    """
     def __init__(self, nbits=8):
         self.nbits = nbits
         self.red = Signal(intbv(0)[nbits:])
@@ -31,7 +33,10 @@ class RGB(object):
 
 
 class YCbCr(object):
-
+    """
+    Y, Cb, Cr are the outputs signals of the color space
+    conversion module with nbits bitwidth
+    """
     def __init__(self, nbits=8):
         self.nbits = nbits
         self.y = Signal(intbv(0)[nbits:])
@@ -44,34 +49,57 @@ class YCbCr(object):
 
 @block
 def rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits=14):
+    """
+    Color Space Conversion module
+    This module is used to transform the rgb input
+    to an other representation called YCbCr
+
+    Inputs:
+        Red, Green, Blue, data_valid
+        clock, reset
+
+    Outputs:
+        Y, Cb ,Cr, data_valid
+
+    Parameters:
+        num_fractional_bits
+    """
 
     fract_bits = num_fractional_bits
     nbits = rgb.nbits
+    # the a and b are used for the rounding
     a = fract_bits + nbits
     b = fract_bits
 
+    # build the coefficients
     Y, Cb, Cr, Offset = build_coeffs(fract_bits)
 
     # Ranges for multiplication and addition signals
-    # to find the bit width required for a multiplication:
     mult_max_range = 2**(nbits+fract_bits+1)
     rgb_range = 2**nbits
     coeff_range = 2**fract_bits
 
     # signals for y,cb,cr registers
-    Y_reg, Cb_reg, Cr_reg = [[Signal(intbv(0, min=-mult_max_range, max=mult_max_range)) for _ in range(3)] for _ in range(3)]
-    Y_sum, Cb_sum, Cr_sum = [Signal(intbv(0, min=-mult_max_range, max=mult_max_range)) for _ in range(3)]
+    Y_reg, Cb_reg, Cr_reg = [[Signal(intbv(0, min=-mult_max_range,
+                                           max=mult_max_range)) for _ in range(3)] for _ in range(3)]
+    Y_sum, Cb_sum, Cr_sum = [Signal(intbv(0, min=-mult_max_range,
+                                          max=mult_max_range)) for _ in range(3)]
 
     # signals for signed input RGB
-    R_s, G_s, B_s = [Signal(intbv(0, min=-rgb_range, max=rgb_range)) for i in range(3)]
+    R_s, G_s, B_s = [Signal(intbv(0, min=-rgb_range,
+                                  max=rgb_range)) for i in range(3)]
 
     # signals for coefficient signed conversion
-    Y1_s, Y2_s, Y3_s = [Signal(intbv(Y[i], min=-coeff_range, max=coeff_range)) for i in range(3)]
-    Cb1_s, Cb2_s, Cb3_s = [Signal(intbv(Cb[i], min=-coeff_range, max=coeff_range)) for i in range(3)]
-    Cr1_s, Cr2_s, Cr3_s = [Signal(intbv(Cr[i], min=-coeff_range, max=coeff_range)) for i in range(3)]
-    offset_y, offset_cb, offset_cr = [Signal(intbv(Offset[i], min=-mult_max_range, max=mult_max_range)) for i in range(3)]
+    Y1_s, Y2_s, Y3_s = [Signal(intbv(Y[i], min=-coeff_range,
+                                     max=coeff_range)) for i in range(3)]
+    Cb1_s, Cb2_s, Cb3_s = [Signal(intbv(Cb[i], min=-coeff_range,
+                                        max=coeff_range)) for i in range(3)]
+    Cr1_s, Cr2_s, Cr3_s = [Signal(intbv(Cr[i], min=-coeff_range,
+                                        max=coeff_range)) for i in range(3)]
+    offset_y, offset_cb, offset_cr = [Signal(intbv(Offset[i], min=-mult_max_range,
+                                                   max=mult_max_range)) for i in range(3)]
 
-    enable_out_reg = [Signal(bool(0)) for _ in range(2)]
+    data_valid_reg = [Signal(bool(0)) for _ in range(2)]
 
     @always_comb
     def logic2():
@@ -98,7 +126,7 @@ def rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits=14):
             Cr_reg[2].next = B_s*Cr3_s
 
             Y_sum.next = Y_reg[0]+Y_reg[1]+Y_reg[2]+offset_y
-            Cb_sum.next =- Cb_reg[0]-Cb_reg[1]+Cb_reg[2]+offset_cb
+            Cb_sum.next = -Cb_reg[0]-Cb_reg[1]+Cb_reg[2]+offset_cb
             Cr_sum.next = Cr_reg[0]-Cr_reg[1]-Cr_reg[2]+offset_cr
 
             # rounding
@@ -120,10 +148,10 @@ def rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits=14):
             else:
                 ycbcr.cr.next = Cr_sum[a:b]
 
-            # enable_out delayed
-            enable_out_reg[0].next = rgb.data_valid
-            enable_out_reg[1].next = enable_out_reg[0]
-            ycbcr.data_valid.next = enable_out_reg[1]
+            # data_valid delayed
+            data_valid_reg[0].next = rgb.data_valid
+            data_valid_reg[1].next = data_valid_reg[0]
+            ycbcr.data_valid.next = data_valid_reg[1]
 
         else:
 
@@ -140,7 +168,8 @@ def convert():
     reset = ResetSignal(1, active=True, async=True)
 
     analyze.simulator = 'ghdl'
-    assert rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits=14).analyze_convert() == 0
+    assert rgb2ycbcr(rgb, ycbcr, clock, reset,
+                     num_fractional_bits=14).analyze_convert() == 0
 
 if __name__ == '__main__':
     convert()
