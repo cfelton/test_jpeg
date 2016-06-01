@@ -17,7 +17,7 @@ addons:
       
 cache:
   directories:
-  - $HOME/iverilog
+    - $HOME/iverilog
       
 # get some stuff to install
 before_install:
