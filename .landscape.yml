@@ -1,9 +1,6 @@
 
 doc-warnings: yes
 strictness: high
-uses:
-  - myhdl
-  - Pillow
 autodetect: yes
 ignore-paths:
   - hdl/jpegenc_v2/myhdl
