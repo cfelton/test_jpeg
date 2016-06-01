@@ -1,11 +1,8 @@
 
-clean :
+clean:
 	$(MAKE) -C work clean
-run :
+run:
 	$(MAKE) -C work run
-
-#compile : $(files)
-#	ghdl -a --workdir=work $(files)
 
 compile:
 	ghdl -a --workdir=work ../JPEG_PKG.vhd
@@ -87,4 +84,4 @@ compile:
 	ghdl -a --workdir=work --ieee=synopsys vhdl/GPL_V2_Image_pkg.vhd
 	ghdl -a --workdir=work vhdl/ClkGen.vhd
 	ghdl -a --workdir=work --ieee=synopsys vhdl/HostBFM.vhd
-	ghdl -a --workdir=work --ieee=synopsys --vcd=debug.vcd vhdl/JPEG_TB.vhd
+	ghdl -a --workdir=work --ieee=synopsys vhdl/JPEG_TB.vhd
