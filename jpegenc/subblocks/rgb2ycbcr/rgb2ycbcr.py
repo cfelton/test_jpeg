@@ -111,7 +111,7 @@ def rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits=14):
 
     @always_comb
     def logic2():
-        # input RGB signed conversion
+        # input RGB to RGB signed
         R_s.next = rgb.red
         G_s.next = rgb.green
         B_s.next = rgb.blue
@@ -156,7 +156,7 @@ def rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits=14):
             else:
                 ycbcr.cr.next = Cr_sum[a:b]
 
-            # data_valid delayed
+            # data_valid delayed for 3 cycles
             data_valid_reg[0].next = rgb.data_valid
             data_valid_reg[1].next = data_valid_reg[0]
             ycbcr.data_valid.next = data_valid_reg[1]
