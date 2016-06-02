@@ -1,27 +1,61 @@
 #!/bin/python
-from myhdl import block, Signal, ResetSignal, intbv, always_comb, always_seq
+
+import numpy as np
+
+import myhdl
+from myhdl import Signal, ResetSignal, intbv, always_comb, always_seq
 from myhdl.conversion import analyze
 
 
-"""
-The coefficient which used in the color space
-conversion are standard and are defined
-in the JFIF Standard
-https://en.wikipedia.org/wiki/YCbCr
-"""
+class ColorSpace(object):
+    def __init__(self, red=0, green=0, blue=0):
+        self.red = red
+        self.green = green
+        self.blue = blue
+        # setup the constant coefficients for YCbCr
+        self._set_jiff_coefs()
 
-Y_COEFF = [0.2999, 0.587, 0.114]
-CB_COEFF = [0.1687, 0.3313, 0.5]
-CR_COEFF = [0.5, 0.4187, 0.0813]
-OFFSET = [0, 128, 128]
+    def _set_jiff_coefs(self):
+        """The YCbCr special constants
+         The JIFF YCbCr conversion requires "special" constants defined
+         by the standard.  The constants are describe in a Wikipedia page:
+         https://en.wikipedia.org/wiki/YCbCr
+        """
+        self.ycbcr_coef_mat = np.array([
+            [0.2999, 0.5870, 0.1140],     # Y coefficients
+            [-0.1687, -0.3313, 0.5000],   # Cb coefficients
+            [0.5000, -0.4187, -0.0813],   # Cr coefficients
+        ])
+        self.offset = [0, 128, 128]
+
+    def get_jiff_ycbcr(self):
+        """Convert
+        """
+        rgb = (255 - np.array([self.red, self.green, self.blue]))
+        rgb -= 128
+        rgb = rgb.transopose()
+        offset = self.offset.transpose()
+        cmat = self.ycbcr_coef_mat
+        ycbcr = rgb @ cmat + offset
+        return ycbcr
+
+    def get_jiff_ycbcr_int_coef(self, precision_factor=0):
+        """Generate the integer (fixed-ponit) coefficients
+        """
+        pass
 
 
 def build_coeffs(fract_bits):
+    def list_of_ints(val, num):
+        return [val for _ in range(num)]
+    Y, Cb, Cr, Offset = (list_of_ints(0, 3), list_of_ints(0, 3),
+                         list_of_ints(0, 3), list_of_ints(0, 3), )
 
-    Y = [int(round(Y_COEFF[i]*(2**fract_bits)))for i in range(3)]
-    Cb = [int(round(CB_COEFF[i]*(2**fract_bits))) for i in range(3)]
-    Cr = [int(round(CR_COEFF[i]*(2**fract_bits))) for i in range(3)]
-    Offset = [int(round(OFFSET[i]*(2**fract_bits))) for i in range(3)]
+    # @todo: update to use ColorSpace
+    # Y = [int(round(Y_COEFF[i]*(2**fract_bits)))for i in range(3)]
+    # Cb = [int(round(CB_COEFF[i]*(2**fract_bits))) for i in range(3)]
+    # Cr = [int(round(CR_COEFF[i]*(2**fract_bits))) for i in range(3)]
+    # Offset = [int(round(OFFSET[i]*(2**fract_bits))) for i in range(3)]
 
     return Y, Cb, Cr, Offset
 
@@ -55,7 +89,7 @@ class YCbCr(object):
     def bitLength(self): return self.nbits
 
 
-@block
+@myhdl.block
 def rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits=14):
     """
     Color Space Conversion module
@@ -95,7 +129,7 @@ def rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits=14):
 
     # signals for signed input RGB
     R_s, G_s, B_s = [Signal(intbv(0, min=-rgb_range,
-                                  max=rgb_range)) for i in range(3)]
+                                  max=rgb_range)) for _ in range(3)]
 
     # signals for coefficient signed conversion
     Y1_s, Y2_s, Y3_s = [Signal(intbv(Y[i], min=-coeff_range,
