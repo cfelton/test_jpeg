@@ -57,14 +57,31 @@ def test_color_translation(args=None):
         @instance
         def tbstim():
             yield reset_on_start(reset, clock)
+            rgb.data_valid.next = True
 
             for i in range(samples):
                 r, g, b = [randrange(256) for _ in range(3)]
+                a = ColorSpace(r,g,b)
+                y, cb, cr = [a.get_jfif_ycbcr()[j] for j in range(3)]
                 for color, val in zip(('red', 'green', 'blue'), (r, g, b)):
                     inputs[color].append(val)
+                for ycbcr_out, val in zip(('y', 'cb', 'cr'), (int(y), int(cb), int(cr))):
+                    expected_outputs[ycbcr_out].append(val)
+
+
+                # rgb signal assignment in the dut
+                rgb.red.next = inputs['red'][i]
+                rgb.green.next = inputs['green'][i]
+                rgb.blue.next = inputs['blue'][i]
+
+                if samples > 2:
+                    for ycbcr_act, val in zip(('y', 'cb', 'cr'), (int(ycbcr.y),int(ycbcr.cb), int(ycbcr.cr))):
+                        actual_outputs[ycbcr_act].append(val)
 
                 yield clock.posedge
 
+            print expected_outputs
+            print actual_outputs
             raise StopSimulation
 
         return myhdl.instances()
@@ -76,3 +93,6 @@ def test_color_translation(args=None):
 
 def test_block_conversion():
     pass
+
+
+test_color_translation()

@@ -13,11 +13,11 @@ class ColorSpace(object):
         self.green = green
         self.blue = blue
         # setup the constant coefficients for YCbCr
-        self._set_jiff_coefs()
+        self._set_jfif_coefs()
 
-    def _set_jiff_coefs(self):
+    def _set_jfif_coefs(self):
         """The YCbCr special constants
-         The JIFF YCbCr conversion requires "special" constants defined
+         The JFIF YCbCr conversion requires "special" constants defined
          by the standard.  The constants are describe in a Wikipedia page:
          https://en.wikipedia.org/wiki/YCbCr
         """
@@ -28,7 +28,7 @@ class ColorSpace(object):
         ])
         self.offset = np.array([0, 128, 128])
 
-    def get_jiff_ycbcr(self):
+    def get_jfif_ycbcr(self):
         """Convert
         """
         rgb = np.array([self.red, self.green, self.blue])
@@ -36,9 +36,9 @@ class ColorSpace(object):
         offset = self.offset[np.newaxis, :].transpose()
         cmat = self.ycbcr_coef_mat
         ycbcr = np.dot(cmat,rgb) + offset
-        return ycbcr
+        return ycbcr.astype(int)
 
-    def get_jiff_ycbcr_int_coef(self, precision_factor=0):
+    def get_jfif_ycbcr_int_coef(self, precision_factor=0):
         """Generate the integer (fixed-point) coefficients
         """
         cmat = self.ycbcr_coef_mat
@@ -56,7 +56,7 @@ def build_coeffs(fract_bits):
         return [val for _ in range(num)]
     Y, Cb, Cr, Offset = (list_of_ints(0, 3), list_of_ints(0, 3),
                          list_of_ints(0, 3), list_of_ints(0, 3), )
-    int_coef, Offset = ColorSpace().get_jiff_ycbcr_int_coef(fract_bits)
+    int_coef, Offset = ColorSpace().get_jfif_ycbcr_int_coef(fract_bits)
     Y = int_coef[0]
     Cb = int_coef[1]
     Cr = int_coef[2]
