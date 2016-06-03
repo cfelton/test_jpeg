@@ -1,5 +1,3 @@
-#!/bin/python
-
 from random import randrange
 
 import myhdl
@@ -9,7 +7,6 @@ from myhdl.conversion import verify
 
 # never use import *
 from jpegenc.subblocks.rgb2ycbcr import ColorSpace, RGB, YCbCr, rgb2ycbcr
-
 
 @myhdl.block
 def clock_driver(clock):
