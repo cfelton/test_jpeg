@@ -26,23 +26,29 @@ class ColorSpace(object):
             [-0.1687, -0.3313, 0.5000],   # Cb coefficients
             [0.5000, -0.4187, -0.0813],   # Cr coefficients
         ])
-        self.offset = [0, 128, 128]
+        self.offset = np.array([0, 128, 128])
 
     def get_jiff_ycbcr(self):
         """Convert
         """
-        rgb = (255 - np.array([self.red, self.green, self.blue]))
-        rgb -= 128
-        rgb = rgb.transopose()
-        offset = self.offset.transpose()
+        rgb = np.array([self.red, self.green, self.blue])
+        rgb = rgb[np.newaxis, :].transpose()
+        offset = self.offset[np.newaxis, :].transpose()
         cmat = self.ycbcr_coef_mat
-        ycbcr = rgb @ cmat + offset
+        ycbcr = np.dot(cmat,rgb) + offset
         return ycbcr
 
     def get_jiff_ycbcr_int_coef(self, precision_factor=0):
-        """Generate the integer (fixed-ponit) coefficients
+        """Generate the integer (fixed-point) coefficients
         """
-        pass
+        cmat = self.ycbcr_coef_mat
+        cmat_ab = np.absolute(cmat)
+        int_coef = cmat_ab*(2**precision_factor)
+        int_coef = np.rint(int_coef)
+        int_coef = int_coef.astype(int)
+        int_offset = np.rint(self.offset*(2**precision_factor))
+        int_offset = int_offset.astype(int)
+        return int_coef.tolist(), int_offset.tolist()
 
 
 def build_coeffs(fract_bits):
@@ -50,13 +56,10 @@ def build_coeffs(fract_bits):
         return [val for _ in range(num)]
     Y, Cb, Cr, Offset = (list_of_ints(0, 3), list_of_ints(0, 3),
                          list_of_ints(0, 3), list_of_ints(0, 3), )
-
-    # @todo: update to use ColorSpace
-    # Y = [int(round(Y_COEFF[i]*(2**fract_bits)))for i in range(3)]
-    # Cb = [int(round(CB_COEFF[i]*(2**fract_bits))) for i in range(3)]
-    # Cr = [int(round(CR_COEFF[i]*(2**fract_bits))) for i in range(3)]
-    # Offset = [int(round(OFFSET[i]*(2**fract_bits))) for i in range(3)]
-
+    int_coef, Offset = ColorSpace().get_jiff_ycbcr_int_coef(fract_bits)
+    Y = int_coef[0]
+    Cb = int_coef[1]
+    Cr = int_coef[2]
     return Y, Cb, Cr, Offset
 
 
