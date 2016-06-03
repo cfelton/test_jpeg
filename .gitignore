@@ -1,6 +1,7 @@
 *~
 *.py[cod]
 __pycache__/
+venv/
 *.o
 *.vpi
 *.vcd
