@@ -85,10 +85,6 @@ def color_translation(convertible=False):
                                   (int(y), int(cb), int(cr))):
             expected_outputs[ycbcr_out].append(val)
 
-    if __debug__:
-        print expected_outputs
-        print expected_outputs.values()
-
     if(not convertible):
         @myhdl.block
         def bench_color_trans():
