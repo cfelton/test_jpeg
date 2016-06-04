@@ -5,7 +5,7 @@ from myhdl import (StopSimulation, block, Signal, ResetSignal, intbv,
                    delay, instance, always_comb, always_seq)
 from myhdl.conversion import verify
 
-from jpegenc.subblocks.rgb2ycbcr import ColorSpace, RGB, YCbCr, rgb2ycbcr
+from rgb2ycbcr import ColorSpace, RGB, YCbCr, rgb2ycbcr
 
 
 @myhdl.block
@@ -40,7 +40,7 @@ def rstonstart(reset, clock):
 def print_results(inputs, expected_outputs, actual_outputs):
     """Print the results of the Simulation
     """
-    for i in range(len(actual_outputs.values()[0])):
+    for i in range(len(list(actual_outputs.values())[0])):
         print("Expected Outputs ===> y = %d cb = %d cr = %d"
               % (expected_outputs['y'][i], expected_outputs['cb'][i],
                  expected_outputs['cr'][i]))
@@ -84,6 +84,10 @@ def color_translation(convertible=False):
         for ycbcr_out, val in zip(('y', 'cb', 'cr'),
                                   (int(y), int(cb), int(cr))):
             expected_outputs[ycbcr_out].append(val)
+
+    if __debug__:
+        print expected_outputs
+        print expected_outputs.values()
 
     if(not convertible):
         @myhdl.block
