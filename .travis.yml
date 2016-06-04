@@ -25,6 +25,7 @@ before_install:
   - ./scripts/ci/install_iverilog.sh
   - chmod +x ./scripts/ci/install_ghdl.sh
   - ./scripts/ci/install_ghdl.sh
+  - export PATH=$PATH:$PWD/ghdl-0.33/bin/
 
 # command to install dependencies
 install:
