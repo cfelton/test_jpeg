@@ -36,6 +36,7 @@ class ColorSpace(object):
         offset = self.offset[np.newaxis, :].transpose()
         cmat = self.ycbcr_coef_mat
         ycbcr = np.dot(cmat,rgb) + offset
+        ycbcr = np.rint(ycbcr)
         return ycbcr.astype(int)
 
     def get_jfif_ycbcr_int_coef(self, precision_factor=0):
