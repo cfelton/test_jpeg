@@ -42,7 +42,8 @@ install:
 
 script:
    - cd test
-   - py.test test_rgb2ycbcr.py 
+   - coverage run --source jpegenc -m py.test -s
+   - cp .coverage ../
 
 after_success:
    - coveralls
