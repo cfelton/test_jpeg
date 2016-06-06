@@ -1,7 +1,5 @@
 #!/bin/python
-"""
-Color Space Conversion Module
-"""
+"""Color Space Conversion Module"""
 
 import numpy as np
 
@@ -11,6 +9,7 @@ from myhdl.conversion import analyze
 
 
 class ColorSpace(object):
+
     """
     Color Space Conversion Class
     It is used to derive the integer coefficients
@@ -18,7 +17,8 @@ class ColorSpace(object):
     """
 
     def __init__(self, red=0, green=0, blue=0):
-        # Instance variables
+        """ Instance variables"""
+
         self.red = red
         self.green = green
         self.blue = blue
@@ -26,8 +26,7 @@ class ColorSpace(object):
         self._set_jfif_coefs()
 
     def _set_jfif_coefs(self):
-        """
-        The YCbCr special constants
+        """The YCbCr special constants
         The JFIF YCbCr conversion requires "special" constants defined
         by the standard.  The constants are describe in a Wikipedia page:
         https://en.wikipedia.org/wiki/YCbCr
@@ -41,7 +40,7 @@ class ColorSpace(object):
         self.offset = np.array([0, 128, 128])
 
     def get_jfif_ycbcr(self):
-        # Convert
+        """RGB to YCbCr Conversion"""
 
         rgb = np.array([self.red, self.green, self.blue])
         rgb = rgb[np.newaxis, :].transpose()
@@ -56,16 +55,17 @@ class ColorSpace(object):
 
         cmat = self.ycbcr_coef_mat
         cmat_ab = np.absolute(cmat)
-        int_coef = cmat_ab*(2**precision_factor)
+        int_coef = cmat_ab * (2**precision_factor)
         int_coef = np.rint(int_coef)
         int_coef = int_coef.astype(int)
-        int_offset = np.rint(self.offset*(2**precision_factor))
+        int_offset = np.rint(self.offset * (2**precision_factor))
         int_offset = int_offset.astype(int)
         return int_coef.tolist(), int_offset.tolist()
 
 
 def build_coeffs(fract_bits):
-    # function which used to build the coefficients
+    """ function which used to build the coefficients """
+
     def list_of_ints(val, num):
         return [val for _ in range(num)]
     Y, Cb, Cr, Offset = (list_of_ints(0, 3), list_of_ints(0, 3),
@@ -78,9 +78,8 @@ def build_coeffs(fract_bits):
 
 
 class RGB(object):
-    """
-    Red, Green, Blue Signals with nbits bitwidth for RGB input
-    """
+
+    """ Red, Green, Blue Signals with nbits bitwidth for RGB input """
 
     def __init__(self, nbits=8):
         self.nbits = nbits
@@ -93,8 +92,8 @@ class RGB(object):
 
 
 class YCbCr(object):
-    """
-    Y, Cb, Cr are the outputs signals of the color space
+
+    """Y, Cb, Cr are the outputs signals of the color space
     conversion module with nbits bitwidth
     """
 
@@ -174,38 +173,34 @@ def rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits=14):
 
         if rgb.data_valid:
 
-            Y_reg[0].next = R_s*Y1_s
-            Y_reg[1].next = G_s*Y2_s
-            Y_reg[2].next = B_s*Y3_s
+            Y_reg[0].next = R_s * Y1_s
+            Y_reg[1].next = G_s * Y2_s
+            Y_reg[2].next = B_s * Y3_s
 
-            Cb_reg[0].next = R_s*Cb1_s
-            Cb_reg[1].next = G_s*Cb2_s
-            Cb_reg[2].next = B_s*Cb3_s
+            Cb_reg[0].next = R_s * Cb1_s
+            Cb_reg[1].next = G_s * Cb2_s
+            Cb_reg[2].next = B_s * Cb3_s
 
-            Cr_reg[0].next = R_s*Cr1_s
-            Cr_reg[1].next = G_s*Cr2_s
-            Cr_reg[2].next = B_s*Cr3_s
+            Cr_reg[0].next = R_s * Cr1_s
+            Cr_reg[1].next = G_s * Cr2_s
+            Cr_reg[2].next = B_s * Cr3_s
 
             Y_sum.next = Y_reg[0]+Y_reg[1]+Y_reg[2]+offset_y
             Cb_sum.next = -Cb_reg[0]-Cb_reg[1]+Cb_reg[2]+offset_cb
             Cr_sum.next = Cr_reg[0]-Cr_reg[1]-Cr_reg[2]+offset_cr
 
-            # rounding
-
-            """
-            rounding the part from signal[fract_bits + nbits:fract_bits]
-            """
+            """ rounding the part from signal[fract_bits + nbits:fract_bits] """
 
             if(Y_sum[b - 1] == 1 and Y_sum[a:b] != (2**nbits)):
-                ycbcr.y.next = Y_sum[a:b]+1
+                ycbcr.y.next = Y_sum[a:b] + 1
             else:
                 ycbcr.y.next = Y_sum[a:b]
             if(Cb_sum[b - 1] == 1 and Cb_sum[a:b] != (2**nbits)):
-                ycbcr.cb.next = Cb_sum[a:b]+1
+                ycbcr.cb.next = Cb_sum[a:b] + 1
             else:
                 ycbcr.cb.next = Cb_sum[a:b]
             if(Cr_sum[b - 1] == 1 and Cr_sum[a:b] != (2**nbits)):
-                ycbcr.cr.next = Cr_sum[a:b]+1
+                ycbcr.cr.next = Cr_sum[a:b] + 1
             else:
                 ycbcr.cr.next = Cr_sum[a:b]
 
