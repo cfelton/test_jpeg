@@ -1,4 +1,7 @@
 #!/bin/python
+"""
+Color Space Conversion Module
+"""
 
 import numpy as np
 
@@ -8,7 +11,14 @@ from myhdl.conversion import analyze
 
 
 class ColorSpace(object):
+    """
+    Color Space Conversion Class
+    It is used to derive the integer coefficients
+    and as a software reference for the conversion
+    """
+
     def __init__(self, red=0, green=0, blue=0):
+        # Instance variables
         self.red = red
         self.green = green
         self.blue = blue
@@ -16,11 +26,13 @@ class ColorSpace(object):
         self._set_jfif_coefs()
 
     def _set_jfif_coefs(self):
-        """The YCbCr special constants
-         The JFIF YCbCr conversion requires "special" constants defined
-         by the standard.  The constants are describe in a Wikipedia page:
-         https://en.wikipedia.org/wiki/YCbCr
         """
+        The YCbCr special constants
+        The JFIF YCbCr conversion requires "special" constants defined
+        by the standard.  The constants are describe in a Wikipedia page:
+        https://en.wikipedia.org/wiki/YCbCr
+        """
+
         self.ycbcr_coef_mat = np.array([
             [0.2999, 0.5870, 0.1140],     # Y coefficients
             [-0.1687, -0.3313, 0.5000],   # Cb coefficients
@@ -29,19 +41,19 @@ class ColorSpace(object):
         self.offset = np.array([0, 128, 128])
 
     def get_jfif_ycbcr(self):
-        """Convert
-        """
+        # Convert
+
         rgb = np.array([self.red, self.green, self.blue])
         rgb = rgb[np.newaxis, :].transpose()
         offset = self.offset[np.newaxis, :].transpose()
         cmat = self.ycbcr_coef_mat
-        ycbcr = np.dot(cmat,rgb) + offset
+        ycbcr = np.dot(cmat, rgb) + offset
         ycbcr = np.rint(ycbcr)
         return ycbcr.astype(int)
 
     def get_jfif_ycbcr_int_coef(self, precision_factor=0):
-        """Generate the integer (fixed-point) coefficients
-        """
+        # Generate the integer (fixed-point) coefficients
+
         cmat = self.ycbcr_coef_mat
         cmat_ab = np.absolute(cmat)
         int_coef = cmat_ab*(2**precision_factor)
@@ -53,10 +65,11 @@ class ColorSpace(object):
 
 
 def build_coeffs(fract_bits):
+    # function which used to build the coefficients
     def list_of_ints(val, num):
         return [val for _ in range(num)]
     Y, Cb, Cr, Offset = (list_of_ints(0, 3), list_of_ints(0, 3),
-                         list_of_ints(0, 3), list_of_ints(0, 3), )
+                         list_of_ints(0, 3), list_of_ints(0, 3),)
     int_coef, Offset = ColorSpace().get_jfif_ycbcr_int_coef(fract_bits)
     Y = int_coef[0]
     Cb = int_coef[1]
@@ -68,6 +81,7 @@ class RGB(object):
     """
     Red, Green, Blue Signals with nbits bitwidth for RGB input
     """
+
     def __init__(self, nbits=8):
         self.nbits = nbits
         self.red = Signal(intbv(0)[nbits:])
@@ -83,6 +97,7 @@ class YCbCr(object):
     Y, Cb, Cr are the outputs signals of the color space
     conversion module with nbits bitwidth
     """
+
     def __init__(self, nbits=8):
         self.nbits = nbits
         self.y = Signal(intbv(0)[nbits:])
@@ -207,6 +222,8 @@ def rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits=14):
 
 
 def convert():
+    # convert rgb2ycbcr module
+
     ycbcr = YCbCr()
     rgb = RGB()
 
