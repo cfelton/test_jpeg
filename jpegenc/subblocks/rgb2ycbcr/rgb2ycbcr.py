@@ -17,8 +17,7 @@ class ColorSpace(object):
     """
 
     def __init__(self, red=0, green=0, blue=0):
-        """ Instance variables"""
-
+        """Instance variables"""
         self.red = red
         self.green = green
         self.blue = blue
@@ -31,7 +30,6 @@ class ColorSpace(object):
         by the standard.  The constants are describe in a Wikipedia page:
         https://en.wikipedia.org/wiki/YCbCr
         """
-
         self.ycbcr_coef_mat = np.array([
             [0.2999, 0.5870, 0.1140],     # Y coefficients
             [-0.1687, -0.3313, 0.5000],   # Cb coefficients
@@ -41,7 +39,6 @@ class ColorSpace(object):
 
     def get_jfif_ycbcr(self):
         """RGB to YCbCr Conversion"""
-
         rgb = np.array([self.red, self.green, self.blue])
         rgb = rgb[np.newaxis, :].transpose()
         offset = self.offset[np.newaxis, :].transpose()
@@ -51,8 +48,7 @@ class ColorSpace(object):
         return ycbcr.astype(int)
 
     def get_jfif_ycbcr_int_coef(self, precision_factor=0):
-        # Generate the integer (fixed-point) coefficients
-
+        """Generate the integer (fixed-point) coefficients"""
         cmat = self.ycbcr_coef_mat
         cmat_ab = np.absolute(cmat)
         int_coef = cmat_ab * (2**precision_factor)
@@ -65,21 +61,20 @@ class ColorSpace(object):
 
 def build_coeffs(fract_bits):
     """ function which used to build the coefficients """
-
     def list_of_ints(val, num):
         return [val for _ in range(num)]
-    Y, Cb, Cr, Offset = (list_of_ints(0, 3), list_of_ints(0, 3),
+    y, cb, cr, offset = (list_of_ints(0, 3), list_of_ints(0, 3),
                          list_of_ints(0, 3), list_of_ints(0, 3),)
     int_coef, Offset = ColorSpace().get_jfif_ycbcr_int_coef(fract_bits)
-    Y = int_coef[0]
-    Cb = int_coef[1]
-    Cr = int_coef[2]
-    return Y, Cb, Cr, Offset
+    y = int_coef[0]
+    cb = int_coef[1]
+    cr = int_coef[2]
+    return y, cb, cr, offset
 
 
 class RGB(object):
 
-    """ Red, Green, Blue Signals with nbits bitwidth for RGB input """
+    """Red, Green, Blue Signals with nbits bitwidth for RGB input"""
 
     def __init__(self, nbits=8):
         self.nbits = nbits
@@ -87,8 +82,6 @@ class RGB(object):
         self.green = Signal(intbv(0)[nbits:])
         self.blue = Signal(intbv(0)[nbits:])
         self.data_valid = Signal(bool(0))
-
-    def bitLength(self): return self.nbits
 
 
 class YCbCr(object):
@@ -185,11 +178,11 @@ def rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits=14):
             Cr_reg[1].next = G_s * Cr2_s
             Cr_reg[2].next = B_s * Cr3_s
 
-            Y_sum.next = Y_reg[0]+Y_reg[1]+Y_reg[2]+offset_y
-            Cb_sum.next = -Cb_reg[0]-Cb_reg[1]+Cb_reg[2]+offset_cb
-            Cr_sum.next = Cr_reg[0]-Cr_reg[1]-Cr_reg[2]+offset_cr
+            Y_sum.next = Y_reg[0] + Y_reg[1] + Y_reg[2] + offset_y
+            Cb_sum.next = -Cb_reg[0] - Cb_reg[1] + Cb_reg[2] + offset_cb
+            Cr_sum.next = Cr_reg[0] - Cr_reg[1] - Cr_reg[2] + offset_cr
 
-            """ rounding the part from signal[fract_bits + nbits:fract_bits] """
+            """rounding the part from signal[fract_bits + nbits:fract_bits]"""
 
             if(Y_sum[b - 1] == 1 and Y_sum[a:b] != (2**nbits)):
                 ycbcr.y.next = Y_sum[a:b] + 1
@@ -217,8 +210,7 @@ def rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits=14):
 
 
 def convert():
-    # convert rgb2ycbcr module
-
+    """convert rgb2ycbcr module"""
     ycbcr = YCbCr()
     rgb = RGB()
 
