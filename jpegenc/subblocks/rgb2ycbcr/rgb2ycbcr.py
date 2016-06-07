@@ -63,13 +63,13 @@ def build_coeffs(fract_bits):
     """ function which used to build the coefficients """
     def list_of_ints(val, num):
         return [val for _ in range(num)]
-    y, cb, cr, offset = (list_of_ints(0, 3), list_of_ints(0, 3),
+    Y, Cb, Cr, Offset = (list_of_ints(0, 3), list_of_ints(0, 3),
                          list_of_ints(0, 3), list_of_ints(0, 3),)
     int_coef, Offset = ColorSpace().get_jfif_ycbcr_int_coef(fract_bits)
-    y = int_coef[0]
-    cb = int_coef[1]
-    cr = int_coef[2]
-    return y, cb, cr, offset
+    Y = int_coef[0]
+    Cb = int_coef[1]
+    Cr = int_coef[2]
+    return Y, Cb, Cr, Offset
 
 
 class RGB(object):
@@ -128,7 +128,7 @@ def rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits=14):
     Y, Cb, Cr, Offset = build_coeffs(fract_bits)
 
     # Ranges for multiplication and addition signals
-    mult_max_range = 2**(nbits+fract_bits+1)
+    mult_max_range = 2**(nbits + fract_bits + 1)
     rgb_range = 2**nbits
     coeff_range = 2**fract_bits
 
@@ -179,10 +179,10 @@ def rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits=14):
             Cr_reg[2].next = B_s * Cr3_s
 
             Y_sum.next = Y_reg[0] + Y_reg[1] + Y_reg[2] + offset_y
-            Cb_sum.next = -Cb_reg[0] - Cb_reg[1] + Cb_reg[2] + offset_cb
+            Cb_sum.next = - Cb_reg[0] - Cb_reg[1] + Cb_reg[2] + offset_cb
             Cr_sum.next = Cr_reg[0] - Cr_reg[1] - Cr_reg[2] + offset_cr
 
-            """rounding the part from signal[fract_bits + nbits:fract_bits]"""
+            # rounding the part from signal[fract_bits + nbits:fract_bits]
 
             if(Y_sum[b - 1] == 1 and Y_sum[a:b] != (2**nbits)):
                 ycbcr.y.next = Y_sum[a:b] + 1
