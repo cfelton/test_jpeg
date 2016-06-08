@@ -11,6 +11,7 @@ from myhdl.conversion import analyze
 class ColorSpace(object):
 
     """Color Space Conversion Class
+
     It is used to derive the integer coefficients
     and as a software reference for the conversion
     """
@@ -25,6 +26,7 @@ class ColorSpace(object):
 
     def _set_jfif_coefs(self):
         """The YCbCr special constants
+
         The JFIF YCbCr conversion requires "special" constants defined
         by the standard.  The constants are describe in a Wikipedia page:
         https://en.wikipedia.org/wiki/YCbCr
@@ -87,9 +89,7 @@ class RGB(object):
 
 class YCbCr(object):
 
-    """Y, Cb, Cr are the outputs signals of the color space
-    conversion module with nbits bitwidth
-    """
+    """Y, Cb, Cr output signals"""
 
     def __init__(self, nbits=8):
         self.nbits = nbits
@@ -102,6 +102,7 @@ class YCbCr(object):
 @myhdl.block
 def rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits=14):
     """Color Space Conversion module
+
     This module is used to transform the rgb input
     to an other representation called YCbCr
 
@@ -160,7 +161,7 @@ def rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits=14):
 
     @always_seq(clock.posedge, reset=reset)
     def logic():
-
+        """Color Space Equation Conversion Implementation"""
         if rgb.data_valid:
 
             Y_reg[0].next = R_s * Y1_s
