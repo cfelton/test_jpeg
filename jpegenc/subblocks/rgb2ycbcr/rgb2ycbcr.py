@@ -10,8 +10,7 @@ from myhdl.conversion import analyze
 
 class ColorSpace(object):
 
-    """
-    Color Space Conversion Class
+    """Color Space Conversion Class
     It is used to derive the integer coefficients
     and as a software reference for the conversion
     """
@@ -60,8 +59,9 @@ class ColorSpace(object):
 
 
 def build_coeffs(fract_bits):
-    """ function which used to build the coefficients """
+    """function which used to build the coefficients"""
     def list_of_ints(val, num):
+        """create lists"""
         return [val for _ in range(num)]
     Y, Cb, Cr, Offset = (list_of_ints(0, 3), list_of_ints(0, 3),
                          list_of_ints(0, 3), list_of_ints(0, 3),)
@@ -77,6 +77,7 @@ class RGB(object):
     """Red, Green, Blue Signals with nbits bitwidth for RGB input"""
 
     def __init__(self, nbits=8):
+        """member variables initialize"""
         self.nbits = nbits
         self.red = Signal(intbv(0)[nbits:])
         self.green = Signal(intbv(0)[nbits:])
@@ -97,13 +98,10 @@ class YCbCr(object):
         self.cr = Signal(intbv(0)[nbits:])
         self.data_valid = Signal(bool(0))
 
-    def bitLength(self): return self.nbits
-
 
 @myhdl.block
 def rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits=14):
-    """
-    Color Space Conversion module
+    """Color Space Conversion module
     This module is used to transform the rgb input
     to an other representation called YCbCr
 
@@ -117,7 +115,6 @@ def rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits=14):
     Parameters:
         num_fractional_bits
     """
-
     fract_bits = num_fractional_bits
     nbits = rgb.nbits
     # the a and b are used for the rounding
@@ -156,7 +153,7 @@ def rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits=14):
 
     @always_comb
     def logic2():
-        # input RGB to RGB signed
+        """input RGB to RGB signed"""
         R_s.next = rgb.red
         G_s.next = rgb.green
         B_s.next = rgb.blue
@@ -184,15 +181,15 @@ def rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits=14):
 
             # rounding the part from signal[fract_bits + nbits:fract_bits]
 
-            if(Y_sum[b - 1] == 1 and Y_sum[a:b] != (2**nbits)):
+            if Y_sum[b - 1] == 1 and Y_sum[a:b] != (2**nbits):
                 ycbcr.y.next = Y_sum[a:b] + 1
             else:
                 ycbcr.y.next = Y_sum[a:b]
-            if(Cb_sum[b - 1] == 1 and Cb_sum[a:b] != (2**nbits)):
+            if Cb_sum[b - 1] == 1 and Cb_sum[a:b] != (2**nbits):
                 ycbcr.cb.next = Cb_sum[a:b] + 1
             else:
                 ycbcr.cb.next = Cb_sum[a:b]
-            if(Cr_sum[b - 1] == 1 and Cr_sum[a:b] != (2**nbits)):
+            if Cr_sum[b - 1] == 1 and Cr_sum[a:b] != (2**nbits):
                 ycbcr.cr.next = Cr_sum[a:b] + 1
             else:
                 ycbcr.cr.next = Cr_sum[a:b]
