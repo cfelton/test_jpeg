@@ -39,8 +39,10 @@ def two_d_dct_numpy(block):
 
     print block
 
-    dct_result = np.dot(coeff_matrix, block)
-    dct_result = np.dot(dct_result, np.transpose(coeff_matrix))
+    # first 1d-dct with rows
+    dct_result = np.dot(coeff_matrix, np.transpose(block))
+    # second 1d-dct with columns
+    dct_result = np.dot(coeff_matrix, np.transpose(dct_result))
     dct_result = np.rint(dct_result).astype(int)
     dct_result[0][0] -= 1024
     print dct_result
