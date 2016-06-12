@@ -84,13 +84,13 @@ def dct_1d(input_interface, output_interface, clock, reset, num_fractional_bits=
     fract_bits = num_fractional_bits
     nbits = input_interface.nbits
     output_fract = output_interface.out_precision
-    increase_precision = 0
+    increase_range = 2
 
-    mult_max_range = 2**(nbits + fract_bits + 1 + increase_precision)
+    mult_max_range = 2**(nbits + fract_bits + 1 + increase_range)
     coeff_range = 2**fract_bits
-    input_range = 2**(nbits + increase_precision)
+    input_range = 2**(nbits + increase_range)
 
-    a = fract_bits + nbits + increase_precision + 1
+    a = fract_bits + nbits + increase_range + 1
     b = fract_bits
 
     mult_reg = [Signal(intbv(0, min=-mult_max_range, max=mult_max_range))
@@ -120,7 +120,7 @@ def dct_1d(input_interface, output_interface, clock, reset, num_fractional_bits=
     def coeff_assign():
         if input_interface.data_valid:
             for i in range(8):
-                coeffs[i].next = coeff_rom[inputs_counter * 8 + i]
+                coeffs[i].next = coeff_rom[i* 8 + inputs_counter]
 
     @always_seq(clock.posedge, reset=reset)
     def mul_add():
