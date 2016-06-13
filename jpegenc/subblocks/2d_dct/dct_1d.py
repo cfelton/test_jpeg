@@ -6,41 +6,7 @@ from math import sqrt, pi, cos, sin
 import myhdl
 from myhdl import Signal, ResetSignal, intbv, always_comb, always_seq
 from myhdl.conversion import analyze
-
-
-class input_interface(object):
-
-    def __init__(self, nbits=8):
-        self.nbits = nbits
-        in_range = 2**nbits
-        """
-        self.coeff0 = Signal(intbv(0, min=-coeff_range, max=coeff_range))
-        self.coeff1 = Signal(intbv(0, min=-coeff_range, max=coeff_range))
-        self.coeff2 = Signal(intbv(0, min=-coeff_range, max=coeff_range))
-        self.coeff3 = Signal(intbv(0, min=-coeff_range, max=coeff_range))
-        self.coeff4 = Signal(intbv(0, min=-coeff_range, max=coeff_range))
-        self.coeff5 = Signal(intbv(0, min=-coeff_range, max=coeff_range))
-        self.coeff6 = Signal(intbv(0, min=-coeff_range, max=coeff_range))
-        self.coeff7 = Signal(intbv(0, min=-coeff_range, max=coeff_range))
-        """
-        self.data_in = Signal(intbv(0, min=0, max=in_range))
-        self.data_valid = Signal(bool(0))
-
-
-class output_interface(object):
-
-    def __init__(self, out_precision=11):
-        self.out_precision = out_precision
-        out_range = 2**out_precision
-        self.out0 = Signal(intbv(0, min=-out_range, max=out_range))
-        self.out1 = Signal(intbv(0, min=-out_range, max=out_range))
-        self.out2 = Signal(intbv(0, min=-out_range, max=out_range))
-        self.out3 = Signal(intbv(0, min=-out_range, max=out_range))
-        self.out4 = Signal(intbv(0, min=-out_range, max=out_range))
-        self.out5 = Signal(intbv(0, min=-out_range, max=out_range))
-        self.out6 = Signal(intbv(0, min=-out_range, max=out_range))
-        self.out7 = Signal(intbv(0, min=-out_range, max=out_range))
-        self.data_valid = Signal(bool(0))
+from interfaces import input_interface, output_interface
 
 
 def dct_int_coeffs(precision_factor):
@@ -77,6 +43,12 @@ def tuple_construct(matrix):
             a.append(j)
     return tuple(a)
 
+def rounding(in_sig, out_rounded, a, b, c):
+     if in_sig[c - 1] == 1:
+         out_rounded.next = in_sig[a:b].signed() + 1
+     else:
+         out_rounded.next = in_sig[a:b].signed()
+
 
 @myhdl.block
 def dct_1d(input_interface, output_interface, clock, reset, num_fractional_bits=14):
@@ -84,14 +56,15 @@ def dct_1d(input_interface, output_interface, clock, reset, num_fractional_bits=
     fract_bits = num_fractional_bits
     nbits = input_interface.nbits
     output_fract = output_interface.out_precision
-    increase_range = 2
+    increase_range = 1
 
     mult_max_range = 2**(nbits + fract_bits + 1 + increase_range)
     coeff_range = 2**fract_bits
     input_range = 2**(nbits + increase_range)
 
-    a = fract_bits + nbits + increase_range + 1
-    b = fract_bits
+    a = fract_bits + nbits + increase_range + 2
+    b = a - output_fract - 1
+    c = fract_bits
 
     mult_reg = [Signal(intbv(0, min=-mult_max_range, max=mult_max_range))
                 for _ in range(8)]
@@ -100,7 +73,7 @@ def dct_1d(input_interface, output_interface, clock, reset, num_fractional_bits=
     coeffs = [Signal(intbv(0, min=-coeff_range, max=coeff_range))
               for _ in range(8)]
     mux_flush = [Signal(intbv(0, min=-mult_max_range, max=mult_max_range))
-                       for _ in range(8)]
+                 for _ in range(8)]
 
     inputs_counter = Signal(intbv(0, min=0, max=8))
     cycles_counter = Signal(intbv(0, min=0, max=12))
@@ -120,7 +93,7 @@ def dct_1d(input_interface, output_interface, clock, reset, num_fractional_bits=
     def coeff_assign():
         if input_interface.data_valid:
             for i in range(8):
-                coeffs[i].next = coeff_rom[i* 8 + inputs_counter]
+                coeffs[i].next = coeff_rom[i * 8 + inputs_counter]
 
     @always_seq(clock.posedge, reset=reset)
     def mul_add():
@@ -135,7 +108,6 @@ def dct_1d(input_interface, output_interface, clock, reset, num_fractional_bits=
                 mult_reg[6].next = data_in_s * coeffs[6]
                 mult_reg[7].next = data_in_s * coeffs[7]
 
-
                 adder_reg[0].next = mux_flush[0] + mult_reg[0]
                 adder_reg[1].next = mux_flush[1] + mult_reg[1]
                 adder_reg[2].next = mux_flush[2] + mult_reg[2]
@@ -149,24 +121,11 @@ def dct_1d(input_interface, output_interface, clock, reset, num_fractional_bits=
     def mux_after_adder_reg():
         if cycles_counter == 10 or (cycles_counter == 7  and
                                     first_row_passed):
-            mux_flush[0].next = 0
-            mux_flush[1].next = 0
-            mux_flush[2].next = 0
-            mux_flush[3].next = 0
-            mux_flush[4].next = 0
-            mux_flush[5].next = 0
-            mux_flush[6].next = 0
-            mux_flush[7].next = 0
-
+            for i in range(8):
+                mux_flush[i].next = 0
         else:
-            mux_flush[0].next = adder_reg[0]
-            mux_flush[1].next = adder_reg[1]
-            mux_flush[2].next = adder_reg[2]
-            mux_flush[3].next = adder_reg[3]
-            mux_flush[4].next = adder_reg[4]
-            mux_flush[5].next = adder_reg[5]
-            mux_flush[6].next = adder_reg[6]
-            mux_flush[7].next = adder_reg[7]
+            for i in range(8):
+                mux_flush[i].next = adder_reg[i]
 
     @always_seq(clock.posedge, reset=reset)
     def counters():
@@ -189,42 +148,44 @@ def dct_1d(input_interface, output_interface, clock, reset, num_fractional_bits=
     def outputs():
         if cycles_counter == 10 or (first_row_passed and
                                     cycles_counter == 7):
-            if adder_reg[0][b - 1] == 1:
+            if adder_reg[0][c - 1] == 1:
                 output_interface.out0.next = adder_reg[0][a:b].signed() + 1
             else:
                 output_interface.out0.next = adder_reg[0][a:b].signed()
-            if adder_reg[1][b - 1] == 1:
+            if adder_reg[1][c - 1] == 1:
                 output_interface.out1.next = adder_reg[1][a:b].signed() + 1
             else:
                 output_interface.out1.next = adder_reg[1][a:b].signed()
-            if adder_reg[2][b - 1] == 1:
+            if adder_reg[2][c - 1] == 1:
                 output_interface.out2.next = adder_reg[2][a:b].signed() + 1
             else:
                 output_interface.out2.next = adder_reg[2][a:b].signed()
-            if adder_reg[3][b - 1] == 1:
+            if adder_reg[3][c - 1] == 1:
                 output_interface.out3.next = adder_reg[3][a:b].signed() + 1
             else:
                 output_interface.out3.next = adder_reg[3][a:b].signed()
-            if adder_reg[4][b - 1] == 1:
+            if adder_reg[4][c - 1] == 1:
                 output_interface.out4.next = adder_reg[4][a:b].signed() + 1
             else:
                 output_interface.out4.next = adder_reg[4][a:b].signed()
-            if adder_reg[5][b - 1] == 1:
+            if adder_reg[5][c - 1] == 1:
                 output_interface.out5.next = adder_reg[5][a:b].signed() + 1
             else:
                 output_interface.out5.next = adder_reg[5][a:b].signed()
-            if adder_reg[6][b - 1] == 1:
+            if adder_reg[6][c- 1] == 1:
                 output_interface.out6.next = adder_reg[6][a:b].signed() + 1
             else:
                 output_interface.out6.next = adder_reg[6][a:b].signed()
-            if adder_reg[7][b - 1] == 1:
+            if adder_reg[7][c- 1] == 1:
                 output_interface.out7.next = adder_reg[7][a:b].signed() + 1
             else:
                 output_interface.out7.next = adder_reg[7][a:b].signed()
-
             output_interface.data_valid.next = True
+        else:
+            output_interface.data_valid.next = False
 
     return outputs, counters, mul_add, input_to_signed, coeff_assign, mux_after_adder_reg
+
 
 def convert():
 
@@ -234,8 +195,8 @@ def convert():
     clock = Signal(bool(0))
     reset = ResetSignal(1, active=True, async=True)
 
-    inst = dct_1d(inputs, outputs, clock, reset)
-    inst.convert(hdl='VHDL')
+    analyze.simulator = 'ghdl'
+    assert dct_1d(inputs, outputs, clock, reset, num_fractional_bits=14).analyze_convert() == 0
 
 if __name__ == '__main__':
     convert()
