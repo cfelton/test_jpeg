@@ -78,8 +78,16 @@ class input_interface(object):
 
     def __init__(self, nbits=8):
         self.nbits = nbits
-        in_range = 2**nbits
-        self.data_in = Signal(intbv(0, min=0, max=in_range))
+        self.in_range = 2**nbits
+        self.data_in = Signal(intbv(0, min=0, max=self.in_range))
+        self.data_valid = Signal(bool(0))
+
+class input_1d_1st_stage(object):
+
+    def __init__(self, nbits=8):
+        self.nbits = nbits
+        self.in_range = 2**nbits
+        self.data_in = Signal(intbv(0, min=-self.in_range, max=self.in_range))
         self.data_valid = Signal(bool(0))
 
 class output_interface(object):

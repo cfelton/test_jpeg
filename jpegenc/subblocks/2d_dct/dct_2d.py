@@ -2,13 +2,15 @@
 # coding=utf-8
 
 import numpy as np
-from math import sqrt, pi, cos, sin
+from math import sqrt, pi, cos
 import myhdl
 from myhdl import Signal, ResetSignal, intbv, always_comb, always_seq, instance
 from myhdl.conversion import analyze
 
-from interfaces import input_interface, output_interface,outputs_2d, input_1d_2nd_stage
+from interfaces import (input_1d_1st_stage, input_interface, output_interface,
+                        outputs_2d, input_1d_2nd_stage)
 from dct_1d import dct_1d
+
 
 def random_matrix_8_8():
 
@@ -40,7 +42,7 @@ def two_d_dct_numpy(block):
                     [g, -e, d, -b, b, -d, e, -g]]
     coeff_matrix = np.asarray(coeff_matrix)
     block = np.asarray(block)
-
+    block = block - 128
     print block
 
     # first 1d-dct with rows
@@ -50,7 +52,6 @@ def two_d_dct_numpy(block):
     dct_result = np.rint(dct_result)
     dct_result = np.dot(coeff_matrix, np.transpose(dct_result))
     dct_result = np.rint(dct_result).astype(int)
-    dct_result[0][0] -= 1024
     print dct_result
 
 # block = random_matrix_8_8()
@@ -66,12 +67,14 @@ block = [[0xa6, 0xa1, 0x9b, 0x9a, 0x9b, 0x9c, 0x97, 0x92],
 
 two_d_dct_numpy(block)
 
+
 @myhdl.block
-def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14):
+def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14, out_prec=10):
 
     first_1d_output = output_interface()
+    input_1d_stage_1 = input_1d_1st_stage()
 
-    first_1d = dct_1d(inputs, first_1d_output, clock,
+    first_1d = dct_1d(input_1d_stage_1, first_1d_output, clock,
                       reset, num_fractional_bits)
 
     inputs_2nd_stage_0 = input_1d_2nd_stage(first_1d_output.out_precision)
@@ -83,8 +86,6 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14):
     inputs_2nd_stage_6 = input_1d_2nd_stage(first_1d_output.out_precision)
     inputs_2nd_stage_7 = input_1d_2nd_stage(first_1d_output.out_precision)
 
-    out_prec = 10
-
     outputs_2nd_stage_0 = output_interface(out_prec)
     outputs_2nd_stage_1 = output_interface(out_prec)
     outputs_2nd_stage_2 = output_interface(out_prec)
@@ -94,23 +95,34 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14):
     outputs_2nd_stage_6 = output_interface(out_prec)
     outputs_2nd_stage_7 = output_interface(out_prec)
 
+    stage_2_inst_0 = dct_1d(inputs_2nd_stage_0, outputs_2nd_stage_0, clock,
+                            reset, num_fractional_bits)
+    stage_2_inst_1 = dct_1d(inputs_2nd_stage_1, outputs_2nd_stage_1, clock,
+                            reset, num_fractional_bits)
+    stage_2_inst_2 = dct_1d(inputs_2nd_stage_2, outputs_2nd_stage_2, clock,
+                            reset, num_fractional_bits)
+    stage_2_inst_3 = dct_1d(inputs_2nd_stage_3, outputs_2nd_stage_3, clock,
+                            reset, num_fractional_bits)
+    stage_2_inst_4 = dct_1d(inputs_2nd_stage_4, outputs_2nd_stage_4, clock,
+                            reset, num_fractional_bits)
+    stage_2_inst_5 = dct_1d(inputs_2nd_stage_5, outputs_2nd_stage_5, clock,
+                            reset, num_fractional_bits)
+    stage_2_inst_6 = dct_1d(inputs_2nd_stage_6, outputs_2nd_stage_6, clock,
+                            reset, num_fractional_bits)
+    stage_2_inst_7 = dct_1d(inputs_2nd_stage_7, outputs_2nd_stage_7, clock,
+                            reset, num_fractional_bits)
 
-    stage_2_inst_0 = dct_1d(inputs_2nd_stage_0, outputs_2nd_stage_0, clock, reset,
-                            num_fractional_bits)
-    stage_2_inst_1 = dct_1d(inputs_2nd_stage_1, outputs_2nd_stage_1, clock, reset,
-                            num_fractional_bits)
-    stage_2_inst_2 = dct_1d(inputs_2nd_stage_2, outputs_2nd_stage_2, clock, reset,
-                                num_fractional_bits)
-    stage_2_inst_3 = dct_1d(inputs_2nd_stage_3, outputs_2nd_stage_3, clock, reset,
-                                num_fractional_bits)
-    stage_2_inst_4 = dct_1d(inputs_2nd_stage_4, outputs_2nd_stage_4, clock, reset,
-                                num_fractional_bits)
-    stage_2_inst_5 = dct_1d(inputs_2nd_stage_5, outputs_2nd_stage_5, clock, reset,
-                                num_fractional_bits)
-    stage_2_inst_6 = dct_1d(inputs_2nd_stage_6, outputs_2nd_stage_6, clock, reset,
-                                num_fractional_bits)
-    stage_2_inst_7 = dct_1d(inputs_2nd_stage_7, outputs_2nd_stage_7, clock, reset,
-                                num_fractional_bits)
+    data_in_signed = Signal(intbv(0, min=-input_1d_stage_1.in_range,
+                                  max=input_1d_stage_1.in_range))
+    data_valid_reg = Signal(bool(0))
+
+    @always_seq(clock.posedge, reset=reset)
+    def input_subtract():
+        if inputs.data_valid:
+            data_in_signed.next = inputs.data_in
+            input_1d_stage_1.data_in.next = data_in_signed - 128
+            data_valid_reg.next = inputs.data_valid
+            input_1d_stage_1.data_valid.next = data_valid_reg
 
     @always_seq(clock.posedge, reset=reset)
     def first_stage_to_second():
@@ -133,7 +145,6 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14):
 
     @always_seq(clock.posedge, reset=reset)
     def second_stage_output():
-        # subtract y00 with 1024 but check the precisions!!!
         outputs.y00.next = outputs_2nd_stage_0.out0
         outputs.y01.next = outputs_2nd_stage_0.out1
         outputs.y02.next = outputs_2nd_stage_0.out2
@@ -200,24 +211,25 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14):
         outputs.y77.next = outputs_2nd_stage_7.out7
         outputs.data_valid = outputs_2nd_stage_0.data_valid
 
-    return second_stage_output, first_stage_to_second, first_1d, stage_2_inst_0,\
-           stage_2_inst_1, stage_2_inst_2, stage_2_inst_3, stage_2_inst_4,\
-           stage_2_inst_5, stage_2_inst_6, stage_2_inst_7
+    return (input_subtract, second_stage_output, first_stage_to_second, first_1d,
+            stage_2_inst_0, stage_2_inst_1, stage_2_inst_2, stage_2_inst_3,
+            stage_2_inst_4, stage_2_inst_5, stage_2_inst_6, stage_2_inst_7)
+
 
 def convert():
 
     out_prec = 10
-
+    fract_bits = 14
     inputs = input_interface()
     outputs = outputs_2d(out_prec)
 
     clock = Signal(bool(0))
     reset = ResetSignal(1, active=True, async=True)
 
-    inst = dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14)
+    inst = dct_2d(inputs, outputs, clock, reset, fract_bits, out_prec)
     inst.convert(hdl='vhdl')
-    #analyze.simulator = 'ghdl'
-    #assert dct_1d(inputs, outputs, clock, reset, num_fractional_bits=14).analyze_convert() == 0
+    analyze.simulator = 'ghdl'
+    #assert dct_2d(inputs, outputs, clock, reset, fract_bits, out_prec).analyze_convert() == 0
 
 if __name__ == '__main__':
     convert()

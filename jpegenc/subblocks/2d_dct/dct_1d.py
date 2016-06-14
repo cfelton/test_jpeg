@@ -2,7 +2,7 @@
 # coding=utf-8
 
 import numpy as np
-from math import sqrt, pi, cos, sin
+from math import sqrt, pi, cos
 import myhdl
 from myhdl import Signal, ResetSignal, intbv, always_comb, always_seq
 from myhdl.conversion import analyze
@@ -43,12 +43,6 @@ def tuple_construct(matrix):
             a.append(j)
     return tuple(a)
 
-def rounding(in_sig, out_rounded, a, b, c):
-     if in_sig[c - 1] == 1:
-         out_rounded.next = in_sig[a:b].signed() + 1
-     else:
-         out_rounded.next = in_sig[a:b].signed()
-
 
 @myhdl.block
 def dct_1d(input_interface, output_interface, clock, reset, num_fractional_bits=14):
@@ -60,11 +54,10 @@ def dct_1d(input_interface, output_interface, clock, reset, num_fractional_bits=
 
     mult_max_range = 2**(nbits + fract_bits + 1 + increase_range)
     coeff_range = 2**fract_bits
-    input_range = 2**(nbits + increase_range)
 
     a = fract_bits + output_fract + 1
     b = fract_bits
-    c = fract_bits -1
+    c = fract_bits - 1
 
     mult_reg = [Signal(intbv(0, min=-mult_max_range, max=mult_max_range))
                 for _ in range(8)]
@@ -79,15 +72,14 @@ def dct_1d(input_interface, output_interface, clock, reset, num_fractional_bits=
     cycles_counter = Signal(intbv(0, min=0, max=12))
     first_row_passed = Signal(bool(0))
 
-    data_in_s = Signal(intbv(0, min=-input_range, max=input_range))
-
+    data_in_reg = Signal(intbv(0, min=-2**nbits,
+                               max=2**nbits))
     # coefficient rom
     coeff_rom = tuple_construct(dct_int_coeffs(fract_bits))
 
     @always_seq(clock.posedge, reset=reset)
-    def input_to_signed():
-        if input_interface.data_valid:
-            data_in_s.next = input_interface.data_in
+    def input_reg():
+        data_in_reg.next = input_interface.data_in
 
     @always_seq(clock.posedge, reset=reset)
     def coeff_assign():
@@ -99,14 +91,14 @@ def dct_1d(input_interface, output_interface, clock, reset, num_fractional_bits=
     def mul_add():
 
         if input_interface.data_valid:
-                mult_reg[0].next = data_in_s * coeffs[0]
-                mult_reg[1].next = data_in_s * coeffs[1]
-                mult_reg[2].next = data_in_s * coeffs[2]
-                mult_reg[3].next = data_in_s * coeffs[3]
-                mult_reg[4].next = data_in_s * coeffs[4]
-                mult_reg[5].next = data_in_s * coeffs[5]
-                mult_reg[6].next = data_in_s * coeffs[6]
-                mult_reg[7].next = data_in_s * coeffs[7]
+                mult_reg[0].next = data_in_reg * coeffs[0]
+                mult_reg[1].next = data_in_reg * coeffs[1]
+                mult_reg[2].next = data_in_reg * coeffs[2]
+                mult_reg[3].next = data_in_reg * coeffs[3]
+                mult_reg[4].next = data_in_reg * coeffs[4]
+                mult_reg[5].next = data_in_reg * coeffs[5]
+                mult_reg[6].next = data_in_reg * coeffs[6]
+                mult_reg[7].next = data_in_reg * coeffs[7]
 
                 adder_reg[0].next = mux_flush[0] + mult_reg[0]
                 adder_reg[1].next = mux_flush[1] + mult_reg[1]
@@ -119,7 +111,7 @@ def dct_1d(input_interface, output_interface, clock, reset, num_fractional_bits=
 
     @always_comb
     def mux_after_adder_reg():
-        if cycles_counter == 10 or (cycles_counter == 7  and
+        if cycles_counter == 10 or (cycles_counter == 7 and
                                     first_row_passed):
             for i in range(8):
                 mux_flush[i].next = 0
@@ -184,7 +176,7 @@ def dct_1d(input_interface, output_interface, clock, reset, num_fractional_bits=
         else:
             output_interface.data_valid.next = False
 
-    return outputs, counters, mul_add, input_to_signed, coeff_assign, mux_after_adder_reg
+    return input_reg, outputs, counters, mul_add, coeff_assign, mux_after_adder_reg
 
 
 def convert():
