@@ -59,6 +59,7 @@ def test_dct_1d():
                     inputs.data_in.next = test_block[i]
                 yield clock.posedge
                 if outputs.data_valid:
+                    yield delay(1)
                     out_print()
 
             raise StopSimulation

@@ -47,6 +47,7 @@ def two_d_dct_numpy(block):
     dct_result = np.dot(coeff_matrix, np.transpose(block))
     # second 1d-dct with columns
     print np.rint(dct_result)
+    dct_result = np.rint(dct_result)
     dct_result = np.dot(coeff_matrix, np.transpose(dct_result))
     dct_result = np.rint(dct_result).astype(int)
     dct_result[0][0] -= 1024
@@ -82,14 +83,16 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14):
     inputs_2nd_stage_6 = input_1d_2nd_stage(first_1d_output.out_precision)
     inputs_2nd_stage_7 = input_1d_2nd_stage(first_1d_output.out_precision)
 
-    outputs_2nd_stage_0 = output_interface()
-    outputs_2nd_stage_1 = output_interface()
-    outputs_2nd_stage_2 = output_interface()
-    outputs_2nd_stage_3 = output_interface()
-    outputs_2nd_stage_4 = output_interface()
-    outputs_2nd_stage_5 = output_interface()
-    outputs_2nd_stage_6 = output_interface()
-    outputs_2nd_stage_7 = output_interface()
+    out_prec = 10
+
+    outputs_2nd_stage_0 = output_interface(out_prec)
+    outputs_2nd_stage_1 = output_interface(out_prec)
+    outputs_2nd_stage_2 = output_interface(out_prec)
+    outputs_2nd_stage_3 = output_interface(out_prec)
+    outputs_2nd_stage_4 = output_interface(out_prec)
+    outputs_2nd_stage_5 = output_interface(out_prec)
+    outputs_2nd_stage_6 = output_interface(out_prec)
+    outputs_2nd_stage_7 = output_interface(out_prec)
 
 
     stage_2_inst_0 = dct_1d(inputs_2nd_stage_0, outputs_2nd_stage_0, clock, reset,
@@ -130,6 +133,7 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14):
 
     @always_seq(clock.posedge, reset=reset)
     def second_stage_output():
+        # subtract y00 with 1024 but check the precisions!!!
         outputs.y00.next = outputs_2nd_stage_0.out0
         outputs.y01.next = outputs_2nd_stage_0.out1
         outputs.y02.next = outputs_2nd_stage_0.out2
@@ -194,6 +198,7 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14):
         outputs.y75.next = outputs_2nd_stage_7.out5
         outputs.y76.next = outputs_2nd_stage_7.out6
         outputs.y77.next = outputs_2nd_stage_7.out7
+        outputs.data_valid = outputs_2nd_stage_0.data_valid
 
     return second_stage_output, first_stage_to_second, first_1d, stage_2_inst_0,\
            stage_2_inst_1, stage_2_inst_2, stage_2_inst_3, stage_2_inst_4,\
@@ -201,8 +206,10 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14):
 
 def convert():
 
+    out_prec = 10
+
     inputs = input_interface()
-    outputs = outputs_2d()
+    outputs = outputs_2d(out_prec)
 
     clock = Signal(bool(0))
     reset = ResetSignal(1, active=True, async=True)

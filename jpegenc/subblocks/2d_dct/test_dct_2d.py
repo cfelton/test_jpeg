@@ -36,15 +36,23 @@ def reset_on_start(reset, clock):
     yield clock.posedge
     reset.next = not reset
 
+def out_print(outputs):
+    attrs = vars(outputs)
+    for i in range(8):
+        for j in range(8):
+            y = "y" + str(i) + str(j)
+            print("%s: %d" %(y, attrs[y]))
+
 def test_dct_2d():
 
     fract_bits = 14
+    output_bits = 10
 
     clock = Signal(bool(0))
     reset = ResetSignal(1, active=True, async=True)
 
     inputs = input_interface()
-    outputs = outputs_2d()
+    outputs = outputs_2d(output_bits)
 
     @myhdl.block
     def bench_dct_2d():
@@ -60,6 +68,9 @@ def test_dct_2d():
                 if i <64:
                     inputs.data_in.next = block[i]
                 yield clock.posedge
+                if outputs.data_valid:
+                    yield delay(1)
+                    out_print(outputs)
 
             raise StopSimulation
 

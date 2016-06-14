@@ -62,9 +62,9 @@ def dct_1d(input_interface, output_interface, clock, reset, num_fractional_bits=
     coeff_range = 2**fract_bits
     input_range = 2**(nbits + increase_range)
 
-    a = fract_bits + nbits + increase_range + 2
-    b = a - output_fract - 1
-    c = fract_bits
+    a = fract_bits + output_fract + 1
+    b = fract_bits
+    c = fract_bits -1
 
     mult_reg = [Signal(intbv(0, min=-mult_max_range, max=mult_max_range))
                 for _ in range(8)]
@@ -148,35 +148,35 @@ def dct_1d(input_interface, output_interface, clock, reset, num_fractional_bits=
     def outputs():
         if cycles_counter == 10 or (first_row_passed and
                                     cycles_counter == 7):
-            if adder_reg[0][c - 1] == 1:
+            if adder_reg[0][c] == 1:
                 output_interface.out0.next = adder_reg[0][a:b].signed() + 1
             else:
                 output_interface.out0.next = adder_reg[0][a:b].signed()
-            if adder_reg[1][c - 1] == 1:
+            if adder_reg[1][c] == 1:
                 output_interface.out1.next = adder_reg[1][a:b].signed() + 1
             else:
                 output_interface.out1.next = adder_reg[1][a:b].signed()
-            if adder_reg[2][c - 1] == 1:
+            if adder_reg[2][c] == 1:
                 output_interface.out2.next = adder_reg[2][a:b].signed() + 1
             else:
                 output_interface.out2.next = adder_reg[2][a:b].signed()
-            if adder_reg[3][c - 1] == 1:
+            if adder_reg[3][c] == 1:
                 output_interface.out3.next = adder_reg[3][a:b].signed() + 1
             else:
                 output_interface.out3.next = adder_reg[3][a:b].signed()
-            if adder_reg[4][c - 1] == 1:
+            if adder_reg[4][c] == 1:
                 output_interface.out4.next = adder_reg[4][a:b].signed() + 1
             else:
                 output_interface.out4.next = adder_reg[4][a:b].signed()
-            if adder_reg[5][c - 1] == 1:
+            if adder_reg[5][c] == 1:
                 output_interface.out5.next = adder_reg[5][a:b].signed() + 1
             else:
                 output_interface.out5.next = adder_reg[5][a:b].signed()
-            if adder_reg[6][c- 1] == 1:
+            if adder_reg[6][c] == 1:
                 output_interface.out6.next = adder_reg[6][a:b].signed() + 1
             else:
                 output_interface.out6.next = adder_reg[6][a:b].signed()
-            if adder_reg[7][c- 1] == 1:
+            if adder_reg[7][c] == 1:
                 output_interface.out7.next = adder_reg[7][a:b].signed() + 1
             else:
                 output_interface.out7.next = adder_reg[7][a:b].signed()
