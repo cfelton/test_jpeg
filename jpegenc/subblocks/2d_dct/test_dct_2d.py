@@ -64,9 +64,11 @@ def test_dct_2d():
             yield reset_on_start(reset, clock)
             inputs.data_valid.next = True
 
-            for i in range(90):
-                if i <64:
+            for i in range(200):
+                if i<64:
                     inputs.data_in.next = block[i]
+                if i>=64 and i<128:
+                    inputs.data_in.next = block[i - 64]
                 yield clock.posedge
                 if outputs.data_valid:
                     yield delay(1)

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# coding=utf-8
 
 import numpy as np
 from math import sqrt, pi, cos
@@ -116,6 +114,8 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14, out_prec=10):
                                   max=input_1d_stage_1.in_range))
     data_valid_reg = Signal(bool(0))
 
+    counter = Signal(intbv(0, min=0, max=8))
+
     @always_seq(clock.posedge, reset=reset)
     def input_subtract():
         if inputs.data_valid:
@@ -209,11 +209,27 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14, out_prec=10):
         outputs.y75.next = outputs_2nd_stage_7.out5
         outputs.y76.next = outputs_2nd_stage_7.out6
         outputs.y77.next = outputs_2nd_stage_7.out7
-        outputs.data_valid = outputs_2nd_stage_0.data_valid
 
-    return (input_subtract, second_stage_output, first_stage_to_second, first_1d,
+    @always_seq(clock.posedge, reset=reset)
+    def counter_update():
+        if outputs_2nd_stage_0.data_valid:
+            if counter == 7:
+                counter.next = 0
+            else:
+                counter.next = counter + 1
+
+    @always_comb
+    def data_valid_2d():
+        if outputs_2nd_stage_0.data_valid and counter == 0 :
+            outputs.data_valid.next = True
+        else:
+            outputs.data_valid.next = False
+            """reset counter for the next outputs"""
+
+    return (input_subtract, second_stage_output, first_stage_to_second,
             stage_2_inst_0, stage_2_inst_1, stage_2_inst_2, stage_2_inst_3,
-            stage_2_inst_4, stage_2_inst_5, stage_2_inst_6, stage_2_inst_7)
+            stage_2_inst_4, stage_2_inst_5, stage_2_inst_6, stage_2_inst_7,
+            data_valid_2d, counter_update, first_1d)
 
 
 def convert():
@@ -226,10 +242,8 @@ def convert():
     clock = Signal(bool(0))
     reset = ResetSignal(1, active=True, async=True)
 
-    inst = dct_2d(inputs, outputs, clock, reset, fract_bits, out_prec)
-    inst.convert(hdl='vhdl')
     analyze.simulator = 'ghdl'
-    #assert dct_2d(inputs, outputs, clock, reset, fract_bits, out_prec).analyze_convert() == 0
+    assert dct_2d(inputs, outputs, clock, reset, fract_bits, out_prec).analyze_convert() == 0
 
 if __name__ == '__main__':
     convert()
