@@ -27,6 +27,16 @@ def reset_on_start(reset, clock):
     yield clock.posedge
     reset.next = not reset
 
+@myhdl.block
+def rstonstart(reset, clock):
+    @instance
+    def ros():
+        reset.next = True
+        yield delay(40)
+        yield clock.posedge
+        reset.next = not reset
+    return ros
+
 class InputsAndOutputs(object):
 
     def __init__(self, samples):
@@ -41,6 +51,19 @@ class InputsAndOutputs(object):
             self.inputs.append(vector)
             dct_result = dct_obj.dct_1d_transformation(vector)
             self.outputs.append(dct_result)
+
+    def get_rom_tables(self):
+        a,b = [[] for _ in range(2)]
+        for i in self.inputs:
+            for j in i:
+                a.append(j)
+        for i in self.outputs:
+            for j in i:
+                b.append(j)
+        inputs_rom = tuple(a)
+        expected_outputs_rom = tuple(b)
+        return inputs_rom, expected_outputs_rom
+
 
 def out_print(expected_outputs, actual_outputs):
 
@@ -102,6 +125,54 @@ def test_dct_1d():
     inst.config_sim(trace=True)
     inst.run_sim()
 
+def test_dct_1d_conversion():
+
+    samples, fract_bits, out_prec = 10, 14, 10
+
+    clock = Signal(bool(0))
+    reset = ResetSignal(1, active=True, async=True)
+
+    inputs = input_interface()
+    outputs = output_interface(out_prec)
+
+    in_out_data = InputsAndOutputs(samples)
+    in_out_data.initialize()
+
+    inputs_rom, expected_outputs_rom = in_out_data.get_rom_tables()
+
+    @myhdl.block
+    def bench_dct_1d():
+        tdut = dct_1d(inputs, outputs, clock, reset, fract_bits)
+        tbclk = clock_driver(clock)
+        tbrst = rstonstart(reset, clock)
+
+        @instance
+        def tbstim():
+            yield reset.negedge
+            inputs.data_valid.next =True
+
+            for i in range(samples * 8):
+                inputs.data_in.next = inputs_rom[i]
+                yield clock.posedge
+
+        @instance
+        def monitor():
+            outputs_count = 0
+            while(outputs_count != samples):
+                yield clock.posedge
+                if outputs.data_valid:
+                    yield delay(1)
+                    out_print(in_out_data.outputs[outputs_count],
+                              outputs)
+                    outputs_count += 1
+
+            raise StopSimulation
+
+        return tdut, tbclk, tbstim, monitor
+
+
+
 
 
 test_dct_1d()
+test_dct_1d_conversion()
