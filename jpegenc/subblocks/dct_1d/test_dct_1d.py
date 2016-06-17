@@ -53,7 +53,7 @@ class InputsAndOutputs(object):
             self.outputs.append(dct_result)
 
     def get_rom_tables(self):
-        a,b = [[] for _ in range(2)]
+        a, b = [[] for _ in range(2)]
         for i in self.inputs:
             for j in i:
                 a.append(j)
@@ -139,6 +139,7 @@ def test_dct_1d_conversion():
     in_out_data.initialize()
 
     inputs_rom, expected_outputs_rom = in_out_data.get_rom_tables()
+    print_sig = output_interface(out_prec)
 
     @myhdl.block
     def bench_dct_1d():
@@ -157,20 +158,52 @@ def test_dct_1d_conversion():
 
         @instance
         def monitor():
+            a = True
+            while(a):
+                yield clock.posedge
+                if outputs.data_valid:
+                    yield delay(1)
+                    print_sig.out0.next = expected_outputs_rom[0]
+                    print_sig.out1.next = expected_outputs_rom[1]
+                    print_sig.out2.next = expected_outputs_rom[2]
+                    print_sig.out3.next = expected_outputs_rom[3]
+                    print_sig.out4.next = expected_outputs_rom[4]
+                    print_sig.out5.next = expected_outputs_rom[5]
+                    print_sig.out6.next = expected_outputs_rom[6]
+                    print_sig.out7.next = expected_outputs_rom[7]
+                    yield delay(1)
+                    print("%d out0 %d"%(print_sig.out0, outputs.out0))
+                    print("%d out1 %d"%(print_sig.out1, outputs.out1))
+                    a = False
+
+            """
             outputs_count = 0
             while(outputs_count != samples):
                 yield clock.posedge
                 if outputs.data_valid:
                     yield delay(1)
-                    out_print(in_out_data.outputs[outputs_count],
-                              outputs)
-                    outputs_count += 1
+                    print_sig.out0.next = expected_outputs_rom[outputs_count*8 + 0]
+                    print_sig.out1.next = expected_outputs_rom[outputs_count*8 + 1]
+                    print_sig.out2.next = expected_outputs_rom[outputs_count*8 + 2]
+                    print_sig.out3.next = expected_outputs_rom[outputs_count*8 + 3]
+                    print_sig.out4.next = expected_outputs_rom[outputs_count*8 + 4]
+                    print_sig.out5.next = expected_outputs_rom[outputs_count*8 + 5]
+                    print_sig.out6.next = expected_outputs_rom[outputs_count*8 + 6]
+                    print_sig.out7.next = expected_outputs_rom[outputs_count*8 + 7]
+                    yield delay(1)
+                    print("%d out0 %d"%(print_sig.out0, outputs.out0))
+                    print("%d out1 %d"%(print_sig.out1, outputs.out1))
 
+                    outputs_count += 1
+            """
             raise StopSimulation
 
-        return tdut, tbclk, tbstim, monitor
+        return tdut, tbclk, tbstim, monitor, tbrst
 
 
+    # verify and convert with GHDL
+    verify.simulator = 'ghdl'
+    assert bench_dct_1d().verify_convert() == 0
 
 
 
