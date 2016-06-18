@@ -101,7 +101,51 @@ def test():
         yield reset_on_start(clock, reset)
 
         yield block_process(
+            clock, red_pixels_1,
+            datastream,
+            rlesymbols,
+            rleconfig,  red
+            )
+
+        print ("=====")
+
+        yield block_process(
+            clock, red_pixels_2,
+            datastream,
+            rlesymbols,
+            rleconfig,  red
+            )
+
+        print ("=====")
+
+        yield block_process(
             clock, blue_pixels_1,
+            datastream,
+            rlesymbols,
+            rleconfig,  red
+            )
+
+        print ("=====")
+        yield block_process(
+            clock, blue_pixels_2,
+            datastream,
+            rlesymbols,
+            rleconfig,  red
+            )
+
+        print ("=====")
+        yield block_process(
+            clock, green_pixels_1,
+            datastream,
+            rlesymbols,
+            rleconfig,  red
+            )
+
+        print ("=====")
+
+
+        yield block_process(
+            clock, green_pixels_2,
             datastream,
             rlesymbols,
             rleconfig,  red
