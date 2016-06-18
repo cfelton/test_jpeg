@@ -1,5 +1,4 @@
 """ core of the run length encoder module """
-
 from myhdl import always_comb, always_seq, block
 from myhdl import intbv, ResetSignal, Signal
 from myhdl.conversion import analyze
@@ -56,7 +55,7 @@ def rle(reset, clock, datastream, rlesymbols, rleconfig):
 
     @always_comb
     def assign():
-        """Assign outputs"""
+        """arssign size amplitude and read address"""
         rlesymbols.size.next = rlesymbols_temp.size
         rlesymbols.amplitude.next = rlesymbols_temp.amplitude
         rleconfig.read_addr.next = read_cnt
@@ -64,33 +63,35 @@ def rle(reset, clock, datastream, rlesymbols, rleconfig):
 
     @always_seq(clock.posedge, reset=reset)
     def mainprocessing():
-        """main processing"""
+        """sequential block to calculate the runlength"""
         rlesymbols_temp.dovalid.next = 0
         rlesymbols_temp.runlength.next = 0
         rlesymbols.runlength.next = rlesymbols_temp.runlength
         rlesymbols.dovalid.next = rlesymbols_temp.dovalid
         divalid.next = read_en
 
-        if datastream.start == 1:
+        # when start asserts divalid asserts
+        if datastream.start:
             read_cnt.next = 0
             read_en.next = 1
             divalid_en.next = 1
 
-        if divalid == 1 and write_cnt == 63:
+        # after processing the last pixel
+        if divalid and write_cnt == 63:
             divalid_en.next = 0
 
-        if read_en == 1:
+        if read_en:
             if read_cnt == 63:
                 read_cnt.next = 0
                 read_en.next = 0
             else:
                 read_cnt.next = read_cnt + 1
 
-        if divalid == 1:
+        if divalid:
             write_cnt.next = write_cnt + 1
 
             if write_cnt == 0:
-
+                # differece encoding for the dc pixel
                 if (rleconfig.color_component == 0) or (
                         rleconfig.color_component == 1):
 
@@ -147,7 +148,7 @@ def rle(reset, clock, datastream, rlesymbols, rleconfig):
                         divalid.next = 0
                         read_cnt.next = read_cnt
 
-        if zrl_processing == 1:
+        if zrl_processing:
             if zero_cnt <= 15:
                 accumulator.next = zrl_data_in
                 rlesymbols_temp.runlength.next = zero_cnt
@@ -164,11 +165,11 @@ def rle(reset, clock, datastream, rlesymbols, rleconfig):
                 divalid.next = 0
                 read_cnt.next = read_cnt
 
-        if datastream.start == 1:
+        if datastream.start:
             zero_cnt.next = 0
             write_cnt.next = 0
 
-        if rleconfig.sof == 1:
+        if rleconfig.sof:
             prev_dc_0.next = 0
             prev_dc_1.next = 0
             prev_dc_2.next = 0

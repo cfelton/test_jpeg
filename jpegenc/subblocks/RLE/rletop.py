@@ -68,8 +68,6 @@ def rletop(reset, clock, indatastream, bufferdatabus, rleconfig):
         bufferdatabus.runlength.next = dfifo.data_out[20:16]
         bufferdatabus.size.next = dfifo.data_out[16:12]
         bufferdatabus.amplitude.next = dfifo.data_out[12:0]
-        
-        # quantiser.buffer_sel.next = buffer_sel_temp_q
 
     # rle core instantiation
     rle_core = rle(reset, clock, datastream_temp, rlesymbols_temp, rleconfig)
@@ -78,7 +76,7 @@ def rletop(reset, clock, indatastream, bufferdatabus, rleconfig):
     def assign2():
         datastream_temp.input_val.next = indatastream.input_val
 
-    #instantiation of rle double buffer
+    # instantiation of rle double buffer
     rle_doublefifo = rledoublefifo(reset, clock, dfifo)
 
     @always_comb
@@ -86,18 +84,15 @@ def rletop(reset, clock, indatastream, bufferdatabus, rleconfig):
         dfifo.data_in.next = concat (
             rlesymbols_temp.runlength, rlesymbols_temp.size, rlesymbols_temp.amplitude)
     
-        # print ("data is %d %d %d" % (rlesymbols_temp.runlength, rlesymbols_temp.size, rlesymbols_temp.amplitude))
         dfifo.write_enable.next = rlesymbols_temp.dovalid
-        # print ("%d wrte is" %rlesymbols_temp.dovalid)
 
     @always_seq(clock.posedge, reset=reset)
     def seq1():
         indatastream.ready.next = 0
-        if indatastream.start == 1:
+        if indatastream.start:
             wr_cnt.next = 0
 
-
-        if rlesymbols_temp.dovalid == 1:
+        if rlesymbols_temp.dovalid:
             if (rlesymbols_temp.runlength == 15) and (rlesymbols_temp.size == 0):
                 wr_cnt.next = wr_cnt + 16
 
