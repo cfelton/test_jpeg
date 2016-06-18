@@ -16,7 +16,7 @@ class DataStream(object):
         self.input_val = Signal(intbv(0)[width:].signed())
 
 class RLESymbols(object):
-    """RLE symbols generatred by RLE Core"""
+    """ RLE symbols generatred by RLE Core """
     def __init__(self, width=WIDTH_RAM_DATA, size=SIZE):
         self.runlength = Signal(intbv(0)[size:])
         self.size = Signal(intbv(0)[size:])
@@ -24,7 +24,7 @@ class RLESymbols(object):
         self.dovalid = Signal(bool(0))
 
 class RLEConfig(object):
-    """RLE configuration Signals are added here"""
+    """ RLE configuration Signals are added here """
     def __init__(self):
         self.color_component = Signal(intbv(0)[3:])
         self.read_addr = Signal(intbv(0)[6:])
@@ -119,6 +119,7 @@ def rle(reset, clock, datastream, rlesymbols, rleconfig):
                 rlesymbols_temp.dovalid.next = 1
 
             else:
+                # we calculate the runlength here
                 if datastream.input_val.signed() == 0:
                     if write_cnt == 63:
                         accumulator.next = 0
@@ -149,6 +150,7 @@ def rle(reset, clock, datastream, rlesymbols, rleconfig):
                         read_cnt.next = read_cnt
 
         if zrl_processing:
+            # if number of zeroes exceeds 15 we stall the input
             if zero_cnt <= 15:
                 accumulator.next = zrl_data_in
                 rlesymbols_temp.runlength.next = zero_cnt
@@ -168,6 +170,7 @@ def rle(reset, clock, datastream, rlesymbols, rleconfig):
         if datastream.start:
             zero_cnt.next = 0
             write_cnt.next = 0
+
 
         if rleconfig.sof:
             prev_dc_0.next = 0
