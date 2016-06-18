@@ -98,7 +98,7 @@ def dct_1d(input_interface, output_interface, clock, reset,
     def coeff_assign():
         if input_interface.data_valid:
             for i in range(8):
-                coeffs[i].next = coeff_rom[i * 8 + inputs_counter]
+                coeffs[i].next = coeff_rom[i * 8 + int(inputs_counter)]
 
     @always_seq(clock.posedge, reset=reset)
     def mul_add():
