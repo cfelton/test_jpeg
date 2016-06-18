@@ -2,8 +2,7 @@
 from myhdl import always_comb, always_seq, block
 from myhdl import intbv, ResetSignal, Signal
 from myhdl.conversion import analyze
-import entropycoder
-
+from jpegenc.subblocks.RLE.RLECore.entropycoder import entropycoder
 
 WIDTH_RAM_ADDRESS = 6
 WIDTH_RAM_DATA = 12
