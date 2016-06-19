@@ -6,25 +6,14 @@ from myhdl import intbv, ResetSignal, Signal, StopSimulation
 from myhdl.conversion import verify
 from jpegenc.subblocks.RLE.RLECore.entropycoder import entropycoder
 from commons import tbclock, reset_on_start, entropy_encode, numofbits
-
-
-@block
-def resetonstart(clock, reset):
-    """reset block used for verification purpose"""
-    @instance
-    def reset_button():
-        reset.next = True
-        yield delay(40)
-        yield clock.posedge
-        reset.next = False
-    return reset_button
+from commons import resetonstart
 
 
 def test_entropycoder():
     """We will test the entropy coder in this block"""
     
     WIDTH = 12
-    SIZE = int(numofbits(WIDTH-1))
+    SIZE = (numofbits(WIDTH-1))
     clock = Signal(bool(0))
     reset = ResetSignal(0, active=True, async=True)
     data_in = Signal(intbv(0)[(WIDTH+1):].signed())
@@ -39,7 +28,7 @@ def test_entropycoder():
         @instance
         def tbstim():
 
-            """ stimulus generates inputs for entropy coder """
+            """stimulus generates inputs for entropy coder"""
 
             yield reset_on_start(clock, reset)
 

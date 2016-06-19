@@ -3,7 +3,7 @@ def numofbits(amplitude):
     while amplitude != 0:
         amplitude = int(amplitude/2)
         count = count + 1
-    return count
+    return int(count)
 
 
 def entropy_encode(amplitude):
