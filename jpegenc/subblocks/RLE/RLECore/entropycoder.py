@@ -5,9 +5,6 @@ from myhdl import always_seq, block
 from myhdl import intbv, ResetSignal, Signal
 from myhdl.conversion import analyze
 
-WIDTH_REG = 12
-SIZE = 4
-
 
 def two2bin(num):
     """ converts negative number to positive """
@@ -15,32 +12,33 @@ def two2bin(num):
     return inum + 1
 
 
-def nbits(num):
+def nbits(num, WIDTH):
     """ returns the number of bits required to store num """
-    i = WIDTH_REG - 1
+    i = WIDTH - 1
     while i >= 0:
         if num[i] == 1:
             return i + 1
         i = i - 1
-    return num[WIDTH_REG]
+    return num[WIDTH]
 
 
 @block
-def entropycoder(clock, reset, input_value, size, amplitude):
+def entropycoder(WIDTH, clock, reset, data_in, size, amplitude):
+
     """ returns the amplitude of input and number of bits
         required to store the input """
 
     @always_seq(clock.posedge, reset=reset)
     def logic():
         """ sequential block that finds amplitude and num of bits"""
-        if input_value[WIDTH_REG] == 0:
-            amplitude.next = input_value
-            size.next = nbits(input_value)
+        if data_in[WIDTH] == 0:
+            amplitude.next = data_in
+            size.next = nbits(data_in, WIDTH)
 
         else:
-            amplitude.next = input_value - 1
-            absval = intbv(0)[(WIDTH_REG):0]
-            absval[:] = two2bin(input_value)
-            size.next = nbits(absval)
+            amplitude.next = data_in - 1
+            absval = intbv(0)[(WIDTH):0]
+            absval[:] = two2bin(data_in)
+            size.next = nbits(absval, WIDTH)
 
     return logic
