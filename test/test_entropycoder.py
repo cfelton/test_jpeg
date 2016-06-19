@@ -3,62 +3,88 @@
 from myhdl import block, delay
 from myhdl import instance
 from myhdl import intbv, ResetSignal, Signal, StopSimulation
+from myhdl.conversion import verify
 from jpegenc.subblocks.RLE.RLECore.entropycoder import entropycoder
-
-# declared constants
-WIDTH = 12
-SIZE = 4
+from commons import tbclock, reset_on_start, entropy_encode, numofbits
 
 
 @block
-def test():
+def resetonstart(clock, reset):
+    """reset block used for verification purpose"""
+    @instance
+    def reset_button():
+        reset.next = True
+        yield delay(40)
+        yield clock.posedge
+        reset.next = False
+    return reset_button
 
-    '''sequential block for testing entropy coder '''
 
+def test_entropycoder():
+    """We will test the entropy coder in this block"""
+    
+    WIDTH = 12
+    SIZE = int(numofbits(WIDTH-1))
     clock = Signal(bool(0))
     reset = ResetSignal(0, active=True, async=True)
     data_in = Signal(intbv(0)[(WIDTH+1):].signed())
     size = Signal(intbv(0)[SIZE:])
     amplitude = Signal(intbv(0)[(WIDTH+1):].signed())
 
-    inst = entropycoder(clock, reset, data_in, size, amplitude)
+    @block
+    def bench_entropycoder():
+        inst = entropycoder(WIDTH, clock, reset, data_in, size, amplitude)
+        inst_clock = tbclock(clock)
 
-    @instance
-    def tbclock():
+        @instance
+        def tbstim():
 
-        ''' instance that generates clock '''
-        clock.next = 0
-        while True:
-            yield delay(10)
-            clock.next = not clock
+            """ stimulus generates inputs for entropy coder """
 
-    @instance
-    def tbsim():
+            yield reset_on_start(clock, reset)
 
-        ''' instance that generates input for entropy coder '''
+            for i in range(-2**(WIDTH-1), 2**(WIDTH-1), 1):
+                data_in.next = i
+                yield clock.posedge
+                yield clock.posedge
+                amplitude_ref, size_ref = entropy_encode(data_in)
+                # comparing with the data present in reference
+                assert size == size_ref
+                assert amplitude == amplitude_ref
 
-        reset.next = True
-        yield delay(20)
-        reset.next = False
-        yield clock.posedge
+            raise StopSimulation
 
-        for i in range(-2045, 2045, 1):
-            data_in.next = i
-            yield clock.posedge
-            yield clock.posedge
+        return tbstim, inst, inst_clock
 
-        raise StopSimulation
-
-    return tbsim, tbclock, inst
-
-
-def bench():
-
-    ''' testbench begins here '''
-    inst1 = test()
+    inst1 = bench_entropycoder()
     inst1.config_sim(trace=False)
     inst1.run_sim()
 
 
-if __name__ == '__main__':
-    bench()
+def test_block_conversion():
+    """Test bench used for conversion purpose"""
+
+    WIDTH = 12
+    SIZE = int(numofbits(WIDTH-1))
+    clock = Signal(bool(0))
+    reset = ResetSignal(0, active=True, async=True)
+    data_in = Signal(intbv(0)[(WIDTH+1):].signed())
+    size = Signal(intbv(0)[SIZE:])
+    amplitude = Signal(intbv(0)[(WIDTH+1):].signed())
+
+    @block
+    def bench_entropycoder():
+        inst = entropycoder(WIDTH, clock, reset, data_in, size, amplitude)
+        inst_clock = tbclock(clock)
+        inst_reset = resetonstart(clock, reset)
+
+        @instance
+        def tbstim():
+            yield clock.posedge
+            print ("Conversion done!!")
+            raise StopSimulation
+
+        return tbstim, inst, inst_clock, inst_reset
+
+    verify.simulator = 'iverilog'
+    assert bench_entropycoder().verify_convert() == 0
