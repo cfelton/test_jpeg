@@ -179,12 +179,12 @@ def test_dct_1d_conversion():
                     print("%d %d %d %d %d %d %d %d" % (print_sig.out0, print_sig.out1,
                                                        print_sig.out2, print_sig.out3,
                                                        print_sig.out4, print_sig.out5,
-                                                       print_sig.out6, print_sig.out6))
+                                                       print_sig.out6, print_sig.out7))
                     print("Actual Outputs")
                     print("%d %d %d %d %d %d %d %d" % (outputs.out0, outputs.out1,
-                                                       outputs.out2, outputs.out3,
-                                                       outputs.out4, outputs.out5,
-                                                       outputs.out6, outputs.out7))
+                                                      outputs.out2, outputs.out3,
+                                                      outputs.out4, outputs.out5,
+                                                      outputs.out6, outputs.out6))
                     print("------------------------")
                     outputs_count += 1
 

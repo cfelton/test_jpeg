@@ -9,31 +9,41 @@ from myhdl.conversion import analyze
 from interfaces import input_interface, output_interface
 
 
-def dct_int_coeffs(precision_factor):
-    # create b,c,..,g with cos(pk/16) for less code, and a=sqrt(2)/2 or
-    # a=cos(p/4)
-    const = sqrt(2.0/8)
-    a = const * cos(pi/4)
-    b = const * cos(pi/16)
-    c = const * cos(pi/8)
-    d = const * cos(3*pi/16)
-    e = const * cos(5*pi/16)
-    f = const * cos(3*pi/8)
-    g = const * cos(7*pi/16)
+class dct_1d_transformation(object):
 
-    coeff_matrix = [[a, a, a, a, a, a, a, a],
-                    [b, d, e, g, -g, -e, -d, -b],
-                    [c, f, -f, -c, -c, -f, f, c],
-                    [d, -g, -b, -e, e, b, g, -d],
-                    [a, -a, -a, a, a, -a, -a, a],
-                    [e, -b, g, d, -d, -g, b, -e],
-                    [f, -c, c, -f, -f, c, -c, f],
-                    [g, -e, d, -b, b, -d, e, -g]]
-    coeff_matrix = np.asarray(coeff_matrix)
-    coeff_matrix = coeff_matrix * (2**precision_factor)
-    coeff_matrix = np.rint(coeff_matrix)
-    coeff_matrix = coeff_matrix.astype(int)
-    return coeff_matrix
+    def __init__(self):
+        const = sqrt(2.0/8)
+        a = const * cos(pi/4)
+        b = const * cos(pi/16)
+        c = const * cos(pi/8)
+        d = const * cos(3*pi/16)
+        e = const * cos(5*pi/16)
+        f = const * cos(3*pi/8)
+        g = const * cos(7*pi/16)
+
+        self.coeff_matrix = [[a, a, a, a, a, a, a, a],
+                             [b, d, e, g, -g, -e, -d, -b],
+                             [c, f, -f, -c, -c, -f, f, c],
+                             [d, -g, -b, -e, e, b, g, -d],
+                             [a, -a, -a, a, a, -a, -a, a],
+                             [e, -b, g, d, -d, -g, b, -e],
+                             [f, -c, c, -f, -f, c, -c, f],
+                             [g, -e, d, -b, b, -d, e, -g]]
+
+    def dct_1d_transformation(self, vector):
+        vector_t = np.transpose(vector)
+        dct_result = np.dot(self.coeff_matrix, vector_t)
+        dct_result = np.rint(dct_result)
+        dct_result = dct_result.astype(int)
+        return dct_result
+
+
+    def dct_int_coeffs(self, precision_factor):
+        coeff_matrix = np.asarray(self.coeff_matrix)
+        coeff_matrix = coeff_matrix * (2**precision_factor)
+        coeff_matrix = np.rint(coeff_matrix)
+        coeff_matrix = coeff_matrix.astype(int)
+        return coeff_matrix
 
 
 def tuple_construct(matrix):
@@ -45,11 +55,12 @@ def tuple_construct(matrix):
 
 
 @myhdl.block
-def dct_1d(input_interface, output_interface, clock, reset, num_fractional_bits=14):
+def dct_1d(input_interface, output_interface, clock, reset,
+           num_fractional_bits=14, out_precision=10):
 
     fract_bits = num_fractional_bits
     nbits = input_interface.nbits
-    output_fract = output_interface.out_precision
+    output_fract = out_precision
     increase_range = 1
 
     mult_max_range = 2**(nbits + fract_bits + 1 + increase_range)
@@ -75,7 +86,9 @@ def dct_1d(input_interface, output_interface, clock, reset, num_fractional_bits=
     data_in_reg = Signal(intbv(0, min=-2**nbits,
                                max=2**nbits))
     # coefficient rom
-    coeff_rom = tuple_construct(dct_int_coeffs(fract_bits))
+    dct_1d_obj = dct_1d_transformation()
+    coeff_matrix = dct_1d_obj.dct_int_coeffs(fract_bits)
+    coeff_rom = tuple_construct(coeff_matrix)
 
     @always_seq(clock.posedge, reset=reset)
     def input_reg():
@@ -85,7 +98,7 @@ def dct_1d(input_interface, output_interface, clock, reset, num_fractional_bits=
     def coeff_assign():
         if input_interface.data_valid:
             for i in range(8):
-                coeffs[i].next = coeff_rom[i * 8 + inputs_counter]
+                coeffs[i].next = coeff_rom[i * 8 + int(inputs_counter)]
 
     @always_seq(clock.posedge, reset=reset)
     def mul_add():
@@ -133,8 +146,7 @@ def dct_1d(input_interface, output_interface, clock, reset, num_fractional_bits=
             if inputs_counter == 7:
                 inputs_counter.next = 0
             else:
-                inputs_counter.next = inputs_counter +1
-
+                inputs_counter.next = inputs_counter + 1
 
     @always_seq(clock.posedge, reset=reset)
     def outputs():
@@ -176,11 +188,14 @@ def dct_1d(input_interface, output_interface, clock, reset, num_fractional_bits=
         else:
             output_interface.data_valid.next = False
 
-    return input_reg, outputs, counters, mul_add, coeff_assign, mux_after_adder_reg
+    return (input_reg, outputs, counters, mul_add, coeff_assign,
+            mux_after_adder_reg)
 
 
 def convert():
 
+    num_fractional_bits = 14
+    out_precision = 10
     inputs = input_interface()
     outputs = output_interface()
 
@@ -188,24 +203,8 @@ def convert():
     reset = ResetSignal(1, active=True, async=True)
 
     analyze.simulator = 'ghdl'
-    assert dct_1d(inputs, outputs, clock, reset, num_fractional_bits=14).analyze_convert() == 0
+    assert dct_1d(inputs, outputs, clock, reset,
+                  num_fractional_bits, out_precision).analyze_convert() == 0
 
 if __name__ == '__main__':
     convert()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
