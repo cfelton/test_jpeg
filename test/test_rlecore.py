@@ -108,7 +108,7 @@ def test_rle_conversion():
     constants = Constants(6, 12, 63, 4)
     pixel = Pixel()
     datastream = DataStream(constants.width_data)
-    rlesymbols = RLESymbols(constants.width_data, constants.size)
+    rlesymbols = RLESymbols(constants.width_data, constants.size, constants.rlength)
     rleconfig = RLEConfig(numofbits(constants.max_write_cnt))
 
     @block
