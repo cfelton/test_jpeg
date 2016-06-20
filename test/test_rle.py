@@ -3,182 +3,154 @@ from myhdl.conversion import *
 from jpegenc.subblocks.RLE.rletop import *
 from testcases import *
 from jpegenc.subblocks.RLE.RLECore.rlecore import DataStream, rle
-from jpegenc.subblocks.RLE.RLECore.rlecore import RLEConfig
+from jpegenc.subblocks.RLE.RLECore.rlecore import RLEConfig, Pixel
 from jpegenc.subblocks.RLE.RleDoubleFifo.rledoublebuffer import *
-# from test_rlecore import *
-
-red = 1
-green = 2
-blue = 3
-
-WIDTH_RAM_ADDRESS = 6
-WIDTH_RAM_DATA = 12
+from commons import tbclock, reset_on_start, resetonstart, Constants, BufferConstants
+from commons import numofbits, start_of_block, block_process, write_block, read_block
 
 
-def reset_on_start(clock, reset):
-    reset.next = True
-    yield delay(20)
-    yield clock.posedge
-    reset.next = False
+def test_rle():
 
-def start_of_block(clock, start):
-    start.next = True
-    yield clock.posedge
-    start.next = False
-    yield clock.posedge
+    @block
+    def bench_rle():
 
-def write_block(clock, block, datastream, rlesymbols, rleconfig, color):
-    # select color component
-    rleconfig.color_component.next = color
-    yield start_of_block(clock, datastream.start)
+        constants = Constants(6, 12, 63, 4)
+        clock = Signal(bool(0))
+        reset = ResetSignal(0, active=1, async=True)
 
-    datastream.input_val.next = block[rleconfig.read_addr]
-    yield clock.posedge
-    while rleconfig.read_addr != 63:
-        datastream.input_val.next = block[rleconfig.read_addr]
-        yield clock.posedge
+        pixel = Pixel()
 
-    datastream.input_val.next = block[rleconfig.read_addr]
-    yield clock.posedge
-    yield clock.posedge
-    yield clock.posedge
-    yield clock.posedge
-    yield clock.posedge
+        indatastream = InDataStream(constants.width_data)
+        bufferdatabus = BufferDataBus(constants.width_data, constants.size, constants.rlength)
+        rleconfig = RLEConfig(numofbits(constants.max_write_cnt))
+    
+        width_dbuf = constants.width_data + constants.size + constants.rlength
+        dfifo_const = BufferConstants(width_dbuf, constants.max_write_cnt + 1)
 
+        inst = rletop(dfifo_const, constants, reset, clock, indatastream, bufferdatabus, rleconfig)
+        inst_clock = tbclock(clock)
 
-def read_block(select, bufferdatabus, clock):
-    bufferdatabus.buffer_sel.next = select
-    yield clock.posedge
-    bufferdatabus.read_enable.next = True
-    yield clock.posedge
-    yield clock.posedge
-    while bufferdatabus.fifo_empty != 1:
-        print ("runlength %d size %d amplitude %d" % (
-            bufferdatabus.runlength, bufferdatabus.size, bufferdatabus.amplitude))
-        yield clock.posedge
+        @instance
+        def tbstim():
 
-    print ("runlength %d size %d amplitude %d" % (
-        bufferdatabus.runlength, bufferdatabus.size, bufferdatabus.amplitude))
+            yield reset_on_start(clock, reset)
 
-    bufferdatabus.read_enable.next = False
-    yield clock.posedge
+            bufferdatabus.buffer_sel.next = False
+            yield clock.posedge
+            yield write_block(
+                clock, red_pixels_1,
+                indatastream,
+                bufferdatabus,
+                rleconfig, pixel.Y1
+                )
+            yield clock.posedge
+            print ("=====")
 
-@block
-def test():
+            yield read_block(True, bufferdatabus, clock)
 
-    clock = Signal(bool(0))
-    reset = ResetSignal(0, active=1, async=True)
+            yield write_block(
+                clock, red_pixels_2,
+                indatastream,
+                bufferdatabus,
+                rleconfig, pixel.Y2
+                )
+            yield clock.posedge
 
-    indatastream = InDataStream()
-    bufferdatabus = BufferDataBus()
-    rleconfig = RLEConfig()
+            print ("=====")
 
-    jpgv1 = rletop(reset, clock, indatastream, bufferdatabus, rleconfig)
-   
+            yield read_block(False, bufferdatabus, clock)
 
-    @instance
-    def tbclock():
-        clock.next=0
-        while True:
-            yield delay(10)
-            clock.next = not clock
+            yield write_block(
+                clock, green_pixels_1,
+                indatastream,
+                bufferdatabus,
+                rleconfig, pixel.Cb
+                )
+            yield clock.posedge
+            print ("=======")
 
 
-    @instance
-    def tbsim():
-        """ reset signal """
-        yield reset_on_start(clock, reset)
+            yield read_block(True, bufferdatabus, clock)
 
-        bufferdatabus.buffer_sel.next = False
-        yield clock.posedge
-        yield write_block(
-            clock, red_pixels_1,
-            indatastream,
-            bufferdatabus,
-            rleconfig,  red
-            )
-        yield clock.posedge
-        print ("=====")
-
-        yield read_block(True, bufferdatabus, clock)
-
-        yield write_block(
-            clock, red_pixels_2,
-            indatastream,
-            bufferdatabus,
-            rleconfig,  red
-            )
-        yield clock.posedge
-
-        print ("=====")
-
-        yield read_block(False, bufferdatabus, clock)
-
-        yield write_block(
-            clock, green_pixels_1,
-            indatastream,
-            bufferdatabus,
-            rleconfig, green
-            )
-        yield clock.posedge
-        print ("=======")
+            yield write_block(
+                clock, green_pixels_2,
+                indatastream,
+                bufferdatabus,
+                rleconfig, pixel.Cb
+                )
+            yield clock.posedge
+            print ("=======")
 
 
-        yield read_block(True, bufferdatabus, clock)
+            yield read_block(False, bufferdatabus, clock)
 
-        yield write_block(
-            clock, green_pixels_2,
-            indatastream,
-            bufferdatabus,
-            rleconfig, green
-            )
-        yield clock.posedge
-        print ("=======")
-
-
-        yield read_block(False, bufferdatabus, clock)
-
-        yield write_block(
-            clock, blue_pixels_1,
-            indatastream,
-            bufferdatabus,
-            rleconfig, blue
-            )
-        yield clock.posedge
-        print ("=======")
+            yield write_block(
+                clock, blue_pixels_1,
+                indatastream,
+                bufferdatabus,
+                rleconfig, pixel.Cr
+                )
+            yield clock.posedge
+            print ("=======")
 
 
-        yield read_block(True, bufferdatabus, clock)
+            yield read_block(True, bufferdatabus, clock)
 
-        yield write_block(
-            clock,  blue_pixels_2,
-            indatastream,
-            bufferdatabus,
-            rleconfig, blue
-            )
-        yield clock.posedge
-        print ("=======")
+            yield write_block(
+                clock,  blue_pixels_2,
+                indatastream,
+                bufferdatabus,
+                rleconfig, pixel.Cr
+                )
+            yield clock.posedge
+            print ("=======")
 
-        yield read_block(False, bufferdatabus, clock)
+            yield read_block(False, bufferdatabus, clock)
 
-        print ("===============")
+            print ("===============")
 
-        yield clock.posedge
-        rleconfig.sof.next = True
-        yield clock.posedge
+            yield clock.posedge
+            rleconfig.sof.next = True
+            yield clock.posedge
 
-        raise StopSimulation        
-    return  tbsim, tbclock, jpgv1
+            raise StopSimulation        
+
+        return  tbstim, inst_clock, inst
+
+    instance_rle = bench_rle()
+    instance_rle.config_sim(trace = False)
+    instance_rle.run_sim()
+
+def test_rle_conversion():
+
+    @block
+    def bench_rle_conversion():
+
+        constants = Constants(6, 12, 63, 4)
+        clock = Signal(bool(0))
+        reset = ResetSignal(0, active=1, async=True)
+
+        pixel = Pixel()
+
+        indatastream = InDataStream(constants.width_data)
+        bufferdatabus = BufferDataBus(constants.width_data, constants.size, constants.rlength)
+        rleconfig = RLEConfig(numofbits(constants.max_write_cnt))
+    
+        width_dbuf = constants.width_data + constants.size + constants.rlength
+        dfifo_const = BufferConstants(width_dbuf, constants.max_write_cnt + 1)
+
+        inst = rletop(dfifo_const, constants, reset, clock, indatastream, bufferdatabus, rleconfig)
+        inst_clock = tbclock(clock)
+        inst_reset = resetonstart(clock, reset)
 
 
+        @instance
+        def tbstim():
+            yield clock.posedge
+            print ("Conversion done!!")
+            raise StopSimulation
 
-def conversion_bench():
+        return tbstim, inst, inst_clock, inst_reset
 
-    instance = test()
-    instance.config_sim(trace = True)
-    instance.run_sim()
-    #verify.simulator='iverilog'
-    #assert testbench2().verify_convert() == 0
-
-if __name__ == '__main__':
-    conversion_bench() 
+    verify.simulator = 'iverilog'
+    assert bench_rle_conversion().verify_convert() == 0

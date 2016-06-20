@@ -5,19 +5,16 @@ from myhdl import ResetSignal, Signal, delay, instance
 #   from myhdl.conversion import verify
 from jpegenc.subblocks.RLE.RleDoubleFifo.rledoublebuffer import DoubleFifoBus
 from jpegenc.subblocks.RLE.RleDoubleFifo.rledoublebuffer import rledoublefifo
-
-DEPTH = 64
-WIDTH = 20
-
-
+from commons import BufferConstants
+        
 @block
 def test():
     """ test bench """
-
+    buffer_constants = BufferConstants(20, 64)
     clock = Signal(bool(0))
     reset = ResetSignal(0, active=1, async=True)
-    dfifo_bus = DoubleFifoBus()
-    dut = rledoublefifo(reset, clock, dfifo_bus)
+    dfifo_bus = DoubleFifoBus(buffer_constants.width)
+    dut = rledoublefifo(buffer_constants, reset, clock, dfifo_bus)
 
     @instance
     def tbclock():
