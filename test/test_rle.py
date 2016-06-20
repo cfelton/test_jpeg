@@ -10,8 +10,8 @@ from jpegenc.subblocks.RLE.rletop import InDataStream, BufferDataBus
 from jpegenc.subblocks.RLE.rletop import rletop
 from jpegenc.subblocks.RLE.RLECore.rlecore import RLEConfig, Pixel
 
-from commons import tbclock, reset_on_start, resetonstart, Constants
-from commons import numofbits, start_of_block, BufferConstants
+from common import tbclock, reset_on_start, resetonstart, Constants
+from common import numofbits, start_of_block, BufferConstants
 
 
 def write_block(clock, block, datastream, rleconfig, color):
@@ -143,7 +143,7 @@ def test_rle():
                 rleconfig, pixel.Cb
                 )
             yield clock.posedge
-            print ("=======")
+            print ("=============================")
 
             # read Cb component from 1st Buffer
             yield read_block(True, bufferdatabus, clock)
@@ -155,7 +155,7 @@ def test_rle():
                 rleconfig, pixel.Cb
                 )
             yield clock.posedge
-            print ("=======")
+            print ("==============================")
 
             # read Cb component from 2nd Buffer
             yield read_block(False, bufferdatabus, clock)
@@ -167,7 +167,7 @@ def test_rle():
                 rleconfig, pixel.Cr
                 )
             yield clock.posedge
-            print ("=======")
+            print ("==============================")
 
             # read Cr component from 1st Buffer
             yield read_block(True, bufferdatabus, clock)
@@ -179,12 +179,12 @@ def test_rle():
                 rleconfig, pixel.Cr
                 )
             yield clock.posedge
-            print ("=======")
+            print ("==============================")
 
             # read Cr component from 1st Buffer
             yield read_block(False, bufferdatabus, clock)
 
-            print ("===============")
+            print ("==============================")
 
             # end of stream when sof asserts
             yield clock.posedge
@@ -237,3 +237,4 @@ def test_rle_conversion():
 
     verify.simulator = 'iverilog'
     assert bench_rle_conversion().verify_convert() == 0
+test_rle()

@@ -9,8 +9,8 @@ from jpegenc.subblocks.RLE.RLECore.rlecore import DataStream, rle, Pixel
 from jpegenc.subblocks.RLE.RLECore.rlecore import RLESymbols, RLEConfig
 from testcases import *
 
-from commons import tbclock, reset_on_start, resetonstart, Constants
-from commons import numofbits, start_of_block
+from common import tbclock, reset_on_start, resetonstart, Constants
+from common import numofbits, start_of_block
 
 
 def block_process(
@@ -220,3 +220,4 @@ def test_rle_conversion():
 
     verify.simulator = 'iverilog'
     assert bench_rle_core().verify_convert() == 0
+test_rle_core()

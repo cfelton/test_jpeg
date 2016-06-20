@@ -1,4 +1,4 @@
-"""Test file for RLE Double Buffer"""
+"""Test file for RLE Double Buffer to check its conversion and funtioning"""
 
 from myhdl import block, StopSimulation
 from myhdl import ResetSignal, Signal, instance
@@ -7,8 +7,8 @@ from myhdl.conversion import verify
 from jpegenc.subblocks.RLE.RleDoubleFifo.rledoublebuffer import DoubleFifoBus
 from jpegenc.subblocks.RLE.RleDoubleFifo.rledoublebuffer import rledoublefifo
 
-from commons import BufferConstants
-from commons import tbclock, reset_on_start, resetonstart
+from common import BufferConstants
+from common import tbclock, reset_on_start, resetonstart
 
 
 def test_doublebuffer():
