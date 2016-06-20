@@ -66,9 +66,10 @@ pixel = Pixel()
 
 @block
 def rle(constants, reset, clock, datastream, rlesymbols, rleconfig):
-    """
-    This is the heart of the Run Length Encoder
-    """
+    """This is the heart of the Run Length Encoder"""
+    assert isinstance(datastream, DataStream)
+    assert isinstance(rlesymbols, RLESymbols)
+    assert isinstance(rleconfig, RLEConfig)
 
     # these signals processes data temporarily
     rlesymbols_temp = RLESymbols(
