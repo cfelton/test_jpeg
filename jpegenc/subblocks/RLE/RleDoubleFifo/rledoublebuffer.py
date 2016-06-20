@@ -10,8 +10,6 @@ from rhea.cores.fifo.fifo_sync import fifo_sync
 from rhea.system import FIFOBus
 from myhdl.conversion import analyze
 
-DEPTH = 64
-WIDTH = 20
 
 class DoubleFifoBus(object):
     """
@@ -22,7 +20,7 @@ class DoubleFifoBus(object):
         fifo_empty     : asserts if fifo is emtpy
         data_out       : data at the output port of fifo
     """
-    def __init__(self, width=WIDTH):
+    def __init__(self, width):
         self.data_in = Signal(intbv(0)[width:])
         self.write_enable = Signal(bool(0))
         self.buffer_sel = Signal(bool(0))
@@ -32,13 +30,13 @@ class DoubleFifoBus(object):
 
 
 @block
-def rledoublefifo(reset, clock, dfifo_bus):
+def rledoublefifo(buffer_constants, reset, clock, dfifo_bus):
     """double fifo core function"""
 
-    fifo_data_in = Signal(intbv(0)[WIDTH:])
+    fifo_data_in = Signal(intbv(0)[buffer_constants.width:])
 
-    fbus1 = FIFOBus(width=WIDTH, size=DEPTH)
-    fbus2 = FIFOBus(width=WIDTH, size=DEPTH)
+    fbus1 = FIFOBus(width=buffer_constants.width, size=buffer_constants.depth)
+    fbus2 = FIFOBus(width=buffer_constants.width, size=buffer_constants.depth)
 
     fifo_sync1 = fifo_sync(clock, reset, fbus1)
     fifo_sync2 = fifo_sync(clock, reset, fbus2)
@@ -80,19 +78,3 @@ def rledoublefifo(reset, clock, dfifo_bus):
 
     return (
         fifo_sync1, fifo_sync2, assign, mux2_logic, logic)
-
-
-# def convert():
-  #  """conversion into verilog"""
-   # clock = Signal(bool(0))
-   # reset = ResetSignal(0, active=1, async=True)
-   # dfifo_bus = DoubleFifoBus()
-   # inst = rledoublefifo(reset, clock, dfifo_bus)
-   # inst.convert = 'verilog'
-
-    # analyze.simulator = 'iverilog'
-    # assert rledoublefifo(reset, clock, dfifo_bus).analyze_convert() == 0
-
-
-# if __name__ == '__main__':
-  #  convert()

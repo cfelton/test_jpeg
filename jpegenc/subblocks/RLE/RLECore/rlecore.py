@@ -4,9 +4,6 @@ from myhdl import intbv, ResetSignal, Signal
 from myhdl.conversion import analyze
 from jpegenc.subblocks.RLE.RLECore.entropycoder import entropycoder
 
-# WIDTH_RAM_ADDRESS = 6
-# constants.width_data = 12
-# SIZE = 4
 
 class Pixel(object):
     def __init__(self):
@@ -23,8 +20,8 @@ class DataStream(object):
 
 class RLESymbols(object):
     """ RLE symbols generatred by RLE Core """
-    def __init__(self, width, size):
-        self.runlength = Signal(intbv(0)[size:])
+    def __init__(self, width, size, rlength):
+        self.runlength = Signal(intbv(0)[rlength:])
         self.size = Signal(intbv(0)[size:])
         self.amplitude = Signal(intbv(0)[width:].signed())
         self.dovalid = Signal(bool(0))
@@ -47,9 +44,10 @@ def rle(constants, reset, clock, datastream, rlesymbols, rleconfig):
     """ Input and start Signal send using datastream
         and rle symbols are captured
     """
-    rlesymbols_temp = RLESymbols(constants.width_data, constants.size)
+    rlesymbols_temp = RLESymbols(
+        constants.width_data, constants.size, constants.rlength)
 
-    limit = int((2**constants.size) - 1)
+    limit = int((2**constants.rlength) - 1)
 
     prev_dc_0, prev_dc_1, prev_dc_2, zrl_data_in = [Signal(intbv(0)[
         (constants.width_data):].signed()) for _ in range(4)]
@@ -65,7 +63,7 @@ def rle(constants, reset, clock, datastream, rlesymbols, rleconfig):
 
     @always_comb
     def assign():
-        """arssign size amplitude and read address"""
+        """assign size amplitude and read address"""
         rlesymbols.size.next = rlesymbols_temp.size
         rlesymbols.amplitude.next = rlesymbols_temp.amplitude
         rleconfig.read_addr.next = read_cnt

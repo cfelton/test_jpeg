@@ -2,9 +2,12 @@ from myhdl import always_seq, block
 from myhdl import intbv, ResetSignal, Signal
 from myhdl import *
 from myhdl.conversion import analyze
+
+
 from jpegenc.subblocks.RLE.RLECore.rlecore import DataStream, rle
 from jpegenc.subblocks.RLE.RLECore.rlecore import RLESymbols, RLEConfig
 from jpegenc.subblocks.RLE.RleDoubleFifo.rledoublebuffer import *
+
 WIDTH_RAM_ADDRESS = 6
 WIDTH_RAM_DATA = 12
 SIZE = 4
@@ -18,8 +21,8 @@ class  InDataStream(DataStream):
            processing data
     input_val: input to the rle module
     """
-    def __init__(self):
-        super(InDataStream, self).__init__()
+    def __init__(self, width):
+        super(InDataStream, self).__init__(width)
         self.ready = Signal(bool(0))
 
 
@@ -35,22 +38,28 @@ class BufferDataBus(RLESymbols):
     read_enable: enables
     fifo_empty: asserts if any of the two fifos are empty
     """
-    def __init__(self):
-        super(BufferDataBus, self).__init__()
+    def __init__(self, width, size, rlength):
+        super(BufferDataBus, self).__init__(width, size, rlength)
         self.buffer_sel = Signal(bool(0))
         self.read_enable = Signal(bool(0))
         self.fifo_empty = Signal(bool(0))
 
 
 @block
-def rletop(reset, clock, indatastream, bufferdatabus, rleconfig):
+def rletop(dfifo_const, constants, reset, clock, indatastream, bufferdatabus, rleconfig):
 
     # signals used for RLE Core
 
-    rlesymbols_temp = RLESymbols()
-    datastream_temp = DataStream()
-    dfifo = DoubleFifoBus()
-    wr_cnt = Signal(intbv(0)[7:])
+    rlesymbols_temp = RLESymbols(constants.width_data, constants.size, constants.rlength)
+    datastream_temp = DataStream(constants.width_data)
+
+    limit = int((2**constants.rlength) - 1)
+
+    width_dbuf = constants.width_data + constants.size + constants.rlength
+
+    dfifo = DoubleFifoBus(width_dbuf)
+
+    wr_cnt = Signal(intbv(0)[(constants.max_write_cnt + 1):])
 
 
     @always_comb
@@ -65,19 +74,21 @@ def rletop(reset, clock, indatastream, bufferdatabus, rleconfig):
     @always_comb
     def assign1():
         """ output assignments """
-        bufferdatabus.runlength.next = dfifo.data_out[20:16]
-        bufferdatabus.size.next = dfifo.data_out[16:12]
-        bufferdatabus.amplitude.next = dfifo.data_out[12:0]
+        bufferdatabus.runlength.next = dfifo.data_out[(
+            constants.width_data+constants.size+constants.rlength):(constants.width_data+constants.size)]
+        
+        bufferdatabus.size.next = dfifo.data_out[(constants.width_data+constants.size):constants.width_data]
+        bufferdatabus.amplitude.next = dfifo.data_out[constants.width_data:0]
 
     # rle core instantiation
-    rle_core = rle(reset, clock, datastream_temp, rlesymbols_temp, rleconfig)
+    rle_core = rle(constants,reset, clock, datastream_temp, rlesymbols_temp, rleconfig)
 
     @always_comb
     def assign2():
         datastream_temp.input_val.next = indatastream.input_val
 
     # instantiation of rle double buffer
-    rle_doublefifo = rledoublefifo(reset, clock, dfifo)
+    rle_doublefifo = rledoublefifo(dfifo_const, reset, clock, dfifo)
 
     @always_comb
     def assign3():
@@ -88,13 +99,13 @@ def rletop(reset, clock, indatastream, bufferdatabus, rleconfig):
 
     @always_seq(clock.posedge, reset=reset)
     def seq1():
-        indatastream.ready.next = 0
+        indatastream.ready.next = False
         if indatastream.start:
             wr_cnt.next = 0
 
         if rlesymbols_temp.dovalid:
-            if (rlesymbols_temp.runlength == 15) and (rlesymbols_temp.size == 0):
-                wr_cnt.next = wr_cnt + 16
+            if (rlesymbols_temp.runlength == limit) and (rlesymbols_temp.size == 0):
+                wr_cnt.next = wr_cnt + limit + 1
 
             else:
                 wr_cnt.next = wr_cnt + 1 + rlesymbols_temp.runlength
@@ -102,8 +113,8 @@ def rletop(reset, clock, indatastream, bufferdatabus, rleconfig):
         if dfifo.data_in == 0 and wr_cnt != 0:
             indatastream.ready.next = 1
         else:
-            if (wr_cnt + rlesymbols_temp.runlength == 63):
-                indatastream.ready.next = 1
+            if (wr_cnt + rlesymbols_temp.runlength == constants.max_write_cnt):
+                indatastream.ready.next = True
 
 
     @always_comb
@@ -111,23 +122,3 @@ def rletop(reset, clock, indatastream, bufferdatabus, rleconfig):
         bufferdatabus.dovalid.next = bufferdatabus.read_enable
 
     return assign0, assign1, rle_core, assign2, rle_doublefifo, assign3, seq1, assign4
-
-
-# def convert():
-
- #   clock = Signal(bool(0))
- #   reset = ResetSignal(0, active=1, async=True)
-
-
-  #  indatastream = InDataStream()
-   # bufferdatabus = BufferDataBus()
-  #  rleconfig = RLEConfig()
-
-   # inst = rletop(reset, clock, indatastream, bufferdatabus, rleconfig)
-   # inst.convert = 'verilog'
-
-   # analyze.simulator = 'iverilog'
-   # assert rletop(reset, clock, indatastream, bufferdatabus, rleconfig).analyze_convert() == 0
-
-#if __name__ == '__main__':
- #   convert()
