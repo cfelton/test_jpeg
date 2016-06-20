@@ -4,8 +4,8 @@ from myhdl import block, instance
 from myhdl import intbv, ResetSignal, Signal, StopSimulation
 from myhdl.conversion import verify
 from jpegenc.subblocks.RLE.RLECore.entropycoder import entropycoder
-from commons import tbclock, reset_on_start, entropy_encode, numofbits
-from commons import resetonstart
+from common import tbclock, reset_on_start, entropy_encode, numofbits
+from common import resetonstart
 
 
 def test_entropycoder():
