@@ -105,7 +105,7 @@ def test_rle_conversion():
     clock = Signal(bool(0))
     reset = ResetSignal(0, active=1, async=True)
 
-    constants = Constants(6, 12, 63)
+    constants = Constants(6, 12, 63, 4)
     pixel = Pixel()
     datastream = DataStream(constants.width_data)
     rlesymbols = RLESymbols(constants.width_data, constants.size)
