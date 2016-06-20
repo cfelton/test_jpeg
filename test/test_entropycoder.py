@@ -36,7 +36,7 @@ def test_entropycoder():
                 data_in.next = i
                 yield clock.posedge
                 yield clock.posedge
-                amplitude_ref, size_ref = entropy_encode(data_in)
+                amplitude_ref, size_ref = entropy_encode(int(data_in))
                 # comparing with the data present in reference
                 assert size == size_ref
                 assert amplitude == amplitude_ref
