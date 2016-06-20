@@ -104,7 +104,7 @@ def test_rle_core():
         return tbstim, inst_clock, inst
 
     instance_rle = bench_rle_core()
-    instance_rle.config_sim(trace=True)
+    instance_rle.config_sim(trace=False)
     instance_rle.run_sim()
 
 def test_rle_conversion():
