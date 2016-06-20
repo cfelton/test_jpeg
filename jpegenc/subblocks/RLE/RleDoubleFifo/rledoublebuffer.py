@@ -1,14 +1,10 @@
-'''
-The above module is a double buffer
-to store runlength encoded outputs
-'''
+"""The above module is a double buffer to store runlength encoded outputs"""
 
 from myhdl import always_comb, always_seq, block
-from myhdl import intbv, ResetSignal, Signal
-from rhea.cores.fifo.fifo_sync import fifo_sync
+from myhdl import intbv, Signal
 
+from rhea.cores.fifo.fifo_sync import fifo_sync
 from rhea.system import FIFOBus
-from myhdl.conversion import analyze
 
 
 class DoubleFifoBus(object):
@@ -44,12 +40,8 @@ def rledoublefifo(buffer_constants, reset, clock, dfifo_bus):
     @always_comb
     def assign():
         """write into fifo bus"""
-#        print ("%d" % fifo_data_in)
         fbus1.write_data.next = fifo_data_in
         fbus2.write_data.next = fifo_data_in
-        #print ("%d data is " % fifo_data_in)
-
-
 
     @always_seq(clock.posedge, reset=reset)
     def mux2_logic():
