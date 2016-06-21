@@ -179,3 +179,4 @@ def test_doublebuffer_conversion():
 
     verify.simulator = 'iverilog'
     assert bench_doublebuffer_conversion().verify_convert() == 0
+test_doublebuffer()

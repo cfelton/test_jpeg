@@ -83,3 +83,4 @@ def test_block_conversion():
 
     verify.simulator = 'iverilog'
     assert bench_entropycoder().verify_convert() == 0
+test_entropycoder()

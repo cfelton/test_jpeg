@@ -52,7 +52,6 @@ def read_block(select, bufferdatabus, clock):
     # enable read mode
     bufferdatabus.read_enable.next = True
     yield clock.posedge
-    yield clock.posedge
 
     # pop data out into the bus until fifo becomes empty
     while bufferdatabus.fifo_empty != 1:
@@ -196,7 +195,7 @@ def test_rle():
         return tbstim, inst_clock, inst
 
     instance_rle = bench_rle()
-    instance_rle.config_sim(trace=False)
+    instance_rle.config_sim(trace=True)
     instance_rle.run_sim()
 
 
@@ -237,3 +236,4 @@ def test_rle_conversion():
 
     verify.simulator = 'iverilog'
     assert bench_rle_conversion().verify_convert() == 0
+test_rle()
