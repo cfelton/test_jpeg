@@ -5,6 +5,7 @@ from myhdl import intbv, Signal
 
 from rhea.cores.fifo.fifo_sync import fifo_sync
 from rhea.system import FIFOBus
+from rhea import Global
 
 
 class DoubleFifoBus(object):
@@ -31,11 +32,16 @@ def rledoublefifo(buffer_constants, reset, clock, dfifo_bus):
 
     fifo_data_in = Signal(intbv(0)[buffer_constants.width:])
 
-    fbus1 = FIFOBus(width=buffer_constants.width, size=buffer_constants.depth)
-    fbus2 = FIFOBus(width=buffer_constants.width, size=buffer_constants.depth)
+    glbl = Global(clock, reset)
+    fbus1 = FIFOBus(width=buffer_constants.width)
+    fbus2 = FIFOBus(width=buffer_constants.width)
 
-    fifo_sync1 = fifo_sync(clock, reset, fbus1)
-    fifo_sync2 = fifo_sync(clock, reset, fbus2)
+    assert isinstance(glbl, Global)
+    assert isinstance(fbus1, FIFOBus)
+    assert isinstance(fbus2, FIFOBus)
+
+    fifo_sync1 = fifo_sync(glbl, fbus1, buffer_constants.depth)
+    fifo_sync2 = fifo_sync(glbl, fbus2, buffer_constants.depth)
 
     @always_comb
     def assign():

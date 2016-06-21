@@ -88,7 +88,7 @@ def rletop(
         bufferdatabus.size.next = dfifo.data_out[(
             constants.width_data+constants.size):constants.width_data]
 
-        bufferdatabus.amplitude.next = dfifo.data_out[constants.width_data:0]
+        bufferdatabus.amplitude.next = dfifo.data_out[constants.width_data:0].signed()
 
     # send the inputdata into rle core
     rle_core = rle(
