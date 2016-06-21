@@ -236,4 +236,3 @@ def test_rle_conversion():
 
     verify.simulator = 'iverilog'
     assert bench_rle_conversion().verify_convert() == 0
-test_rle()

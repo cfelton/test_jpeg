@@ -3,6 +3,7 @@
 from myhdl import block, StopSimulation
 from myhdl import ResetSignal, Signal, instance
 from myhdl.conversion import verify
+from rhea import Global
 
 from jpegenc.subblocks.RLE.RleDoubleFifo.rledoublebuffer import DoubleFifoBus
 from jpegenc.subblocks.RLE.RleDoubleFifo.rledoublebuffer import rledoublefifo
@@ -179,4 +180,3 @@ def test_doublebuffer_conversion():
 
     verify.simulator = 'iverilog'
     assert bench_doublebuffer_conversion().verify_convert() == 0
-test_doublebuffer()
