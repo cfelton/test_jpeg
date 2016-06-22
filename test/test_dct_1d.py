@@ -6,7 +6,7 @@ from myhdl import (StopSimulation, block, Signal, ResetSignal, intbv,
                                       delay, instance, always_comb, always_seq)
 from myhdl.conversion import verify
 from jpegenc.subblocks.common.interfaces import input_interface, output_interface
-from jpegenc.subblocks.dct_1d.dct_1d import dct_1d, dct_1d_transformation
+from jpegenc.subblocks.dct_1d import dct_1d, dct_1d_transformation
 from random import randrange
 
 
