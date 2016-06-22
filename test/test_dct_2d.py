@@ -52,7 +52,7 @@ class InputsAndOutputs(object):
 def out_print(expected_outputs, actual_outputs):
 
     print("Expected Outputs ===> ")
-    print expected_outputs
+    print(expected_outputs)
     print("Actual Outputs   ===> ")
     a = []
     attrs = vars(actual_outputs)
