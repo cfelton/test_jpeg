@@ -32,6 +32,7 @@ class InputsAndOutputs(object):
         random_matrix = np.random.rand(8, 8)
         random_matrix = np.rint(255*random_matrix)
         random_matrix = random_matrix.astype(int)
+        random_matrix = random_matrix.tolist()
         return random_matrix
 
     def get_rom_tables(self):

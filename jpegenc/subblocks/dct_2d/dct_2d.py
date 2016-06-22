@@ -43,6 +43,7 @@ class dct_2d_transformation(object):
         dct_result = np.rint(dct_result)
         dct_result = np.dot(coeff_matrix, np.transpose(dct_result))
         dct_result = np.rint(dct_result).astype(int)
+        dct_result = dct_result.tolist()
         return dct_result
 
 

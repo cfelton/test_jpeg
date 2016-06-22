@@ -36,6 +36,7 @@ class dct_1d_transformation(object):
         dct_result = np.dot(self.coeff_matrix, vector_t)
         dct_result = np.rint(dct_result)
         dct_result = dct_result.astype(int)
+        dct_result = dct_result.tolist()
         return dct_result
 
     def dct_int_coeffs(self, precision_factor):
@@ -43,6 +44,7 @@ class dct_1d_transformation(object):
         coeff_matrix = coeff_matrix * (2**precision_factor)
         coeff_matrix = np.rint(coeff_matrix)
         coeff_matrix = coeff_matrix.astype(int)
+        coeff_matrix = coeff_matrix.tolist()
         return coeff_matrix
 
 
