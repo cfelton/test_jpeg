@@ -5,8 +5,8 @@ import myhdl
 from myhdl import (StopSimulation, block, Signal, ResetSignal, intbv,
                                       delay, instance, always_comb, always_seq)
 from myhdl.conversion import verify
-from interfaces import input_interface, output_interface
-from dct_1d import dct_1d, dct_1d_transformation
+from jpegenc.subblocks.common.interfaces import input_interface, output_interface
+from jpegenc.subblocks.dct_1d.dct_1d import dct_1d, dct_1d_transformation
 from random import randrange
 
 
@@ -179,12 +179,12 @@ def test_dct_1d_conversion():
                     print("%d %d %d %d %d %d %d %d" % (print_sig.out0, print_sig.out1,
                                                        print_sig.out2, print_sig.out3,
                                                        print_sig.out4, print_sig.out5,
-                                                       print_sig.out6, print_sig.out7))
+                                                       print_sig.out6, print_sig.out6))
                     print("Actual Outputs")
                     print("%d %d %d %d %d %d %d %d" % (outputs.out0, outputs.out1,
-                                                      outputs.out2, outputs.out3,
-                                                      outputs.out4, outputs.out5,
-                                                      outputs.out6, outputs.out6))
+                                                       outputs.out2, outputs.out3,
+                                                       outputs.out4, outputs.out5,
+                                                       outputs.out6, outputs.out7))
                     print("------------------------")
                     outputs_count += 1
 

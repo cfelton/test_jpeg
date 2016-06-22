@@ -5,9 +5,11 @@ from myhdl import (StopSimulation, block, Signal, ResetSignal, intbv,
                    delay, instance, always_comb, always_seq)
 from myhdl.conversion import verify
 
-from interfaces import (input_interface, output_interface, input_1d_2nd_stage,
-                        outputs_2d)
-from dct_2d import dct_2d, dct_2d_transformation
+from jpegenc.subblocks.common.interfaces import (input_interface, output_interface,
+                                                 input_1d_2nd_stage,outputs_2d)
+
+from jpegenc.subblocks.dct_2d.dct_2d import dct_2d, dct_2d_transformation
+
 import numpy as np
 
 

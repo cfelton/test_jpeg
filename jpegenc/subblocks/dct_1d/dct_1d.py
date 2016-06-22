@@ -6,7 +6,8 @@ from math import sqrt, pi, cos
 import myhdl
 from myhdl import Signal, ResetSignal, intbv, always_comb, always_seq
 from myhdl.conversion import analyze
-from interfaces import input_interface, output_interface
+from jpegenc.subblocks.common.interfaces import (input_interface,
+                                                 output_interface)
 
 
 class dct_1d_transformation(object):
@@ -36,7 +37,6 @@ class dct_1d_transformation(object):
         dct_result = np.rint(dct_result)
         dct_result = dct_result.astype(int)
         return dct_result
-
 
     def dct_int_coeffs(self, precision_factor):
         coeff_matrix = np.asarray(self.coeff_matrix)
