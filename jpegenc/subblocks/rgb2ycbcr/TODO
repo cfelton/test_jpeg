@@ -1,0 +1,8 @@
+1) implement analyze_convert in the main module --- DONE
+2) implement verify_convert in the testbench --- DONE
+3) write more tests, for different fractional bitwidths
+4) write comments
+5) make code readable 
+6) PEP8 code refactor
+7) write a documentation about the module
+8) if it is possible make the code more scalable and modular
