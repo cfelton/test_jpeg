@@ -4,10 +4,10 @@ import myhdl
 from myhdl import Signal, ResetSignal, intbv, always_comb, always_seq, instance
 from myhdl.conversion import analyze
 
-from jpegenc.subblocks.common.interfaces import (input_1d_1st_stage, input_interface,
+from jpegenc.subblocks.common import (input_1d_1st_stage, input_interface,
                                                  output_interface, outputs_2d,
                                                  input_1d_2nd_stage)
-from jpegenc.subblocks.dct_1d.dct_1d import dct_1d
+from jpegenc.subblocks.dct_1d import dct_1d
 
 
 class dct_2d_transformation(object):

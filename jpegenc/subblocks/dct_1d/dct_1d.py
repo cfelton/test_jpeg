@@ -6,7 +6,7 @@ from math import sqrt, pi, cos
 import myhdl
 from myhdl import Signal, ResetSignal, intbv, always_comb, always_seq
 from myhdl.conversion import analyze
-from jpegenc.subblocks.common.interfaces import (input_interface,
+from jpegenc.subblocks.common import (input_interface,
                                                  output_interface)
 
 
