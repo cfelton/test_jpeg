@@ -1,4 +1,4 @@
 numpy
 Pillow
 -e git://github.com/jandecaluwe/myhdl.git#egg=myhdl-1.0dev0
--e git://github.com/cfelton/rhea/tree/myhdl_blocks.git#egg=rhea
+-e git://github.com/cfelton/rhea.git#egg=rhea
