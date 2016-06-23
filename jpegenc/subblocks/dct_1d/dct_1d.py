@@ -25,7 +25,7 @@ class dct_1d_transformation(object):
         b = const * cos(pi / 16)
         c = const * cos(pi / 8)
         d = const * cos(3 * pi / 16)
-        e = const * cos(5  *pi / 16)
+        e = const * cos(5 * pi / 16)
         f = const * cos(3 * pi / 8)
         g = const * cos(7 * pi / 16)
 
@@ -128,23 +128,23 @@ def dct_1d(input_interface, output_interface, clock, reset,
     def mul_add():
         """multiplication and addition"""
         if input_interface.data_valid:
-                mult_reg[0].next = data_in_reg * coeffs[0]
-                mult_reg[1].next = data_in_reg * coeffs[1]
-                mult_reg[2].next = data_in_reg * coeffs[2]
-                mult_reg[3].next = data_in_reg * coeffs[3]
-                mult_reg[4].next = data_in_reg * coeffs[4]
-                mult_reg[5].next = data_in_reg * coeffs[5]
-                mult_reg[6].next = data_in_reg * coeffs[6]
-                mult_reg[7].next = data_in_reg * coeffs[7]
+            mult_reg[0].next = data_in_reg * coeffs[0]
+            mult_reg[1].next = data_in_reg * coeffs[1]
+            mult_reg[2].next = data_in_reg * coeffs[2]
+            mult_reg[3].next = data_in_reg * coeffs[3]
+            mult_reg[4].next = data_in_reg * coeffs[4]
+            mult_reg[5].next = data_in_reg * coeffs[5]
+            mult_reg[6].next = data_in_reg * coeffs[6]
+            mult_reg[7].next = data_in_reg * coeffs[7]
 
-                adder_reg[0].next = mux_flush[0] + mult_reg[0]
-                adder_reg[1].next = mux_flush[1] + mult_reg[1]
-                adder_reg[2].next = mux_flush[2] + mult_reg[2]
-                adder_reg[3].next = mux_flush[3] + mult_reg[3]
-                adder_reg[4].next = mux_flush[4] + mult_reg[4]
-                adder_reg[5].next = mux_flush[5] + mult_reg[5]
-                adder_reg[6].next = mux_flush[6] + mult_reg[6]
-                adder_reg[7].next = mux_flush[7] + mult_reg[7]
+            adder_reg[0].next = mux_flush[0] + mult_reg[0]
+            adder_reg[1].next = mux_flush[1] + mult_reg[1]
+            adder_reg[2].next = mux_flush[2] + mult_reg[2]
+            adder_reg[3].next = mux_flush[3] + mult_reg[3]
+            adder_reg[4].next = mux_flush[4] + mult_reg[4]
+            adder_reg[5].next = mux_flush[5] + mult_reg[5]
+            adder_reg[6].next = mux_flush[6] + mult_reg[6]
+            adder_reg[7].next = mux_flush[7] + mult_reg[7]
 
     @always_comb
     def mux_after_adder_reg():

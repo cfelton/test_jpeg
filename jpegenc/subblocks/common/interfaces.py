@@ -25,7 +25,7 @@ class outputs_2d(object):
 
 class input_interface(object):
 
-    """ Input Interface for the 2D-DCT module"""
+    """Input Interface for the 2D-DCT module"""
 
     def __init__(self, nbits=8):
         """Input signals for the 2D-DCT module"""

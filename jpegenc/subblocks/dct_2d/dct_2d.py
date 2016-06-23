@@ -5,8 +5,8 @@ from myhdl import Signal, ResetSignal, intbv, always_comb, always_seq, instance
 from myhdl.conversion import analyze
 
 from jpegenc.subblocks.common import (input_1d_1st_stage, input_interface,
-                                                 output_interface, outputs_2d,
-                                                 input_1d_2nd_stage)
+                                      output_interface, outputs_2d,
+                                      input_1d_2nd_stage)
 from jpegenc.subblocks.dct_1d import dct_1d
 
 
@@ -20,14 +20,14 @@ class dct_2d_transformation(object):
 
     def __init__(self):
         """Initialize the DCT coefficient matrix"""
-        const = sqrt(2.0/8)
-        a = const * cos(pi/4)
-        b = const * cos(pi/16)
-        c = const * cos(pi/8)
-        d = const * cos(3*pi/16)
-        e = const * cos(5*pi/16)
-        f = const * cos(3*pi/8)
-        g = const * cos(7*pi/16)
+        const = sqrt(2.0 / 8)
+        a = const * cos(pi / 4)
+        b = const * cos(pi / 16)
+        c = const * cos(pi / 8)
+        d = const * cos(3 * pi / 16)
+        e = const * cos(5 * pi / 16)
+        f = const * cos(3 * pi / 8)
+        g = const * cos(7 * pi / 16)
 
         self.coeff_matrix = [[a, a, a, a, a, a, a, a],
                              [b, d, e, g, -g, -e, -d, -b],
@@ -37,7 +37,6 @@ class dct_2d_transformation(object):
                              [e, -b, g, d, -d, -g, b, -e],
                              [f, -c, c, -f, -f, c, -c, f],
                              [g, -e, d, -b, b, -d, e, -g]]
-
 
     def dct_2d_transformation(self, block):
         """2D-DCT software reference"""
