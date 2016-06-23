@@ -7,20 +7,27 @@ import myhdl
 from myhdl import Signal, ResetSignal, intbv, always_comb, always_seq
 from myhdl.conversion import analyze
 from jpegenc.subblocks.common import (input_interface,
-                                                 output_interface)
+                                      output_interface)
 
 
 class dct_1d_transformation(object):
 
+    """1D-DCT Transformation Class
+
+    It is used to derive the integer coefficient matrix
+    and as a software reference for the 1D-DCT Transformation.
+    """
+
     def __init__(self):
-        const = sqrt(2.0/8)
-        a = const * cos(pi/4)
-        b = const * cos(pi/16)
-        c = const * cos(pi/8)
-        d = const * cos(3*pi/16)
-        e = const * cos(5*pi/16)
-        f = const * cos(3*pi/8)
-        g = const * cos(7*pi/16)
+        """Initialize the DCT coefficient matrix"""
+        const = sqrt(2.0 / 8)
+        a = const * cos(pi / 4)
+        b = const * cos(pi / 16)
+        c = const * cos(pi / 8)
+        d = const * cos(3 * pi / 16)
+        e = const * cos(5  *pi / 16)
+        f = const * cos(3 * pi / 8)
+        g = const * cos(7 * pi / 16)
 
         self.coeff_matrix = [[a, a, a, a, a, a, a, a],
                              [b, d, e, g, -g, -e, -d, -b],
@@ -32,6 +39,7 @@ class dct_1d_transformation(object):
                              [g, -e, d, -b, b, -d, e, -g]]
 
     def dct_1d_transformation(self, vector):
+        """1D-DCT software reference"""
         vector_t = np.transpose(vector)
         dct_result = np.dot(self.coeff_matrix, vector_t)
         dct_result = np.rint(dct_result)
@@ -40,6 +48,7 @@ class dct_1d_transformation(object):
         return dct_result
 
     def dct_int_coeffs(self, precision_factor):
+        """Transform coeff matrix to integer coefficients"""
         coeff_matrix = np.asarray(self.coeff_matrix)
         coeff_matrix = coeff_matrix * (2**precision_factor)
         coeff_matrix = np.rint(coeff_matrix)
@@ -49,6 +58,7 @@ class dct_1d_transformation(object):
 
 
 def tuple_construct(matrix):
+    """Construct a tuple from list to use it as a rom"""
     a = []
     for i in matrix:
         for j in i:
@@ -59,7 +69,17 @@ def tuple_construct(matrix):
 @myhdl.block
 def dct_1d(input_interface, output_interface, clock, reset,
            num_fractional_bits=14, out_precision=10):
+    """1D-DCT Module
 
+    This module performs the 1D-DCT Transformation.
+    It takes serially  8 inputs and outputs parallely
+    the vector of 8 signals.
+
+    Inputs:
+        data_in, data_valid
+    Outputs:
+        out0, out1,..., out7, data_valid
+    """
     fract_bits = num_fractional_bits
     nbits = input_interface.nbits
     output_fract = out_precision
@@ -94,17 +114,19 @@ def dct_1d(input_interface, output_interface, clock, reset,
 
     @always_seq(clock.posedge, reset=reset)
     def input_reg():
+        """input register"""
         data_in_reg.next = input_interface.data_in
 
     @always_seq(clock.posedge, reset=reset)
     def coeff_assign():
+        """coefficient assignment from rom"""
         if input_interface.data_valid:
             for i in range(8):
                 coeffs[i].next = coeff_rom[i * 8 + int(inputs_counter)]
 
     @always_seq(clock.posedge, reset=reset)
     def mul_add():
-
+        """multiplication and addition"""
         if input_interface.data_valid:
                 mult_reg[0].next = data_in_reg * coeffs[0]
                 mult_reg[1].next = data_in_reg * coeffs[1]
@@ -126,6 +148,7 @@ def dct_1d(input_interface, output_interface, clock, reset,
 
     @always_comb
     def mux_after_adder_reg():
+        """after 8 inputs flush one of the inputs of the adder"""
         if cycles_counter == 10 or (cycles_counter == 7 and
                                     first_row_passed):
             for i in range(8):
@@ -136,7 +159,7 @@ def dct_1d(input_interface, output_interface, clock, reset,
 
     @always_seq(clock.posedge, reset=reset)
     def counters():
-
+        """inputs and cycles counter"""
         if input_interface.data_valid:
             if cycles_counter == 10 or (first_row_passed and
                                         cycles_counter == 7):
@@ -152,6 +175,7 @@ def dct_1d(input_interface, output_interface, clock, reset,
 
     @always_seq(clock.posedge, reset=reset)
     def outputs():
+        """rounding"""
         if cycles_counter == 10 or (first_row_passed and
                                     cycles_counter == 7):
             if adder_reg[0][c] == 1:
@@ -195,7 +219,7 @@ def dct_1d(input_interface, output_interface, clock, reset,
 
 
 def convert():
-
+    """conversion of the module"""
     num_fractional_bits = 14
     out_precision = 10
     inputs = input_interface()

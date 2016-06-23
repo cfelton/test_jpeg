@@ -12,7 +12,14 @@ from jpegenc.subblocks.dct_1d import dct_1d
 
 class dct_2d_transformation(object):
 
+    """2D-DCT Transformation Class
+
+    It is used as a software reference for the 2D-DCT
+    Transformation
+    """
+
     def __init__(self):
+        """Initialize the DCT coefficient matrix"""
         const = sqrt(2.0/8)
         a = const * cos(pi/4)
         b = const * cos(pi/16)
@@ -33,7 +40,7 @@ class dct_2d_transformation(object):
 
 
     def dct_2d_transformation(self, block):
-
+        """2D-DCT software reference"""
         coeff_matrix = np.asarray(self.coeff_matrix)
         block = np.asarray(block)
         block = block - 128
@@ -49,7 +56,18 @@ class dct_2d_transformation(object):
 
 @myhdl.block
 def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14, out_prec=10):
+    """2D-DCT Module
 
+    This module performs the 2D-DCT Transformation.
+    It takes serially the inputs of a 8x8 block
+    and outputs parallely the transformed block in
+    64 signals.
+
+    Inputs:
+        data_in, data_valid
+    Outputs:
+        y00, y01,...., y77, data_valid
+    """
     first_1d_output = output_interface()
     input_1d_stage_1 = input_1d_1st_stage()
 
@@ -100,6 +118,7 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14, out_prec=10):
 
     @always_seq(clock.posedge, reset=reset)
     def input_subtract():
+        """Align to zero each input"""
         if inputs.data_valid:
             data_in_signed.next = inputs.data_in
             input_1d_stage_1.data_in.next = data_in_signed - 128
@@ -108,6 +127,7 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14, out_prec=10):
 
     @always_seq(clock.posedge, reset=reset)
     def first_stage_to_second():
+        """First stage 1d-dct outputs to 2nd stage inputs"""
         inputs_2nd_stage_0.data_in.next = first_1d_output.out0
         inputs_2nd_stage_0.data_valid.next = first_1d_output.data_valid
         inputs_2nd_stage_1.data_in.next = first_1d_output.out1
@@ -127,6 +147,7 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14, out_prec=10):
 
     @always_seq(clock.posedge, reset=reset)
     def second_stage_output():
+        """Outputs of the 2nd stage 1d-dct modules"""
         outputs.y00.next = outputs_2nd_stage_0.out0
         outputs.y01.next = outputs_2nd_stage_1.out0
         outputs.y02.next = outputs_2nd_stage_2.out0
@@ -195,6 +216,7 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14, out_prec=10):
 
     @always_seq(clock.posedge, reset=reset)
     def counter_update():
+        """Counter update"""
         if outputs_2nd_stage_0.data_valid:
             if counter == 7:
                 counter.next = 0
@@ -203,11 +225,11 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14, out_prec=10):
 
     @always_comb
     def data_valid_2d():
+        """Data valid signal assignment when the outputs are valid"""
         if outputs_2nd_stage_0.data_valid and counter == 0:
             data_valid_reg2.next = True
         else:
             data_valid_reg2.next = False
-            """reset counter for the next outputs"""
 
     return (input_subtract, second_stage_output, first_stage_to_second,
             stage_2_inst_0, stage_2_inst_1, stage_2_inst_2, stage_2_inst_3,
@@ -216,7 +238,7 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14, out_prec=10):
 
 
 def convert():
-
+    """2D-DCT module conversion"""
     out_prec = 10
     fract_bits = 14
     inputs = input_interface()
