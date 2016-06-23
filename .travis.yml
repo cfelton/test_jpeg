@@ -32,7 +32,6 @@ install:
   - pwd
   - chmod +x ./scripts/ci/install_myhdl.sh
   - ./scripts/ci/install_myhdl.sh
-  - pip install -e git://github.com/cfelton/rhea.git#egg=rhea
   - pip install coverage
   - pip install coveralls
   - pip install Pillow
