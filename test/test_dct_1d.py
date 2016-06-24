@@ -41,15 +41,16 @@ def rstonstart(reset, clock):
 
 class InputsAndOutputs(object):
 
-    def __init__(self, samples):
+    def __init__(self, samples, N):
+        self.N = N
         self.inputs = []
         self.outputs = []
         self.samples = samples
 
     def initialize(self):
-        dct_obj = dct_1d_transformation()
+        dct_obj = dct_1d_transformation(self.N)
         for i in range(self.samples):
-            vector = [randrange(256) for _ in range(8)]
+            vector = [randrange(256) for _ in range(self.N)]
             self.inputs.append(vector)
             dct_result = dct_obj.dct_1d_transformation(vector)
             self.outputs.append(dct_result)
@@ -74,29 +75,27 @@ def out_print(expected_outputs, actual_outputs):
         print(" %d " % expected_outputs[i]),
     print("")
     print("Actual Outputs   ===> "),
-    attrs = vars(actual_outputs)
-    for i in range(len(expected_outputs)):
-        out = "out" + str(i)
-        print (" %d " % attrs[out]),
+    for i in range(len(actual_outputs)):
+        print(" %d " % actual_outputs[i]),
     print("\n" + " -"*40)
 
 
 def test_dct_1d():
 
-    samples, fract_bits, out_prec = 10, 14, 10
+    samples, fract_bits, out_prec, N = 10, 14, 10, 8
 
     clock = Signal(bool(0))
     reset = ResetSignal(1, active=True, async=True)
 
     inputs = input_interface()
-    outputs = output_interface(out_prec)
+    outputs = output_interface(out_prec, N)
 
-    in_out_data = InputsAndOutputs(samples)
+    in_out_data = InputsAndOutputs(samples, N)
     in_out_data.initialize()
 
     @myhdl.block
     def bench_dct_1d():
-        tdut = dct_1d(inputs, outputs, clock, reset, fract_bits)
+        tdut = dct_1d(inputs, outputs, clock, reset, fract_bits, N)
         tbclk = clock_driver(clock)
 
         @instance
@@ -105,7 +104,7 @@ def test_dct_1d():
             inputs.data_valid.next = True
 
             for i in range(samples):
-                for j in range(8):
+                for j in range(N):
                     inputs.data_in.next = in_out_data.inputs[i][j]
                     yield clock.posedge
 
@@ -116,8 +115,9 @@ def test_dct_1d():
                 yield clock.posedge
                 if outputs.data_valid:
                     yield delay(1)
+                    # convert flat signal to array of signals
                     out_print(in_out_data.outputs[outputs_count],
-                              outputs)
+                              outputs.out_sigs)
                     outputs_count += 1
 
             raise StopSimulation
@@ -131,22 +131,24 @@ def test_dct_1d():
 
 def test_dct_1d_conversion():
 
-    samples, fract_bits, out_prec = 10, 14, 10
+    samples, fract_bits, out_prec, N = 10, 14, 10, 8
 
     clock = Signal(bool(0))
     reset = ResetSignal(1, active=True, async=True)
 
     inputs = input_interface()
-    outputs = output_interface(out_prec)
+    outputs = output_interface(out_prec, N)
 
-    in_out_data = InputsAndOutputs(samples)
+    in_out_data = InputsAndOutputs(samples, N)
     in_out_data.initialize()
 
     inputs_rom, expected_outputs_rom = in_out_data.get_rom_tables()
-    print_sig = output_interface(out_prec)
 
     @myhdl.block
     def bench_dct_1d():
+        print_sig = [Signal(intbv(0, min=-2**out_prec, max=2**out_prec))
+                 for _ in range(N)]
+
         tdut = dct_1d(inputs, outputs, clock, reset, fract_bits)
         tbclk = clock_driver(clock)
         tbrst = rstonstart(reset, clock)
@@ -166,25 +168,15 @@ def test_dct_1d_conversion():
             while(outputs_count != samples):
                 yield clock.posedge
                 if outputs.data_valid:
-                    print_sig.out0.next = expected_outputs_rom[outputs_count * 8 + 0]
-                    print_sig.out1.next = expected_outputs_rom[outputs_count * 8 + 1]
-                    print_sig.out2.next = expected_outputs_rom[outputs_count * 8 + 2]
-                    print_sig.out3.next = expected_outputs_rom[outputs_count * 8 + 3]
-                    print_sig.out4.next = expected_outputs_rom[outputs_count * 8 + 4]
-                    print_sig.out5.next = expected_outputs_rom[outputs_count * 8 + 5]
-                    print_sig.out6.next = expected_outputs_rom[outputs_count * 8 + 6]
-                    print_sig.out7.next = expected_outputs_rom[outputs_count * 8 + 7]
+                    for i in range(N):
+                        print_sig[i].next = expected_outputs_rom[outputs_count * 8 + i]
                     yield delay(1)
                     print("Expected Outputs")
-                    print("%d %d %d %d %d %d %d %d" % (print_sig.out0, print_sig.out1,
-                                                       print_sig.out2, print_sig.out3,
-                                                       print_sig.out4, print_sig.out5,
-                                                       print_sig.out6, print_sig.out6))
+                    for i in range(N):
+                        print("%d" % print_sig[i])
                     print("Actual Outputs")
-                    print("%d %d %d %d %d %d %d %d" % (outputs.out0, outputs.out1,
-                                                       outputs.out2, outputs.out3,
-                                                       outputs.out4, outputs.out5,
-                                                       outputs.out6, outputs.out7))
+                    for i in range(N):
+                        print("%d" % outputs.out_sigs[i])
                     print("------------------------")
                     outputs_count += 1
 
@@ -201,4 +193,5 @@ def test_dct_1d_conversion():
     assert bench_dct_1d().verify_convert() == 0
 
 
-
+test_dct_1d()
+test_dct_1d_conversion()

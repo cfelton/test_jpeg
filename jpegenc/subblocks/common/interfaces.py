@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-from myhdl import Signal, intbv
+from myhdl import Signal, intbv, block, always_comb, instance
 
 class outputs_2d(object):
 
@@ -49,19 +49,19 @@ class output_interface(object):
 
     """Output interface for the 1D-DCT module"""
 
-    def __init__(self, out_precision=10):
+    def __init__(self, out_precision=10, N=8):
         """Outputs signals for the 1D-DCT module"""
         self.out_precision = out_precision
-        out_range = 2**out_precision
-        self.out0 = Signal(intbv(0, min=-out_range, max=out_range))
-        self.out1 = Signal(intbv(0, min=-out_range, max=out_range))
-        self.out2 = Signal(intbv(0, min=-out_range, max=out_range))
-        self.out3 = Signal(intbv(0, min=-out_range, max=out_range))
-        self.out4 = Signal(intbv(0, min=-out_range, max=out_range))
-        self.out5 = Signal(intbv(0, min=-out_range, max=out_range))
-        self.out6 = Signal(intbv(0, min=-out_range, max=out_range))
-        self.out7 = Signal(intbv(0, min=-out_range, max=out_range))
+        self.N = N
+        nrange = 2**out_precision
+        self.out_sigs = [Signal(intbv(0, min=-nrange, max=nrange))
+                         for _ in range(N)]
         self.data_valid = Signal(bool(0))
+
+    def assignment(self, sig, i):
+        # avoid verilog indexing
+        self.out_sigs[i].next = sig
+
 
 class input_1d_2nd_stage(object):
 
