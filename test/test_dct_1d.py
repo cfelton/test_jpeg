@@ -148,6 +148,8 @@ def test_dct_1d_conversion():
     def bench_dct_1d():
         print_sig = [Signal(intbv(0, min=-2**out_prec, max=2**out_prec))
                  for _ in range(N)]
+        print_sig_1 = [Signal(intbv(0, min=-2**out_prec, max=2**out_prec))
+                 for _ in range(N)]
 
         tdut = dct_1d(inputs, outputs, clock, reset, fract_bits)
         tbclk = clock_driver(clock)
@@ -161,6 +163,8 @@ def test_dct_1d_conversion():
             for i in range(samples * 8):
                 inputs.data_in.next = inputs_rom[i]
                 yield clock.posedge
+
+        print_assign = outputs.assignment_2(print_sig_1)
 
         @instance
         def monitor():
@@ -176,13 +180,13 @@ def test_dct_1d_conversion():
                         print("%d" % print_sig[i])
                     print("Actual Outputs")
                     for i in range(N):
-                        print("%d" % outputs.out_sigs[i])
+                        print("%d" % print_sig_1[i])
                     print("------------------------")
                     outputs_count += 1
 
             raise StopSimulation
 
-        return tdut, tbclk, tbstim, monitor, tbrst
+        return tdut, tbclk, tbstim, monitor, tbrst, print_assign
 
 
     # verify and convert with GHDL

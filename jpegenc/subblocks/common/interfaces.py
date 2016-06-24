@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-from myhdl import Signal, intbv, block, always_comb, instance
+from myhdl import Signal, intbv, block, always_comb
 
 class outputs_2d(object):
 
@@ -58,10 +58,37 @@ class output_interface(object):
                          for _ in range(N)]
         self.data_valid = Signal(bool(0))
 
-    def assignment(self, sig, i):
-        # avoid verilog indexing
-        self.out_sigs[i].next = sig
+    @block
+    def assignment(self, array):
 
+        # avoid verilog indexing
+        @block
+        def assign(y, x):
+            @always_comb
+            def assign():
+                y.next = x
+            return assign
+
+        g = [None for _ in range(self.N)]
+        for i in range(self.N):
+            g[i] = assign(self.out_sigs[i], array[i])
+        return g
+
+    @block
+    def assignment_2(self, array):
+
+        # avoid verilog indexing
+        @block
+        def assign(y, x):
+            @always_comb
+            def assign():
+                y.next = x
+            return assign
+
+        g = [None for _ in range(self.N)]
+        for i in range(self.N):
+            g[i] = assign(array[i], self.out_sigs[i])
+        return g
 
 class input_1d_2nd_stage(object):
 

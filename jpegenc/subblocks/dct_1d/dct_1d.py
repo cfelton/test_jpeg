@@ -112,6 +112,9 @@ def dct_1d(input_interface, output_interface, clock, reset,
     coeff_matrix = dct_1d_obj.dct_int_coeffs(fract_bits)
     coeff_rom = tuple_construct(coeff_matrix)
 
+    output_sigs = [Signal(intbv(0, min=-2**output_fract, max=2**output_fract))
+                   for _ in range(N)]
+
     @always_seq(clock.posedge, reset=reset)
     def input_reg():
         """input register"""
@@ -166,21 +169,26 @@ def dct_1d(input_interface, output_interface, clock, reset,
                                        cycles_counter == N - 1):
             for i in range(N):
                 if adder_reg[i][c] == 1:
-                    output_interface.out_sigs[i].next = adder_reg[i][a:b].signed() + 1
+                    # impoveve it like + adder_reg[i][c]
+                    output_sigs[i].next = adder_reg[i][a:b].signed() + 1
                 else:
-                    output_interface.out_sigs[i].next = adder_reg[i][a:b].signed()
+                    output_sigs[i].next = adder_reg[i][a:b].signed()
             output_interface.data_valid.next = True
         else:
             output_interface.data_valid.next = False
 
+    outputs_assignment = output_interface.assignment(output_sigs)
+
     return (input_reg, outputs, counters, mul_add, coeff_assign,
-            mux_after_adder_reg)
+            mux_after_adder_reg, outputs_assignment)
 
 
 def convert():
     """conversion of the module"""
     num_fractional_bits = 14
     out_precision = 10
+    N = 8
+
     inputs = input_interface()
     outputs = output_interface()
 
@@ -190,6 +198,11 @@ def convert():
     analyze.simulator = 'ghdl'
     assert dct_1d(inputs, outputs, clock, reset,
                   num_fractional_bits, out_precision, N).analyze_convert() == 0
+    analyze.simulator = 'iverilog'
+    assert dct_1d(inputs, outputs, clock, reset,
+                  num_fractional_bits, out_precision, N).analyze_convert() == 0
+
+
 
 if __name__ == '__main__':
     convert()
