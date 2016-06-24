@@ -168,11 +168,7 @@ def dct_1d(input_interface, output_interface, clock, reset,
         if cycles_counter == N + 2 or (first_row_passed and
                                        cycles_counter == N - 1):
             for i in range(N):
-                if adder_reg[i][c] == 1:
-                    # impoveve it like + adder_reg[i][c]
-                    output_sigs[i].next = adder_reg[i][a:b].signed() + 1
-                else:
-                    output_sigs[i].next = adder_reg[i][a:b].signed()
+                output_sigs[i].next = adder_reg[i][a:b].signed() + adder_reg[i][c]
             output_interface.data_valid.next = True
         else:
             output_interface.data_valid.next = False
