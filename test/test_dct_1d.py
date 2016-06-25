@@ -5,7 +5,7 @@ import myhdl
 from myhdl import (StopSimulation, block, Signal, ResetSignal, intbv,
                                       delay, instance, always_comb, always_seq)
 from myhdl.conversion import verify
-from jpegenc.subblocks.common import input_interface, output_interface
+from jpegenc.subblocks.common import  output_interface, input_1d_1st_stage
 from jpegenc.subblocks.dct_1d import dct_1d, dct_1d_transformation
 from random import randrange
 
@@ -50,7 +50,7 @@ class InputsAndOutputs(object):
     def initialize(self):
         dct_obj = dct_1d_transformation(self.N)
         for i in range(self.samples):
-            vector = [randrange(256) for _ in range(self.N)]
+            vector = [randrange(-128, 128) for _ in range(self.N)]
             self.inputs.append(vector)
             dct_result = dct_obj.dct_1d_transformation(vector)
             self.outputs.append(dct_result)
@@ -87,7 +87,7 @@ def test_dct_1d():
     clock = Signal(bool(0))
     reset = ResetSignal(1, active=True, async=True)
 
-    inputs = input_interface()
+    inputs = input_1d_1st_stage()
     outputs = output_interface(out_prec, N)
 
     in_out_data = InputsAndOutputs(samples, N)
@@ -95,7 +95,7 @@ def test_dct_1d():
 
     @myhdl.block
     def bench_dct_1d():
-        tdut = dct_1d(inputs, outputs, clock, reset, fract_bits, N)
+        tdut = dct_1d(inputs, outputs, clock, reset, fract_bits, out_prec, N)
         tbclk = clock_driver(clock)
 
         @instance
@@ -136,7 +136,7 @@ def test_dct_1d_conversion():
     clock = Signal(bool(0))
     reset = ResetSignal(1, active=True, async=True)
 
-    inputs = input_interface()
+    inputs = input_1d_1st_stage()
     outputs = output_interface(out_prec, N)
 
     in_out_data = InputsAndOutputs(samples, N)
@@ -151,7 +151,7 @@ def test_dct_1d_conversion():
         print_sig_1 = [Signal(intbv(0, min=-2**out_prec, max=2**out_prec))
                  for _ in range(N)]
 
-        tdut = dct_1d(inputs, outputs, clock, reset, fract_bits)
+        tdut = dct_1d(inputs, outputs, clock, reset, fract_bits, out_prec, N)
         tbclk = clock_driver(clock)
         tbrst = rstonstart(reset, clock)
 
@@ -160,7 +160,7 @@ def test_dct_1d_conversion():
             yield reset.negedge
             inputs.data_valid.next =True
 
-            for i in range(samples * 8):
+            for i in range(samples * N):
                 inputs.data_in.next = inputs_rom[i]
                 yield clock.posedge
 

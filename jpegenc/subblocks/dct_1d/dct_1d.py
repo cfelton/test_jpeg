@@ -72,13 +72,13 @@ def dct_1d(input_interface, output_interface, clock, reset,
     """1D-DCT Module
 
     This module performs the 1D-DCT Transformation.
-    It takes serially  8 inputs and outputs parallely
-    the vector of 8 signals.
+    It takes serially  N inputs and outputs parallely
+    the vector of N signalsv
 
     Inputs:
         data_in, data_valid
     Outputs:
-        out0, out1,..., out7, data_valid
+        List of N signals: out_sigs, data_valid
     """
     fract_bits = num_fractional_bits
     nbits = input_interface.nbits
@@ -138,7 +138,7 @@ def dct_1d(input_interface, output_interface, clock, reset,
     @always_comb
     def mux_after_adder_reg():
         """after 8 inputs flush one of the inputs of the adder"""
-        if cycles_counter == (N + 2) or (cycles_counter == (N -1)
+        if cycles_counter == (N + 2) or (cycles_counter == (N - 1)
                                          and first_row_passed):
             for i in range(N):
                 mux_flush[i].next = 0
@@ -172,7 +172,7 @@ def dct_1d(input_interface, output_interface, clock, reset,
             output_interface.data_valid.next = True
         else:
             output_interface.data_valid.next = False
-
+    # avoid verilog indexing error
     outputs_assignment = output_interface.assignment(output_sigs)
 
     return (input_reg, outputs, counters, mul_add, coeff_assign,
