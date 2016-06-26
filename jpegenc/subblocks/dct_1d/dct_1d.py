@@ -179,9 +179,8 @@ def dct_1d(input_interface, output_interface, clock, reset,
     return (input_reg, outputs, counters, mul_add, coeff_assign,
             mux_after_adder_reg, outputs_assignment)
 
-
+"""
 def convert():
-    """conversion of the module"""
     num_fractional_bits = 14
     out_precision = 10
     N = 8
@@ -203,3 +202,4 @@ def convert():
 
 if __name__ == '__main__':
     convert()
+"""

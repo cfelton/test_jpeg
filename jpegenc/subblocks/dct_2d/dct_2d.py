@@ -174,9 +174,8 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14, stage_1_prec=1
     return (stage_2_insts, input_subtract, second_stage_output,
              counter_update, data_valid_2d, first_1d)
 
-
+"""
 def convert():
-    """2D-DCT module conversion"""
     out_prec = 10
     stage_1_prec = 10
     fract_bits = 14
@@ -194,3 +193,4 @@ def convert():
 
 if __name__ == '__main__':
     convert()
+"""
