@@ -82,7 +82,7 @@ def out_print(expected_outputs, actual_outputs):
 
 def test_dct_1d():
 
-    samples, fract_bits, out_prec, N = 10, 14, 10, 8
+    samples, fract_bits, out_prec, N = 10, 14, 10, 9
 
     clock = Signal(bool(0))
     reset = ResetSignal(1, active=True, async=True)

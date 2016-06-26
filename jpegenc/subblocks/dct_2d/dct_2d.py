@@ -1,7 +1,7 @@
 import numpy as np
 from math import sqrt, pi, cos
 import myhdl
-from myhdl import Signal, ResetSignal, intbv, always_comb, always_seq, instance
+from myhdl import Signal, ResetSignal, intbv, always_comb, always_seq, instance, block
 from myhdl.conversion import analyze
 
 from jpegenc.subblocks.common import (input_1d_1st_stage, input_interface,
@@ -18,25 +18,25 @@ class dct_2d_transformation(object):
     Transformation
     """
 
-    def __init__(self):
+    def __init__(self, N):
         """Initialize the DCT coefficient matrix"""
-        const = sqrt(2.0 / 8)
-        a = const * cos(pi / 4)
-        b = const * cos(pi / 16)
-        c = const * cos(pi / 8)
-        d = const * cos(3 * pi / 16)
-        e = const * cos(5 * pi / 16)
-        f = const * cos(3 * pi / 8)
-        g = const * cos(7 * pi / 16)
+        self.coeff_matrix = self.build_matrix(N)
 
-        self.coeff_matrix = [[a, a, a, a, a, a, a, a],
-                             [b, d, e, g, -g, -e, -d, -b],
-                             [c, f, -f, -c, -c, -f, f, c],
-                             [d, -g, -b, -e, e, b, g, -d],
-                             [a, -a, -a, a, a, -a, -a, a],
-                             [e, -b, g, d, -d, -g, b, -e],
-                             [f, -c, c, -f, -f, c, -c, f],
-                             [g, -e, d, -b, b, -d, e, -g]]
+    def build_matrix(self, N):
+        const = sqrt(2.0 / 8)
+        a0 = sqrt(1.0 / 2.0)
+        ak  = 1
+        coeff_matrix = []
+        for i in range(N):
+            row = []
+            for j in range(N):
+                if i == 0:
+                    coeff = const * a0 * cos(((2 * j + 1) * pi * i) / (2 * N))
+                else:
+                    coeff = const * ak * cos(((2 * j + 1) * pi * i) / (2 * N))
+                row.append(coeff)
+            coeff_matrix.append(row)
+        return coeff_matrix
 
     def dct_2d_transformation(self, block):
         """2D-DCT software reference"""
@@ -54,66 +54,90 @@ class dct_2d_transformation(object):
 
 
 @myhdl.block
-def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14, out_prec=10):
+def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14, stage_1_prec=10, out_prec=10, N=8):
     """2D-DCT Module
 
     This module performs the 2D-DCT Transformation.
-    It takes serially the inputs of a 8x8 block
+    It takes serially the inputs of a NxN block
     and outputs parallely the transformed block in
     64 signals.
 
     Inputs:
         data_in, data_valid
     Outputs:
-        y00, y01,...., y77, data_valid
+        NxN signals in the list out_sigs, data_valid
     """
-    first_1d_output = output_interface()
+    first_1d_output = output_interface(stage_1_prec, N)
     input_1d_stage_1 = input_1d_1st_stage()
 
     first_1d = dct_1d(input_1d_stage_1, first_1d_output, clock,
-                      reset, num_fractional_bits)
-
-    inputs_2nd_stage_0 = input_1d_2nd_stage(first_1d_output.out_precision)
-    inputs_2nd_stage_1 = input_1d_2nd_stage(first_1d_output.out_precision)
-    inputs_2nd_stage_2 = input_1d_2nd_stage(first_1d_output.out_precision)
-    inputs_2nd_stage_3 = input_1d_2nd_stage(first_1d_output.out_precision)
-    inputs_2nd_stage_4 = input_1d_2nd_stage(first_1d_output.out_precision)
-    inputs_2nd_stage_5 = input_1d_2nd_stage(first_1d_output.out_precision)
-    inputs_2nd_stage_6 = input_1d_2nd_stage(first_1d_output.out_precision)
-    inputs_2nd_stage_7 = input_1d_2nd_stage(first_1d_output.out_precision)
-
-    outputs_2nd_stage_0 = output_interface(out_prec)
-    outputs_2nd_stage_1 = output_interface(out_prec)
-    outputs_2nd_stage_2 = output_interface(out_prec)
-    outputs_2nd_stage_3 = output_interface(out_prec)
-    outputs_2nd_stage_4 = output_interface(out_prec)
-    outputs_2nd_stage_5 = output_interface(out_prec)
-    outputs_2nd_stage_6 = output_interface(out_prec)
-    outputs_2nd_stage_7 = output_interface(out_prec)
-
-    stage_2_inst_0 = dct_1d(inputs_2nd_stage_0, outputs_2nd_stage_0, clock,
-                            reset, num_fractional_bits)
-    stage_2_inst_1 = dct_1d(inputs_2nd_stage_1, outputs_2nd_stage_1, clock,
-                            reset, num_fractional_bits)
-    stage_2_inst_2 = dct_1d(inputs_2nd_stage_2, outputs_2nd_stage_2, clock,
-                            reset, num_fractional_bits)
-    stage_2_inst_3 = dct_1d(inputs_2nd_stage_3, outputs_2nd_stage_3, clock,
-                            reset, num_fractional_bits)
-    stage_2_inst_4 = dct_1d(inputs_2nd_stage_4, outputs_2nd_stage_4, clock,
-                            reset, num_fractional_bits)
-    stage_2_inst_5 = dct_1d(inputs_2nd_stage_5, outputs_2nd_stage_5, clock,
-                            reset, num_fractional_bits)
-    stage_2_inst_6 = dct_1d(inputs_2nd_stage_6, outputs_2nd_stage_6, clock,
-                            reset, num_fractional_bits)
-    stage_2_inst_7 = dct_1d(inputs_2nd_stage_7, outputs_2nd_stage_7, clock,
-                            reset, num_fractional_bits)
+                      reset, num_fractional_bits, stage_1_prec, N)
 
     data_in_signed = Signal(intbv(0, min=-input_1d_stage_1.in_range,
                                   max=input_1d_stage_1.in_range))
     data_valid_reg = Signal(bool(0))
     data_valid_reg2 = Signal(bool(0))
 
-    counter = Signal(intbv(0, min=0, max=8))
+    counter = Signal(intbv(0, min=0, max=N))
+    outputs_data_valid = Signal(bool(0))
+
+    # list of interfaces for the 2nd stage 1d-dct modules
+    inputs_2nd_stage = []
+    outputs_2nd_stage = []
+    for i in range(N):
+        inputs_2nd_stage += [input_1d_2nd_stage(first_1d_output.out_precision)]
+        outputs_2nd_stage += [output_interface(out_prec, N)]
+
+
+    @block
+    def assign(data_in, data_valid, data_in_temp, data_valid_temp):
+
+        # avoid verilog indexing
+        @always_comb
+        def assign():
+            data_in.next = data_in_temp
+            data_valid.next = data_valid_temp
+
+        return assign
+
+    @block
+    def assign_2(outputs, outputs_2nd_stage, io):
+
+        # avoid verilog indexing
+        @block
+        def assign(y, x):
+            @always_comb
+            def assign():
+                y.next = x
+            return assign
+
+        g = [None for _ in range(N)]
+        for i in range(N):
+                g[i] = assign(outputs.out_sigs[i*N + io], outputs_2nd_stage.out_sigs[i])
+        return g
+
+    @block
+    def assign_3(y, x):
+
+        @always_comb
+        def assign():
+            y.next = x
+
+        return assign
+
+
+    stage_2_insts = []
+    for i in range(N):
+        stage_2_insts += [dct_1d(inputs_2nd_stage[i], outputs_2nd_stage[i], clock,
+                                reset, num_fractional_bits, stage_1_prec, N)]
+
+        stage_2_insts += [assign(inputs_2nd_stage[i].data_in, inputs_2nd_stage[i].data_valid,
+                                 first_1d_output.out_sigs[i], first_1d_output.data_valid)]
+
+        stage_2_insts += [assign_2(outputs, outputs_2nd_stage[i], i)]
+
+    stage_2_insts += [assign_3(outputs_data_valid, outputs_2nd_stage[0].data_valid)]
+
 
     @always_seq(clock.posedge, reset=reset)
     def input_subtract():
@@ -124,100 +148,16 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14, out_prec=10):
             data_valid_reg.next = inputs.data_valid
             input_1d_stage_1.data_valid.next = data_valid_reg
 
-    @always_seq(clock.posedge, reset=reset)
-    def first_stage_to_second():
-        """First stage 1d-dct outputs to 2nd stage inputs"""
-        inputs_2nd_stage_0.data_in.next = first_1d_output.out0
-        inputs_2nd_stage_0.data_valid.next = first_1d_output.data_valid
-        inputs_2nd_stage_1.data_in.next = first_1d_output.out1
-        inputs_2nd_stage_1.data_valid.next = first_1d_output.data_valid
-        inputs_2nd_stage_2.data_in.next = first_1d_output.out2
-        inputs_2nd_stage_2.data_valid.next = first_1d_output.data_valid
-        inputs_2nd_stage_3.data_in.next = first_1d_output.out3
-        inputs_2nd_stage_3.data_valid.next = first_1d_output.data_valid
-        inputs_2nd_stage_4.data_in.next = first_1d_output.out4
-        inputs_2nd_stage_4.data_valid.next = first_1d_output.data_valid
-        inputs_2nd_stage_5.data_in.next = first_1d_output.out5
-        inputs_2nd_stage_5.data_valid.next = first_1d_output.data_valid
-        inputs_2nd_stage_6.data_in.next = first_1d_output.out6
-        inputs_2nd_stage_6.data_valid.next = first_1d_output.data_valid
-        inputs_2nd_stage_7.data_in.next = first_1d_output.out7
-        inputs_2nd_stage_7.data_valid.next = first_1d_output.data_valid
 
-    @always_seq(clock.posedge, reset=reset)
+    @always_comb
     def second_stage_output():
-        """Outputs of the 2nd stage 1d-dct modules"""
-        outputs.y00.next = outputs_2nd_stage_0.out0
-        outputs.y01.next = outputs_2nd_stage_1.out0
-        outputs.y02.next = outputs_2nd_stage_2.out0
-        outputs.y03.next = outputs_2nd_stage_3.out0
-        outputs.y04.next = outputs_2nd_stage_4.out0
-        outputs.y05.next = outputs_2nd_stage_5.out0
-        outputs.y06.next = outputs_2nd_stage_6.out0
-        outputs.y07.next = outputs_2nd_stage_7.out0
-        outputs.y10.next = outputs_2nd_stage_0.out1
-        outputs.y11.next = outputs_2nd_stage_1.out1
-        outputs.y12.next = outputs_2nd_stage_2.out1
-        outputs.y13.next = outputs_2nd_stage_3.out1
-        outputs.y14.next = outputs_2nd_stage_4.out1
-        outputs.y15.next = outputs_2nd_stage_5.out1
-        outputs.y16.next = outputs_2nd_stage_6.out1
-        outputs.y17.next = outputs_2nd_stage_7.out1
-        outputs.y20.next = outputs_2nd_stage_0.out2
-        outputs.y21.next = outputs_2nd_stage_1.out2
-        outputs.y22.next = outputs_2nd_stage_2.out2
-        outputs.y23.next = outputs_2nd_stage_3.out2
-        outputs.y24.next = outputs_2nd_stage_4.out2
-        outputs.y25.next = outputs_2nd_stage_5.out2
-        outputs.y26.next = outputs_2nd_stage_6.out2
-        outputs.y27.next = outputs_2nd_stage_7.out2
-        outputs.y30.next = outputs_2nd_stage_0.out3
-        outputs.y31.next = outputs_2nd_stage_1.out3
-        outputs.y32.next = outputs_2nd_stage_2.out3
-        outputs.y33.next = outputs_2nd_stage_3.out3
-        outputs.y34.next = outputs_2nd_stage_4.out3
-        outputs.y35.next = outputs_2nd_stage_5.out3
-        outputs.y36.next = outputs_2nd_stage_6.out3
-        outputs.y37.next = outputs_2nd_stage_7.out3
-        outputs.y40.next = outputs_2nd_stage_0.out4
-        outputs.y41.next = outputs_2nd_stage_1.out4
-        outputs.y42.next = outputs_2nd_stage_2.out4
-        outputs.y43.next = outputs_2nd_stage_3.out4
-        outputs.y44.next = outputs_2nd_stage_4.out4
-        outputs.y45.next = outputs_2nd_stage_5.out4
-        outputs.y46.next = outputs_2nd_stage_6.out4
-        outputs.y47.next = outputs_2nd_stage_7.out4
-        outputs.y50.next = outputs_2nd_stage_0.out5
-        outputs.y51.next = outputs_2nd_stage_1.out5
-        outputs.y52.next = outputs_2nd_stage_2.out5
-        outputs.y53.next = outputs_2nd_stage_3.out5
-        outputs.y54.next = outputs_2nd_stage_4.out5
-        outputs.y55.next = outputs_2nd_stage_5.out5
-        outputs.y56.next = outputs_2nd_stage_6.out5
-        outputs.y57.next = outputs_2nd_stage_7.out5
-        outputs.y60.next = outputs_2nd_stage_0.out6
-        outputs.y61.next = outputs_2nd_stage_1.out6
-        outputs.y62.next = outputs_2nd_stage_2.out6
-        outputs.y63.next = outputs_2nd_stage_3.out6
-        outputs.y64.next = outputs_2nd_stage_4.out6
-        outputs.y65.next = outputs_2nd_stage_5.out6
-        outputs.y66.next = outputs_2nd_stage_6.out6
-        outputs.y67.next = outputs_2nd_stage_7.out6
-        outputs.y70.next = outputs_2nd_stage_0.out7
-        outputs.y71.next = outputs_2nd_stage_1.out7
-        outputs.y72.next = outputs_2nd_stage_2.out7
-        outputs.y73.next = outputs_2nd_stage_3.out7
-        outputs.y74.next = outputs_2nd_stage_4.out7
-        outputs.y75.next = outputs_2nd_stage_5.out7
-        outputs.y76.next = outputs_2nd_stage_6.out7
-        outputs.y77.next = outputs_2nd_stage_7.out7
         outputs.data_valid.next = data_valid_reg2
 
     @always_seq(clock.posedge, reset=reset)
     def counter_update():
         """Counter update"""
-        if outputs_2nd_stage_0.data_valid:
-            if counter == 7:
+        if outputs_data_valid:
+            if counter == N - 1:
                 counter.next = 0
             else:
                 counter.next = counter + 1
@@ -225,30 +165,32 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14, out_prec=10):
     @always_comb
     def data_valid_2d():
         """Data valid signal assignment when the outputs are valid"""
-        if outputs_2nd_stage_0.data_valid and counter == 0:
+        if outputs_data_valid and counter == 0:
             data_valid_reg2.next = True
         else:
             data_valid_reg2.next = False
 
-    return (input_subtract, second_stage_output, first_stage_to_second,
-            stage_2_inst_0, stage_2_inst_1, stage_2_inst_2, stage_2_inst_3,
-            stage_2_inst_4, stage_2_inst_5, stage_2_inst_6, stage_2_inst_7,
-            data_valid_2d, counter_update, first_1d)
+
+    return (stage_2_insts, input_subtract, second_stage_output,
+             counter_update, data_valid_2d, first_1d)
 
 
 def convert():
     """2D-DCT module conversion"""
     out_prec = 10
+    stage_1_prec = 10
     fract_bits = 14
+    N = 8
+
     inputs = input_interface()
-    outputs = outputs_2d(out_prec)
+    outputs = outputs_2d(out_prec, N)
 
     clock = Signal(bool(0))
     reset = ResetSignal(1, active=True, async=True)
 
     analyze.simulator = 'ghdl'
     assert dct_2d(inputs, outputs, clock, reset,
-                  fract_bits, out_prec).analyze_convert() == 0
+                  fract_bits, stage_1_prec, out_prec, N).analyze_convert() == 0
 
 if __name__ == '__main__':
     convert()

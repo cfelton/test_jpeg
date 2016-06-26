@@ -172,6 +172,7 @@ def dct_1d(input_interface, output_interface, clock, reset,
             output_interface.data_valid.next = True
         else:
             output_interface.data_valid.next = False
+
     # avoid verilog indexing error
     outputs_assignment = output_interface.assignment(output_sigs)
 
