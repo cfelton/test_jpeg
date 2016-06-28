@@ -171,6 +171,7 @@ def test_dct_1d_conversion():
             outputs_count = 0
             while(outputs_count != samples):
                 yield clock.posedge
+                yield delay(1)
                 if outputs.data_valid:
                     for i in range(N):
                         print_sig[i].next = expected_outputs_rom[outputs_count * 8 + i]

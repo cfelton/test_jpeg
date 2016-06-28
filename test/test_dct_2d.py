@@ -127,8 +127,8 @@ def test_dct_2d():
             outputs_count = 0
             while(outputs_count != samples):
                 yield clock.posedge
+                yield delay(1)
                 if outputs.data_valid:
-                    yield delay(1)
                     out_print(in_out_data.outputs[outputs_count],
                               outputs.out_sigs, N)
                     outputs_count += 1

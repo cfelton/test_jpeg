@@ -118,7 +118,8 @@ def dct_1d(input_interface, output_interface, clock, reset,
     @always_seq(clock.posedge, reset=reset)
     def input_reg():
         """input register"""
-        data_in_reg.next = input_interface.data_in
+        if input_interface.data_valid:
+            data_in_reg.next = input_interface.data_in
 
     @always_seq(clock.posedge, reset=reset)
     def coeff_assign():
@@ -166,11 +167,11 @@ def dct_1d(input_interface, output_interface, clock, reset,
     def outputs():
         """rounding"""
         for i in range(N):
-            output_sigs[i].next = adder_reg[i][a:b].signed() + adder_reg[i][c]
+                output_sigs[i].next = adder_reg[i][a:b].signed() + adder_reg[i][c]
 
         if cycles_counter == N + 2 or (first_row_passed and
                                        cycles_counter == N - 1):
-            output_interface.data_valid.next = True
+                output_interface.data_valid.next = True
         else:
             output_interface.data_valid.next = False
 
