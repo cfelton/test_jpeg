@@ -88,11 +88,12 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14, stage_1_prec=1
         inputs_2nd_stage += [input_1d_2nd_stage(first_1d_output.out_precision)]
         outputs_2nd_stage += [output_interface(out_prec, N)]
 
+    """the blocks below are used for the list of signal elaboration"""
 
     @block
     def assign(data_in, data_valid, data_in_temp, data_valid_temp):
-
-        # avoid verilog indexing
+    """used to assign the signals data_in and data_valid of the first 1d-dct module
+    to the second stage 1d-dct modules"""
         @always_comb
         def assign():
             data_in.next = data_in_temp
@@ -102,8 +103,8 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14, stage_1_prec=1
 
     @block
     def assign_2(outputs, outputs_2nd_stage, io):
-
-        # avoid verilog indexing
+        """used to assigns the output signals of the 2nd stage 1d-dct modules
+        to the outputs signals of the top level 2d-dct"""
         @block
         def assign(y, x):
             @always_comb
@@ -118,7 +119,8 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14, stage_1_prec=1
 
     @block
     def assign_3(y, x):
-
+        """used to make a simple assignment of the data_valid signals of the 2nd stage
+        1d-dct modules to a temp signal which used in the 2d-dct module"""
         @always_comb
         def assign():
             y.next = x
