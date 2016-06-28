@@ -113,8 +113,8 @@ def test_dct_1d():
             outputs_count = 0
             while(outputs_count != samples):
                 yield clock.posedge
+                yield delay(1)
                 if outputs.data_valid:
-                    yield delay(1)
                     # convert flat signal to array of signals
                     out_print(in_out_data.outputs[outputs_count],
                               outputs.out_sigs)

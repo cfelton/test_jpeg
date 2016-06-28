@@ -165,10 +165,11 @@ def dct_1d(input_interface, output_interface, clock, reset,
     @always_seq(clock.posedge, reset=reset)
     def outputs():
         """rounding"""
+        for i in range(N):
+            output_sigs[i].next = adder_reg[i][a:b].signed() + adder_reg[i][c]
+
         if cycles_counter == N + 2 or (first_row_passed and
                                        cycles_counter == N - 1):
-            for i in range(N):
-                output_sigs[i].next = adder_reg[i][a:b].signed() + adder_reg[i][c]
             output_interface.data_valid.next = True
         else:
             output_interface.data_valid.next = False
