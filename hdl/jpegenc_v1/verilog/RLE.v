@@ -105,8 +105,8 @@ module rle
    reg 			       dovalid_reg = 1'b0;
    reg [5:0] 		       zero_cnt = 0;
     
-   reg [5:0] 		       wr_cnt_d1 = 0;
-   reg [5:0] 		       wr_cnt = 0;
+   reg [6:0] 		       wr_cnt_d1 = 0;
+   reg [6:0] 		       wr_cnt = 0;
    reg [5:0] 		       rd_cnt = 0;
    reg 			       rd_en = 1'b0;
     
