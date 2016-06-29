@@ -92,8 +92,8 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14, stage_1_prec=1
 
     @block
     def assign(data_in, data_valid, data_in_temp, data_valid_temp):
-    """used to assign the signals data_in and data_valid of the first 1d-dct module
-    to the second stage 1d-dct modules"""
+        """used to assign the signals data_in and data_valid of the first 1d-dct module
+        to the second stage 1d-dct modules"""
         @always_comb
         def assign():
             data_in.next = data_in_temp
