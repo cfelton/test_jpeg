@@ -59,8 +59,8 @@ def quantizer_top(
     """HDL modeling of top module"""
 
     assert isinstance(quant_ctrl, QuantCtrl)
-    assert isinstance(quanto_datastream, QuantOutputStream)
-    assert isinstance(quanti_datastream, QuantInputStream)
+    assert isinstance(quanto_datastream, QuantODataStream)
+    assert isinstance(quanti_datastream, QuantIDataStream)
     assert isinstance(quant_config, QuantConfig)
 
     # address length and data length declared here
