@@ -1,5 +1,5 @@
 from myhdl import block, delay, instance
-from .reference_jpeg import numofbits
+from .reference_jpeg import numofbits, divider_ref
 
 class Constants(object):
     def __init__(self, width_addr, width_data, max_write_cnt, rlength):
