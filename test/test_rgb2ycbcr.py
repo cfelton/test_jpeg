@@ -12,35 +12,6 @@ from jpegenc.testing import sim_available
 simsok = sim_available('iverilog') and sim_available('ghdl')
 
 
-@myhdl.block
-def clock_driver(clock):
-    @instance
-    def clkgen():
-        clock.next = False
-        while True:
-            yield delay(10)
-            clock.next = not clock
-    return clkgen
-
-
-def reset_on_start(reset, clock):
-    reset.next = True
-    yield delay(40)
-    yield clock.posedge
-    reset.next = not reset
-
-
-@myhdl.block
-def rstonstart(reset, clock):
-    @instance
-    def ros():
-        reset.next = True
-        yield delay(40)
-        yield clock.posedge
-        reset.next = not reset
-    return ros
-
-
 def print_results(inputs, expected_outputs, actual_outputs):
     """Print the results of the Simulation
     """

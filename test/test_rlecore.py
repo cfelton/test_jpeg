@@ -7,11 +7,14 @@ from myhdl.conversion import verify
 
 from jpegenc.subblocks.rle.rlecore import DataStream, rle, Pixel
 from jpegenc.subblocks.rle.rlecore import RLESymbols, RLEConfig
-from testcases import *
+from jpegenc.subblocks.rle.entropycoder import nbits as numofbits
 
-from common import tbclock, reset_on_start, resetonstart, Constants
-from common import numofbits, start_of_block
-
+# from common import tbclock, reset_on_start, resetonstart, Constants
+# from common import numofbits, start_of_block
+from jpegenc.testing import toggle_signal, clock_driver, reset_on_start, pulse_reset
+# from testcases import *
+from rle_known_inputs import (red_pixels_1, green_pixels_1, blue_pixels_1,
+                              red_pixels_2, green_pixels_2, blue_pixels_2,)
 
 def block_process(
         constants, clock, block, datastream, rlesymbols, rleconfig, color):
@@ -21,7 +24,7 @@ def block_process(
     rleconfig.color_component.next = color
 
     # wait till start signal asserts
-    yield start_of_block(clock, datastream.start)
+    yield toggle_signal(datastream.start, clock)
 
     # read input from the block
     datastream.input_val.next = block[rleconfig.read_addr]
@@ -74,6 +77,7 @@ def test_rle_core():
     reset = ResetSignal(0, active=1, async=True)
 
     # constants for input, runlength, size width
+    width, size, rlength, max_write_cnt = 6, 12, 63, 4
     constants = Constants(6, 12, 63, 4)
     pixel = Pixel()
 
@@ -102,13 +106,13 @@ def test_rle_core():
             )
 
         # clock instantiation
-        inst_clock = tbclock(clock)
+        inst_clock = clock_driver(clock)
 
         @instance
         def tbstim():
 
             # reset before sending data
-            yield reset_on_start(clock, reset)
+            yield pulse_reset(reset, clock)
 
             # components of type Y1 or Y2 processed
             yield block_process(
@@ -190,6 +194,7 @@ def test_rle_conversion():
     clock = Signal(bool(0))
     reset = ResetSignal(0, active=1, async=True)
 
+    width, size, rlength, max_write_cnt = 6, 12, 63, 4
     constants = Constants(6, 12, 63, 4)
 
     datastream = DataStream(constants.width_data)
@@ -206,8 +211,8 @@ def test_rle_conversion():
             datastream, rlesymbols, rleconfig
             )
 
-        inst_clock = tbclock(clock)
-        inst_reset = resetonstart(clock, reset)
+        inst_clock = clock_driver(clock)
+        inst_reset = reset_on_start(reset, clock)
 
         @instance
         def tbstim():

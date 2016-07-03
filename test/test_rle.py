@@ -4,13 +4,19 @@ from myhdl import StopSimulation
 from myhdl import block
 from myhdl import ResetSignal, Signal, instance
 from myhdl.conversion import verify
-from testcases import *
 
 from jpegenc.subblocks.rle import rletop, InDataStream, BufferDataBus
 from jpegenc.subblocks.rle import RLEConfig, Pixel
+from jpegenc.subblocks.rle.entropycoder import nbits as numofbits
 
-from common import tbclock, reset_on_start, resetonstart, Constants
-from common import numofbits, start_of_block, BufferConstants
+# from common import tbclock, reset_on_start, resetonstart, Constants
+# from common import numofbits, start_of_block, BufferConstants
+from jpegenc.testing import clock_driver, reset_on_start, pulse_reset, toggle_signal
+from jpegenc.testing import run_testbench
+
+# from testcases import *
+from rle_known_inputs import (red_pixels_1, green_pixels_1, blue_pixels_1,
+                              red_pixels_2, green_pixels_2, blue_pixels_2,)
 
 
 def write_block(clock, block, datastream, rleconfig, color):
@@ -20,7 +26,7 @@ def write_block(clock, block, datastream, rleconfig, color):
     rleconfig.color_component.next = color
 
     # wait till start signal asserts
-    yield start_of_block(clock, datastream.start)
+    yield toggle_signal(datastream.start, clock)
 
     # read data into rle module
     datastream.input_val.next = block[rleconfig.read_addr]
@@ -34,11 +40,8 @@ def write_block(clock, block, datastream, rleconfig, color):
     datastream.input_val.next = block[rleconfig.read_addr]
 
     # wait till all the inputs are written into RLE Double Fifo
-    yield clock.posedge
-    yield clock.posedge
-    yield clock.posedge
-    yield clock.posedge
-    yield clock.posedge
+    for _ in range(4):
+        yield clock.posedge
 
 
 def read_block(select, bufferdatabus, clock):
@@ -100,7 +103,7 @@ def test_rle():
             indatastream, bufferdatabus, rleconfig
         )
 
-        inst_clock = tbclock(clock)
+        inst_clock = clock_driver(clock)
 
         @instance
         def tbstim():
@@ -117,7 +120,7 @@ def test_rle():
                 rleconfig, pixel.Y1
                 )
             yield clock.posedge
-            print ("============================")
+            print("============================")
 
             # read Y1 component from 1st Buffer
             yield read_block(True, bufferdatabus, clock)
@@ -130,7 +133,7 @@ def test_rle():
                 )
             yield clock.posedge
 
-            print ("============================")
+            print("============================")
 
             # read Y2 component from 2nd Buffer
             yield read_block(False, bufferdatabus, clock)
@@ -142,7 +145,7 @@ def test_rle():
                 rleconfig, pixel.Cb
                 )
             yield clock.posedge
-            print ("=============================")
+            print("=============================")
 
             # read Cb component from 1st Buffer
             yield read_block(True, bufferdatabus, clock)
@@ -154,7 +157,7 @@ def test_rle():
                 rleconfig, pixel.Cb
                 )
             yield clock.posedge
-            print ("==============================")
+            print("==============================")
 
             # read Cb component from 2nd Buffer
             yield read_block(False, bufferdatabus, clock)
@@ -166,7 +169,7 @@ def test_rle():
                 rleconfig, pixel.Cr
                 )
             yield clock.posedge
-            print ("==============================")
+            print("==============================")
 
             # read Cr component from 1st Buffer
             yield read_block(True, bufferdatabus, clock)
@@ -178,12 +181,12 @@ def test_rle():
                 rleconfig, pixel.Cr
                 )
             yield clock.posedge
-            print ("==============================")
+            print("==============================")
 
             # read Cr component from 1st Buffer
             yield read_block(False, bufferdatabus, clock)
 
-            print ("==============================")
+            print("==============================")
 
             # end of stream when sof asserts
             yield clock.posedge
@@ -194,10 +197,8 @@ def test_rle():
 
         return tbstim, inst_clock, inst
 
-    instance_rle = bench_rle()
-    instance_rle.config_sim(trace=True)
-    instance_rle.run_sim()
-
+    run_testbench(bench_rle)
+    
 
 def test_rle_conversion():
     """This block is used to test conversion"""
@@ -223,8 +224,8 @@ def test_rle_conversion():
             dfifo_const, constants, reset, clock,
             indatastream, bufferdatabus, rleconfig)
 
-        inst_clock = tbclock(clock)
-        inst_reset = resetonstart(clock, reset)
+        inst_clock = clock_driver(clock)
+        inst_reset = reset_on_start(reset, clock)
 
         @instance
         def tbstim():

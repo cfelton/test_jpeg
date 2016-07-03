@@ -27,21 +27,21 @@ class DoubleFifoBus(object):
 
 
 @block
-def doublefifo(buffer_constants, reset, clock, dfifo_bus):
+def doublefifo(clock, reset, dfifo_bus, width=8, depth=16):
     """double fifo core function"""
 
-    fifo_data_in = Signal(intbv(0)[buffer_constants.width:])
+    fifo_data_in = Signal(intbv(0)[width:])
 
     glbl = Global(clock, reset)
-    fbus1 = FIFOBus(width=buffer_constants.width)
-    fbus2 = FIFOBus(width=buffer_constants.width)
+    fbus1 = FIFOBus(width=width)
+    fbus2 = FIFOBus(width=width)
 
     assert isinstance(glbl, Global)
     assert isinstance(fbus1, FIFOBus)
     assert isinstance(fbus2, FIFOBus)
 
-    fifo_sync1 = fifo_sync(glbl, fbus1, buffer_constants.depth)
-    fifo_sync2 = fifo_sync(glbl, fbus2, buffer_constants.depth)
+    fifo_sync1 = fifo_sync(glbl, fbus1, depth)
+    fifo_sync2 = fifo_sync(glbl, fbus2, depth)
 
     @always_comb
     def assign():
