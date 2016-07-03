@@ -6,9 +6,8 @@ from myhdl import ResetSignal, Signal, instance
 from myhdl.conversion import verify
 from testcases import *
 
-from jpegenc.subblocks.RLE.rletop import InDataStream, BufferDataBus
-from jpegenc.subblocks.RLE.rletop import rletop
-from jpegenc.subblocks.RLE.RLECore.rlecore import RLEConfig, Pixel
+from jpegenc.subblocks.rle import rletop, InDataStream, BufferDataBus
+from jpegenc.subblocks.rle import RLEConfig, Pixel
 
 from common import tbclock, reset_on_start, resetonstart, Constants
 from common import numofbits, start_of_block, BufferConstants
@@ -98,7 +97,8 @@ def test_rle():
         # instantiation for clock and rletop module
         inst = rletop(
             dfifo_const, constants, reset, clock,
-            indatastream, bufferdatabus, rleconfig)
+            indatastream, bufferdatabus, rleconfig
+        )
 
         inst_clock = tbclock(clock)
 
@@ -220,8 +220,8 @@ def test_rle_conversion():
         dfifo_const = BufferConstants(width_dbuf, constants.max_write_cnt + 1)
 
         inst = rletop(
-            dfifo_const, constants, reset,
-            clock, indatastream, bufferdatabus, rleconfig)
+            dfifo_const, constants, reset, clock,
+            indatastream, bufferdatabus, rleconfig)
 
         inst_clock = tbclock(clock)
         inst_reset = resetonstart(clock, reset)
@@ -229,10 +229,14 @@ def test_rle_conversion():
         @instance
         def tbstim():
             yield clock.posedge
-            print ("Conversion done!!")
+            print("Conversion done!!")
             raise StopSimulation
 
         return tbstim, inst, inst_clock, inst_reset
 
     verify.simulator = 'iverilog'
     assert bench_rle_conversion().verify_convert() == 0
+
+
+if __name__ == "__main__":
+    test_rle()

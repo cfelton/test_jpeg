@@ -12,7 +12,8 @@ from myhdl.conversion import verify
 from jpegenc.subblocks.common import (input_interface, output_interface,
                                                  input_1d_2nd_stage,outputs_2d)
 
-from jpegenc.subblocks.dct_2d import dct_2d, dct_2d_transformation
+from jpegenc.subblocks.dct import dct_2d
+from jpegenc.subblocks.dct.dct_2d import dct_2d_transformation
 from jpegenc.testing import sim_available
 
 simsok = sim_available('ghdl') and sim_available('iverilog')

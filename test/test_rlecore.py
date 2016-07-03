@@ -5,8 +5,8 @@ from myhdl import block
 from myhdl import ResetSignal, Signal, instance
 from myhdl.conversion import verify
 
-from jpegenc.subblocks.RLE.RLECore.rlecore import DataStream, rle, Pixel
-from jpegenc.subblocks.RLE.RLECore.rlecore import RLESymbols, RLEConfig
+from jpegenc.subblocks.rle.rlecore import DataStream, rle, Pixel
+from jpegenc.subblocks.rle.rlecore import RLESymbols, RLEConfig
 from testcases import *
 
 from common import tbclock, reset_on_start, resetonstart, Constants
@@ -115,7 +115,7 @@ def test_rle_core():
                 constants, clock,
                 red_pixels_1, datastream, rlesymbols, rleconfig, pixel.Y1)
 
-            print ("======================")
+            print("======================")
 
             # components of type Y1 or Y2 processed
             yield block_process(
@@ -126,7 +126,7 @@ def test_rle_core():
                 rleconfig, pixel.Y2
                 )
 
-            print ("=====================")
+            print("=====================")
 
             # components of type Cb processes
             yield block_process(
@@ -148,7 +148,7 @@ def test_rle_core():
                 rleconfig, pixel.Cb
                 )
 
-            print ("=====================")
+            print("=====================")
 
             # components of type Cr processed
             yield block_process(
@@ -159,7 +159,7 @@ def test_rle_core():
                 rleconfig, pixel.Cr
                 )
 
-            print ("=====================")
+            print("=====================")
 
             # components of type Cr processed
             yield block_process(
@@ -170,7 +170,7 @@ def test_rle_core():
                 rleconfig, pixel.Cr
                 )
 
-            print ("=====================")
+            print("=====================")
 
             # end of stream when sof asserts
             rleconfig.sof.next = True

@@ -1,9 +1,9 @@
 from myhdl import always_seq, always_comb, block
 from myhdl import intbv, Signal, concat
-from jpegenc.subblocks.RLE.RLECore.rlecore import DataStream, rle
-from jpegenc.subblocks.RLE.RLECore.rlecore import RLESymbols, RLEConfig
-from jpegenc.subblocks.RLE.RleDoubleFifo.rledoublebuffer import rledoublefifo
-from jpegenc.subblocks.RLE.RleDoubleFifo.rledoublebuffer import DoubleFifoBus
+from .rlecore import DataStream, rle
+from .rlecore import RLESymbols, RLEConfig
+from .doublebuffer import doublefifo
+from .doublebuffer import DoubleFifoBus
 
 
 class InDataStream(DataStream):
@@ -44,9 +44,8 @@ class BufferDataBus(RLESymbols):
 
 
 @block
-def rletop(
-        dfifo_const, constants, reset, clock,
-        indatastream, bufferdatabus, rleconfig):
+def rletop(dfifo_const, constants, reset, clock,
+           indatastream, bufferdatabus, rleconfig):
     """The top module connects rle core and rle double buffer"""
 
     assert isinstance(indatastream, InDataStream)
@@ -99,7 +98,7 @@ def rletop(
         datastream_temp.input_val.next = indatastream.input_val
 
     # write the processed data to rle double fifo
-    rle_doublefifo = rledoublefifo(dfifo_const, reset, clock, dfifo)
+    rle_doublefifo = doublefifo(dfifo_const, reset, clock, dfifo)
 
     @always_comb
     def assign3():

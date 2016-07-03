@@ -1,13 +1,12 @@
 import numpy as np
 from math import sqrt, pi, cos
 import myhdl
-from myhdl import Signal, ResetSignal, intbv, always_comb, always_seq, instance, block
-from myhdl.conversion import analyze
+from myhdl import Signal, intbv, always_comb, always_seq, block
 
 from jpegenc.subblocks.common import (input_1d_1st_stage, input_interface,
                                       output_interface, outputs_2d,
                                       input_1d_2nd_stage)
-from jpegenc.subblocks.dct_1d import dct_1d
+from .dct_1d import dct_1d
 
 
 class dct_2d_transformation(object):
@@ -25,7 +24,7 @@ class dct_2d_transformation(object):
     def build_matrix(self, N):
         const = sqrt(2.0 / 8)
         a0 = sqrt(1.0 / 2.0)
-        ak  = 1
+        ak = 1
         coeff_matrix = []
         for i in range(N):
             row = []
@@ -54,7 +53,8 @@ class dct_2d_transformation(object):
 
 
 @myhdl.block
-def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14, stage_1_prec=10, out_prec=10, N=8):
+def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14,
+           stage_1_prec=10, out_prec=10, N=8):
     """2D-DCT Module
 
     This module performs the 2D-DCT Transformation.
@@ -140,7 +140,6 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14, stage_1_prec=1
 
     stage_2_insts += [assign_3(outputs_data_valid, outputs_2nd_stage[0].data_valid)]
 
-
     @always_seq(clock.posedge, reset=reset)
     def input_subtract():
         """Align to zero each input"""
@@ -149,7 +148,6 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14, stage_1_prec=1
             input_1d_stage_1.data_in.next = data_in_signed - 128
             data_valid_reg.next = inputs.data_valid
             input_1d_stage_1.data_valid.next = data_valid_reg
-
 
     @always_comb
     def second_stage_output():
@@ -172,27 +170,6 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14, stage_1_prec=1
         else:
             data_valid_reg2.next = False
 
-
     return (stage_2_insts, input_subtract, second_stage_output,
-             counter_update, data_valid_2d, first_1d)
+            counter_update, data_valid_2d, first_1d)
 
-"""
-def convert():
-    out_prec = 10
-    stage_1_prec = 10
-    fract_bits = 14
-    N = 8
-
-    inputs = input_interface()
-    outputs = outputs_2d(out_prec, N)
-
-    clock = Signal(bool(0))
-    reset = ResetSignal(1, active=True, async=True)
-
-    analyze.simulator = 'ghdl'
-    assert dct_2d(inputs, outputs, clock, reset,
-                  fract_bits, stage_1_prec, out_prec, N).analyze_convert() == 0
-
-if __name__ == '__main__':
-    convert()
-"""

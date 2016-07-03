@@ -8,8 +8,9 @@ import myhdl
 from myhdl import (StopSimulation, block, Signal, ResetSignal, intbv,
                                       delay, instance, always_comb, always_seq)
 from myhdl.conversion import verify
-from jpegenc.subblocks.common import  output_interface, input_1d_1st_stage
-from jpegenc.subblocks.dct_1d import dct_1d, dct_1d_transformation
+from jpegenc.subblocks.common import output_interface, input_1d_1st_stage
+from jpegenc.subblocks.dct import dct_1d
+from jpegenc.subblocks.dct.dct_1d import dct_1d_transformation
 from jpegenc.testing import sim_available
 
 simsok = sim_available('iverilog') and sim_available('ghdl')

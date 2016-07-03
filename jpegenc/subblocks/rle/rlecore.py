@@ -1,7 +1,7 @@
 """ core of the run length encoder module """
 from myhdl import always_comb, always_seq, block
 from myhdl import intbv, Signal
-from jpegenc.subblocks.RLE.RLECore.entropycoder import entropycoder
+from .entropycoder import entropycoder
 
 
 class Pixel(object):

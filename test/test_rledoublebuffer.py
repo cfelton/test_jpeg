@@ -3,10 +3,8 @@
 from myhdl import block, StopSimulation
 from myhdl import ResetSignal, Signal, instance
 from myhdl.conversion import verify
-from rhea import Global
 
-from jpegenc.subblocks.RLE.RleDoubleFifo.rledoublebuffer import DoubleFifoBus
-from jpegenc.subblocks.RLE.RleDoubleFifo.rledoublebuffer import rledoublefifo
+from jpegenc.subblocks.rle.doublebuffer import doublefifo, DoubleFifoBus
 
 from common import BufferConstants
 from common import tbclock, reset_on_start, resetonstart
@@ -26,7 +24,7 @@ def test_doublebuffer():
 
         # instantiation of fifo-bus, clock and rledoublefifo
         dfifo_bus = DoubleFifoBus(buffer_constants.width)
-        inst = rledoublefifo(buffer_constants, reset, clock, dfifo_bus)
+        inst = doublefifo(buffer_constants, reset, clock, dfifo_bus)
         inst_clock = tbclock(clock)
 
         @instance
@@ -165,7 +163,7 @@ def test_doublebuffer_conversion():
 
         dfifo_bus = DoubleFifoBus(buffer_constants.width)
 
-        inst = rledoublefifo(buffer_constants, reset, clock, dfifo_bus)
+        inst = doublefifo(buffer_constants, reset, clock, dfifo_bus)
         inst_clock = tbclock(clock)
         inst_reset = resetonstart(clock, reset)
 

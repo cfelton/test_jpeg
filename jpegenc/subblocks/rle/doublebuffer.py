@@ -3,7 +3,7 @@
 from myhdl import always_comb, always_seq, block
 from myhdl import intbv, Signal
 
-from rhea.cores.fifo.fifo_sync import fifo_sync
+from rhea.cores.fifo import fifo_sync
 from rhea.system import FIFOBus
 from rhea import Global
 
@@ -27,7 +27,7 @@ class DoubleFifoBus(object):
 
 
 @block
-def rledoublefifo(buffer_constants, reset, clock, dfifo_bus):
+def doublefifo(buffer_constants, reset, clock, dfifo_bus):
     """double fifo core function"""
 
     fifo_data_in = Signal(intbv(0)[buffer_constants.width:])

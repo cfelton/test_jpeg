@@ -1,9 +1,10 @@
-'''This module tests the functionality and conversion of Entropy Coder'''
+"""This module tests the functionality and conversion of Entropy Coder"""
 
 from myhdl import block, instance
 from myhdl import intbv, ResetSignal, Signal, StopSimulation
 from myhdl.conversion import verify
-from jpegenc.subblocks.RLE.RLECore.entropycoder import entropycoder
+from jpegenc.subblocks.rle.entropycoder import entropycoder
+
 from common import tbclock, reset_on_start, entropy_encode, numofbits
 from common import resetonstart
 

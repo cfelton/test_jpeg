@@ -1,6 +1,10 @@
-""" This module takes a input and returns amplitude of the input and number of bits required to store the input """
+"""
+This module takes a input and returns amplitude of the input and
+number of bits required to store the input
+"""
 
 from myhdl import always_seq, block, intbv
+
 
 def two2bin(num):
     """converts negative number to positive"""
@@ -20,7 +24,8 @@ def nbits(num, width):
 
 @block
 def entropycoder(width, clock, reset, data_in, size, amplitude):
-    """returns the amplitude of input and number of bits required to store the input """
+    """returns the amplitude of input and number of bits required to store the input
+    """
 
     @always_seq(clock.posedge, reset=reset)
     def logic():

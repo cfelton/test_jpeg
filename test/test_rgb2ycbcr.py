@@ -6,7 +6,7 @@ from myhdl import (StopSimulation, block, Signal, ResetSignal, intbv,
                    delay, instance, always_comb, always_seq)
 from myhdl.conversion import verify
 
-from jpegenc.subblocks.rgb2ycbcr import ColorSpace, RGB, YCbCr, rgb2ycbcr
+from jpegenc.subblocks.color_converters import ColorSpace, RGB, YCbCr, rgb2ycbcr
 from jpegenc.testing import sim_available
 
 simsok = sim_available('iverilog') and sim_available('ghdl')

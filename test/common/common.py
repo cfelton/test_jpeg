@@ -1,6 +1,7 @@
 from myhdl import block, delay, instance
 from .reference_jpeg import numofbits
 
+
 class Constants(object):
     def __init__(self, width_addr, width_data, max_write_cnt, rlength):
         self.width_addr = width_addr
@@ -8,6 +9,7 @@ class Constants(object):
         self.size = numofbits(width_data)
         self.max_write_cnt = max_write_cnt
         self.rlength = rlength
+
 
 class BufferConstants(object):
     def __init__(self, width, depth):
