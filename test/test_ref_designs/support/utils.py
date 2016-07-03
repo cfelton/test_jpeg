@@ -19,7 +19,7 @@ def set_default_args(args=None):
     if args is None:
         args = Namespace(trace=False, vtrace=False)
 
-    ipth = './test_images/color/'
+    ipth = '../test_images/color/'
     ipth = os.path.join(ipth, 'small4.png')
 
     default_args = (
@@ -42,7 +42,7 @@ def set_default_args(args=None):
 def get_cli_args(parser=None):
     """Get the CLI test arguments
     """
-    ipth = "./test_images/color/"
+    ipth = "../test_images/color/"
     files = os.listdir(ipth)
     files = [ff for ff in files if fnmatch(ff, '*small*')]
     ifn = random.choice(files)
@@ -66,7 +66,3 @@ def get_cli_args(parser=None):
 
     args = set_default_args(args)
     return args
-    
-
-                         
-        

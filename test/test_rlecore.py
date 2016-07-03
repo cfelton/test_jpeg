@@ -12,8 +12,8 @@ from jpegenc.subblocks.rle.rlecore import DataStream, rle, Pixel
 from jpegenc.subblocks.rle.rlecore import RLESymbols, RLEConfig
 
 from jpegenc.testing import toggle_signal, clock_driver, reset_on_start, pulse_reset
-from rle_known_inputs import (red_pixels_1, green_pixels_1, blue_pixels_1,
-                              red_pixels_2, green_pixels_2, blue_pixels_2,)
+from rle_test_inputs import (red_pixels_1, green_pixels_1, blue_pixels_1,
+                             red_pixels_2, green_pixels_2, blue_pixels_2,)
 
 
 def block_process(

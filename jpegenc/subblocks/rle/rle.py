@@ -44,8 +44,8 @@ class BufferDataBus(RLESymbols):
 
 
 @block
-def rletop(dfifo_const, constants, reset, clock,
-           indatastream, bufferdatabus, rleconfig):
+def rlencoder(dfifo_const, constants, reset, clock,
+              indatastream, bufferdatabus, rleconfig):
     """The top module connects rle core and rle double buffer"""
 
     assert isinstance(indatastream, InDataStream)

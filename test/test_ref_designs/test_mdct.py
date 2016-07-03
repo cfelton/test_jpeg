@@ -19,7 +19,7 @@ class DataBus(object):
 
 
 def prep_cosim(clock, reset, datai, datao, args=None):
-    spth = '../hdl/jpegenc_v1/verilog'
+    spth = '../reference_designs/jpegenc_v1/verilog'
     filelist = ['DCT1D.v', 'DCT2D.v', 'DBUFCTL.v', 
                 'RAM.v', 'ROME.v', 'ROMO.v', 
                 'MDCT.v']

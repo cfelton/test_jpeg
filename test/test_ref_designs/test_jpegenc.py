@@ -32,7 +32,7 @@ def test_jpegenc(args=None):
     tbdut = prep_cosim(clock, reset, jpgv1, jpgv2, args=args)   
     
     # save the bitstreams here
-    v1_bic,v2_bic = [None],[None]
+    v1_bic, v2_bic = [None], [None]
 
     # clock generator (20 tick period)
     @always(delay(10))
@@ -51,7 +51,7 @@ def test_jpegenc(args=None):
         for ii, bb in enumerate(v1_bic):
             print("  [%6d]  %08X" % (ii, int(bb),))
             if ii > 4 and not args.dump_bitstreams:
-                break;
+                break
         print("V1 max frame rate %8.3f @ %s" % (jpgv1.max_frame_rate, str(jpgv2.img_size),))
 
         print("V2 bitstream, len %d" % (len(v2_bic),))

@@ -8,15 +8,15 @@ from myhdl import block
 from myhdl import ResetSignal, Signal, instance
 from myhdl.conversion import verify
 
-from jpegenc.subblocks.rle import rletop, InDataStream, BufferDataBus
+from jpegenc.subblocks.rle import rlencoder, InDataStream, BufferDataBus
 from jpegenc.subblocks.rle import RLEConfig, Pixel
 
 from jpegenc.testing import clock_driver, reset_on_start, pulse_reset, toggle_signal
 from jpegenc.testing import run_testbench
 
 # from testcases import *
-from rle_known_inputs import (red_pixels_1, green_pixels_1, blue_pixels_1,
-                              red_pixels_2, green_pixels_2, blue_pixels_2,)
+from rle_test_inputs import (red_pixels_1, green_pixels_1, blue_pixels_1,
+                             red_pixels_2, green_pixels_2, blue_pixels_2,)
 
 
 def write_block(clock, block, datastream, rleconfig, color):
@@ -101,7 +101,7 @@ def test_rle():
         dfifo_const = Constants(width=width_dbuf, depth=constants.max_write_cnt + 1)
 
         # instantiation for clock and rletop module
-        inst = rletop(
+        inst = rlencoder(
             dfifo_const, constants, reset, clock,
             indatastream, bufferdatabus, rleconfig
         )
@@ -226,7 +226,7 @@ def test_rle_conversion():
         width_dbuf = constants.width_data + constants.size + constants.rlength
         dfifo_const = Constants(width=width_dbuf, depth=constants.max_write_cnt + 1)
 
-        inst = rletop(
+        inst = rlencoder(
             dfifo_const, constants, reset, clock,
             indatastream, bufferdatabus, rleconfig)
 
