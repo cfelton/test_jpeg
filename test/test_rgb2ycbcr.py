@@ -1,11 +1,15 @@
 from random import randrange
 
+import pytest
 import myhdl
 from myhdl import (StopSimulation, block, Signal, ResetSignal, intbv,
                    delay, instance, always_comb, always_seq)
 from myhdl.conversion import verify
 
 from jpegenc.subblocks.rgb2ycbcr import ColorSpace, RGB, YCbCr, rgb2ycbcr
+from jpegenc.testing import sim_available
+
+simsok = sim_available('iverilog') and sim_available('ghdl')
 
 
 @myhdl.block
@@ -49,6 +53,7 @@ def print_results(inputs, expected_outputs, actual_outputs):
                  actual_outputs['cr'][i]))
         print("-"*40)
 
+
 class InputsAndOutputs(object):
 
     """Contains the common data and modules
@@ -87,6 +92,7 @@ class InputsAndOutputs(object):
         a = [exp_y, exp_cb, exp_cr]
         b = [in_r, in_g, in_b]
         return a, b
+
 
 def test_color_translation():
     """
@@ -141,6 +147,8 @@ def test_color_translation():
     inst.config_sim(trace=True)
     inst.run_sim()
 
+
+@pytest.mark.skipif(not simsok, reason="missing installed simulator")
 def test_block_conversion():
     """
     In the current test are tested the outputs of the

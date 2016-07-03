@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 # coding=utf-8
+
+import numpy as np
+
+import pytest
 import myhdl
 from myhdl import (StopSimulation, block, Signal, ResetSignal, intbv,
                    delay, instance, always_comb, always_seq)
@@ -9,8 +13,9 @@ from jpegenc.subblocks.common import (input_interface, output_interface,
                                                  input_1d_2nd_stage,outputs_2d)
 
 from jpegenc.subblocks.dct_2d import dct_2d, dct_2d_transformation
+from jpegenc.testing import sim_available
 
-import numpy as np
+simsok = sim_available('ghdl') and sim_available('iverilog')
 
 
 class InputsAndOutputs(object):
@@ -65,6 +70,7 @@ def out_print(expected_outputs, actual_outputs, N):
     print(a)
     print("-"*40)
 
+
 @myhdl.block
 def clock_driver(clock):
     @instance
@@ -82,6 +88,7 @@ def reset_on_start(reset, clock):
     yield clock.posedge
     reset.next = not reset
 
+
 @myhdl.block
 def rstonstart(reset, clock):
     @instance
@@ -91,6 +98,7 @@ def rstonstart(reset, clock):
         yield clock.posedge
         reset.next = not reset
     return ros
+
 
 def test_dct_2d():
 
@@ -140,6 +148,8 @@ def test_dct_2d():
     inst.config_sim(trace=True)
     inst.run_sim()
 
+
+@pytest.mark.skipif(not simsok, reason="missing installed simulator")
 def test_dct_2d_conversion():
 
     samples, fract_bits, output_bits, stage_1_prec, N = 5, 14, 10, 10, 8
@@ -203,7 +213,6 @@ def test_dct_2d_conversion():
 
         return tdut, tbclk, tbstim, monitor, tbrst, print_assign
 
-
     # verify and convert with GHDL
     verify.simulator = 'ghdl'
     assert bench_dct_2d().verify_convert() == 0
@@ -211,5 +220,7 @@ def test_dct_2d_conversion():
     verify.simulator = 'iverilog'
     assert bench_dct_2d().verify_convert() == 0
 
-test_dct_2d()
-test_dct_2d_conversion()
+
+if __name__ == '__main__':
+    test_dct_2d()
+    test_dct_2d_conversion()

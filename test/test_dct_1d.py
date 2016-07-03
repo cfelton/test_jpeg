@@ -1,13 +1,18 @@
 #!/usr/bin/env python
 # coding=utf-8
 
+from random import randrange
+
+import pytest
 import myhdl
 from myhdl import (StopSimulation, block, Signal, ResetSignal, intbv,
                                       delay, instance, always_comb, always_seq)
 from myhdl.conversion import verify
 from jpegenc.subblocks.common import  output_interface, input_1d_1st_stage
 from jpegenc.subblocks.dct_1d import dct_1d, dct_1d_transformation
-from random import randrange
+from jpegenc.testing import sim_available
+
+simsok = sim_available('iverilog') and sim_available('ghdl')
 
 
 @myhdl.block
@@ -129,6 +134,7 @@ def test_dct_1d():
     inst.run_sim()
 
 
+@pytest.mark.skipif(not simsok, reason="missing installed simulator")
 def test_dct_1d_conversion():
 
     samples, fract_bits, out_prec, N = 10, 14, 10, 8
@@ -189,7 +195,6 @@ def test_dct_1d_conversion():
 
         return tdut, tbclk, tbstim, monitor, tbrst, print_assign
 
-
     # verify and convert with GHDL
     verify.simulator = 'ghdl'
     assert bench_dct_1d().verify_convert() == 0
@@ -198,5 +203,6 @@ def test_dct_1d_conversion():
     assert bench_dct_1d().verify_convert() == 0
 
 
-test_dct_1d()
-test_dct_1d_conversion()
+if __name__ == '__main__':
+    test_dct_1d()
+    test_dct_1d_conversion()

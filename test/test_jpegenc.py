@@ -15,7 +15,10 @@ from myhdl import *
 from support import (prep_cosim, JPEGEncV1, JPEGEncV2, 
                      set_default_args, get_cli_args)
 
+from jpegenc.testing import skip_ref_test
 
+
+@skip_ref_test
 def test_jpegenc(args=None):
     args = set_default_args(args)
 

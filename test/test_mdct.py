@@ -8,7 +8,9 @@ import myhdl
 from myhdl import (Signal, ResetSignal, intbv, always, delay, instance,
                    StopSimulation)
 
+from jpegenc.testing import skip_ref_test
 from support import get_cli_args
+
 
 class DataBus(object):
     def __init__(self, w=8):
@@ -42,7 +44,8 @@ def prep_cosim(clock, reset, datai, datao, args=None):
 
     return gcosim
 
-    
+
+@skip_ref_test
 def test_mdct(args=None):
     """ A simple test to exercise the MDCT block
     """
