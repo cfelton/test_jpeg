@@ -6,7 +6,7 @@ from myhdl.conversion import verify
 
 from jpegenc.subblocks.rle.doublebuffer import doublefifo, DoubleFifoBus
 
-from jpegenc.testing import clock_driver, pulse_reset
+from jpegenc.testing import clock_driver, pulse_reset, reset_on_start
 
 
 def test_doublebuffer():
@@ -159,9 +159,10 @@ def test_doublebuffer_conversion():
         clock = Signal(bool(0))
         reset = ResetSignal(0, active=1, async=True)
 
-        dfifo_bus = DoubleFifoBus(buffer_constants.width)
+        width = 20
+        dfifo_bus = DoubleFifoBus(width=width)
 
-        inst = doublefifo(clock, reset, dfifo_bus, width=20, depth=64)
+        inst = doublefifo(clock, reset, dfifo_bus, width=width, depth=64)
         inst_clock = clock_driver(clock)
         inst_reset = reset_on_start(reset, clock)
 

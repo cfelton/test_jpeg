@@ -22,6 +22,26 @@ def nbits(num, width):
     return num[width]
 
 
+def entropy_encode(amplitude):
+    """ Model of the entropy encoding
+
+    Arguments:
+        amplitude (int): given an integer generate the encoding
+
+    Returns:
+        amplitude_ref:
+        size_ref:
+    """
+    if amplitude >= 0:
+        amplitude_ref = amplitude
+        size_ref = amplitude.bit_length()
+    else:
+        amplitude_ref = amplitude - 1
+        size_ref = abs(amplitude).bit_length()
+
+    return amplitude_ref, size_ref
+
+
 @block
 def entropycoder(width, clock, reset, data_in, size, amplitude):
     """returns the amplitude of input and number of bits required to store the input

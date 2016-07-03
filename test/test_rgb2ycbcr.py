@@ -7,7 +7,8 @@ from myhdl import (StopSimulation, block, Signal, ResetSignal, intbv,
 from myhdl.conversion import verify
 
 from jpegenc.subblocks.color_converters import ColorSpace, RGB, YCbCr, rgb2ycbcr
-from jpegenc.testing import sim_available
+from jpegenc.testing import sim_available, run_testbench
+from jpegenc.testing import clock_driver, reset_on_start, pulse_reset
 
 simsok = sim_available('iverilog') and sim_available('ghdl')
 
@@ -89,7 +90,7 @@ def test_color_translation():
 
         @instance
         def tbstim():
-            yield reset_on_start(reset, clock)
+            yield pulse_reset(reset, clock)
             rgb.data_valid.next = True
 
             for i in range(samples):
@@ -114,9 +115,7 @@ def test_color_translation():
 
         return tbdut, tbclk, tbstim
 
-    inst = bench_color_trans()
-    inst.config_sim(trace=True)
-    inst.run_sim()
+    run_testbench(bench_color_trans)
 
 
 @pytest.mark.skipif(not simsok, reason="missing installed simulator")
@@ -148,7 +147,7 @@ def test_block_conversion():
     def bench_color_trans():
         tbdut = rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits)
         tbclk = clock_driver(clock)
-        tbrst = rstonstart(reset, clock)
+        tbrst = reset_on_start(reset, clock)
 
         @instance
         def tbstim():

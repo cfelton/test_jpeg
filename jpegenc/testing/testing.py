@@ -36,7 +36,7 @@ def run_testbench(bench, trace=True, bench_id=None):
     if trace:
         vcdpath = 'output/vcd'
         if not os.path.isdir(vcdpath):
-            os.makdirs(vcdpath)
+            os.makedirs(vcdpath)
 
         if bench_id is None:
             bench_id = str(id(bench))

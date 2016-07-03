@@ -31,6 +31,8 @@ def clock_driver(clock, period=10):
             yield delay(d2)
             clock.next = True
 
+    return beh_clock
+
 
 def toggle_signal(sig, clock):
     assert isinstance(sig, SignalType)

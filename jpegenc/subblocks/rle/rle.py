@@ -98,7 +98,9 @@ def rletop(dfifo_const, constants, reset, clock,
         datastream_temp.input_val.next = indatastream.input_val
 
     # write the processed data to rle double fifo
-    rle_doublefifo = doublefifo(dfifo_const, reset, clock, dfifo)
+    # @todo: remove dfifo_const
+    rle_doublefifo = doublefifo(clock, reset, dfifo,
+                                width=dfifo_const.width, depth=dfifo_const.depth)
 
     @always_comb
     def assign3():

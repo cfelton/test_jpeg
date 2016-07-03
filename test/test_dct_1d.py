@@ -6,12 +6,13 @@ from random import randrange
 import pytest
 import myhdl
 from myhdl import (StopSimulation, block, Signal, ResetSignal, intbv,
-                                      delay, instance, always_comb, always_seq)
+                   delay, instance, always_comb, always_seq)
 from myhdl.conversion import verify
 from jpegenc.subblocks.common import output_interface, input_1d_1st_stage
 from jpegenc.subblocks.dct import dct_1d
 from jpegenc.subblocks.dct.dct_1d import dct_1d_transformation
-from jpegenc.testing import sim_available
+from jpegenc.testing import sim_available, run_testbench
+from jpegenc.testing import clock_driver, reset_on_start, pulse_reset
 
 simsok = sim_available('iverilog') and sim_available('ghdl')
 
@@ -77,7 +78,7 @@ def test_dct_1d():
 
         @instance
         def tbstim():
-            yield reset_on_start(reset, clock)
+            yield pulse_reset(reset, clock)
             inputs.data_valid.next = True
 
             for i in range(samples):
@@ -101,9 +102,7 @@ def test_dct_1d():
 
         return tdut, tbclk, tbstim, monitor
 
-    inst = bench_dct_1d()
-    inst.config_sim(trace=True)
-    inst.run_sim()
+    run_testbench(bench_dct_1d)
 
 
 @pytest.mark.skipif(not simsok, reason="missing installed simulator")
@@ -125,13 +124,13 @@ def test_dct_1d_conversion():
     @myhdl.block
     def bench_dct_1d():
         print_sig = [Signal(intbv(0, min=-2**out_prec, max=2**out_prec))
-                 for _ in range(N)]
+                     for _ in range(N)]
         print_sig_1 = [Signal(intbv(0, min=-2**out_prec, max=2**out_prec))
-                 for _ in range(N)]
+                       for _ in range(N)]
 
         tdut = dct_1d(inputs, outputs, clock, reset, fract_bits, out_prec, N)
         tbclk = clock_driver(clock)
-        tbrst = rstonstart(reset, clock)
+        tbrst = reset_on_start(reset, clock)
 
         @instance
         def tbstim():
@@ -147,7 +146,7 @@ def test_dct_1d_conversion():
         @instance
         def monitor():
             outputs_count = 0
-            while(outputs_count != samples):
+            while outputs_count != samples:
                 yield clock.posedge
                 yield delay(1)
                 if outputs.data_valid:

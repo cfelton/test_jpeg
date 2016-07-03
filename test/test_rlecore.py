@@ -1,5 +1,8 @@
 """The above testbench tests rle functioning and conversion"""
 
+# @todo: this is temporary until `rle` parameters are updated
+from argparse import Namespace as Constants
+
 from myhdl import StopSimulation
 from myhdl import block
 from myhdl import ResetSignal, Signal, instance
@@ -7,14 +10,11 @@ from myhdl.conversion import verify
 
 from jpegenc.subblocks.rle.rlecore import DataStream, rle, Pixel
 from jpegenc.subblocks.rle.rlecore import RLESymbols, RLEConfig
-from jpegenc.subblocks.rle.entropycoder import nbits as numofbits
 
-# from common import tbclock, reset_on_start, resetonstart, Constants
-# from common import numofbits, start_of_block
 from jpegenc.testing import toggle_signal, clock_driver, reset_on_start, pulse_reset
-# from testcases import *
 from rle_known_inputs import (red_pixels_1, green_pixels_1, blue_pixels_1,
                               red_pixels_2, green_pixels_2, blue_pixels_2,)
+
 
 def block_process(
         constants, clock, block, datastream, rlesymbols, rleconfig, color):
@@ -77,8 +77,10 @@ def test_rle_core():
     reset = ResetSignal(0, active=1, async=True)
 
     # constants for input, runlength, size width
-    width, size, rlength, max_write_cnt = 6, 12, 63, 4
-    constants = Constants(6, 12, 63, 4)
+    width = 6
+    constants = Constants(width_addr=width, width_data=12,
+                          max_write_cnt=63, rlength=4,
+                          size=width.bit_length())
     pixel = Pixel()
 
     # interfaces to the rle core
@@ -92,7 +94,7 @@ def test_rle_core():
         constants.rlength)
 
     # selects the color component, manages address values
-    rleconfig = RLEConfig(numofbits(constants.max_write_cnt))
+    rleconfig = RLEConfig(constants.max_write_cnt.bit_length())
 
     @block
     def bench_rle_core():
@@ -194,14 +196,16 @@ def test_rle_conversion():
     clock = Signal(bool(0))
     reset = ResetSignal(0, active=1, async=True)
 
-    width, size, rlength, max_write_cnt = 6, 12, 63, 4
-    constants = Constants(6, 12, 63, 4)
+    width = 6
+    constants = Constants(width_addr=width, width_data=12,
+                          max_write_cnt=63, rlength=4,
+                          size=width.bit_length())
 
     datastream = DataStream(constants.width_data)
     rlesymbols = RLESymbols(
         constants.width_data, constants.size, constants.rlength)
 
-    rleconfig = RLEConfig(numofbits(constants.max_write_cnt))
+    rleconfig = RLEConfig(constants.max_write_cnt.bit_length())
 
     @block
     def bench_rle_core():

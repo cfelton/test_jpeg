@@ -3,10 +3,12 @@
 from myhdl import block, instance
 from myhdl import intbv, ResetSignal, Signal, StopSimulation
 from myhdl.conversion import verify
-from jpegenc.subblocks.rle.entropycoder import entropycoder
 
-from common import tbclock, reset_on_start, entropy_encode, numofbits
-from common import resetonstart
+from jpegenc.subblocks.rle.entropycoder import entropycoder
+from jpegenc.subblocks.rle.entropycoder import entropy_encode
+
+from jpegenc.testing import run_testbench
+from jpegenc.testing import clock_driver, reset_on_start, pulse_reset
 
 
 def test_entropycoder():
@@ -14,7 +16,7 @@ def test_entropycoder():
 
     # constants for size required and width of input data
     width = 12
-    size_data = (numofbits(width-1))
+    size_data = (width-1).bit_length()
 
     clock = Signal(bool(0))
     reset = ResetSignal(0, active=True, async=True)
@@ -29,14 +31,14 @@ def test_entropycoder():
     @block
     def bench_entropycoder():
         inst = entropycoder(width, clock, reset, data_in, size, amplitude)
-        inst_clock = tbclock(clock)
+        inst_clock = clock_driver(clock)
 
         @instance
         def tbstim():
 
             """stimulus generates inputs for entropy coder"""
 
-            yield reset_on_start(clock, reset)
+            yield pulse_reset(reset, clock)
 
             for i in range(-2**(width-1), 2**(width-1), 1):
                 data_in.next = i
@@ -52,16 +54,14 @@ def test_entropycoder():
 
         return tbstim, inst, inst_clock
 
-    inst1 = bench_entropycoder()
-    inst1.config_sim(trace=False)
-    inst1.run_sim()
+    run_testbench(bench_entropycoder)
 
 
 def test_block_conversion():
     """Test bench used for conversion purpose"""
 
     width = 12
-    size_data = int(numofbits(width-1))
+    size_data = int((width-1).bit_length())
     clock = Signal(bool(0))
     reset = ResetSignal(0, active=True, async=True)
     data_in = Signal(intbv(0)[(width+1):].signed())
@@ -71,8 +71,8 @@ def test_block_conversion():
     @block
     def bench_entropycoder():
         inst = entropycoder(width, clock, reset, data_in, size, amplitude)
-        inst_clock = tbclock(clock)
-        inst_reset = resetonstart(clock, reset)
+        inst_clock = clock_driver(clock)
+        inst_reset = reset_on_start(reset, clock)
 
         @instance
         def tbstim():
