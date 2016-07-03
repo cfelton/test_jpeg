@@ -19,7 +19,7 @@ def set_default_args(args=None):
     if args is None:
         args = Namespace(trace=False, vtrace=False)
 
-    ipth = '../test_images/color/'
+    ipth = './test_images/color/'
     ipth = os.path.join(ipth, 'small4.png')
 
     default_args = (
@@ -36,13 +36,16 @@ def set_default_args(args=None):
 
     args.start_time = datetime.datetime.now()
 
+    if not os.path.isdir('output/vcd'):
+        os.makedirs('output/vcd')
+
     return args
 
 
 def get_cli_args(parser=None):
     """Get the CLI test arguments
     """
-    ipth = "../test_images/color/"
+    ipth = "./test_images/color/"
     files = os.listdir(ipth)
     files = [ff for ff in files if fnmatch(ff, '*small*')]
     ifn = random.choice(files)

@@ -159,7 +159,7 @@ def test_jpegenc(args=None):
         return tbclk, tbstim, tbintf, tbstimv1, tbstimv2
 
     if args.trace:
-        traceSignals.name = 'vcd/test_jpegenc'
+        traceSignals.name = 'output/vcd/test_jpegenc'
         traceSignals.timescale = '1ns'    
         fn = traceSignals.name + '.vcd'
         if os.path.isfile(fn):
