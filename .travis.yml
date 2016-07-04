@@ -31,9 +31,9 @@ before_install:
 # command to install dependencies
 install:
   - pwd
-#  - chmod +x ./scripts/ci/install_myhdl.sh
-#  - ./scripts/ci/install_myhdl.sh
-#  - pip install -e git://github.com/cfelton/rhea.git#egg=rhea
+  # the local script install is used, it copies the vpi files
+  - chmod +x ./scripts/ci/install_myhdl.sh
+  - ./scripts/ci/install_myhdl.sh
   - pip install coverage
   - pip install coveralls
   - pip install Pillow
