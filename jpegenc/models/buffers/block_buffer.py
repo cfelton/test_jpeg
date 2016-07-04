@@ -15,7 +15,8 @@ class PixelStream(object):
         self.resolution = resolution
         self.pformat = pformat
         self.width = sum(pformat)
-        self.pixel = Signal(intbv(0)[self.width:])
+        pmax = (2**self.width)-1
+        self.pixel = Signal(intbv(pmax)[self.width:])
         self.valid = Signal(bool(0))
         self.clock = Signal(bool(0))
 
