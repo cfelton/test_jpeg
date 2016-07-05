@@ -1,13 +1,22 @@
 #!/usr/bin/env python
 # coding=utf-8
+
+import numpy as np
+
+import pytest
 import myhdl
 from myhdl import (StopSimulation, block, Signal, ResetSignal, intbv,
                                       delay, instance, always_comb, always_seq)
 from myhdl.conversion import verify
+
 from jpegenc.subblocks.common import outputs_2d
 from jpegenc.subblocks.zig_zag import zig_zag_scan, zig_zag
-import numpy as np
+from jpegenc.testing import sim_available, run_testbench
+from jpegenc.testing import clock_driver, reset_on_start, pulse_reset
+
 from random import randrange
+
+simsok = sim_available('ghdl') and sim_available('iverilog')
 
 class InputsAndOutputs(object):
 
@@ -50,16 +59,6 @@ def out_print(expected_outputs, actual_outputs, N):
     print(a)
     print("-"*40)
 
-@myhdl.block
-def clock_driver(clock):
-    @instance
-    def clkgen():
-        clock.next = False
-        while True:
-            yield delay(10)
-            clock.next = not clock
-    return clkgen
-
 def test_zig_zag():
 
     samples, output_bits, N = 5, 10, 8
@@ -99,10 +98,9 @@ def test_zig_zag():
 
         return tdut, tbclock, tbstim, monitor
 
-    inst = bench_zig_zag()
-    inst.config_sim(trace=True)
-    inst.run_sim()
+    run_testbench(bench_zig_zag)
 
+@pytest.mark.skipif(not simsok, reason="missing installed simulator")
 def test_zig_zag_conversion():
 
     samples, output_bits, N = 5, 10, 8
@@ -169,5 +167,6 @@ def test_zig_zag_conversion():
     verify.simulator = 'iverilog'
     assert bench_zig_zag().verify_convert() == 0
 
-test_zig_zag()
-test_zig_zag_conversion()
+if __name__ == '__main__':
+    test_zig_zag()
+    test_zig_zag_conversion()
