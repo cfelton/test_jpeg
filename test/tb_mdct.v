@@ -16,7 +16,7 @@ module tb_mdct;
     reg [31:0] 	ocnt = 0;
 
     initial begin
-	$dumpfile("vcd/_tb_mdct.vcd");
+	$dumpfile("output/vcd/_tb_mdct.vcd");
 	$dumpvars(0, tb_mdct);
     end
 

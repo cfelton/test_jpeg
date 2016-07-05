@@ -1,40 +1,16 @@
 from random import randrange
 
+import pytest
 import myhdl
 from myhdl import (StopSimulation, block, Signal, ResetSignal, intbv,
                    delay, instance, always_comb, always_seq)
 from myhdl.conversion import verify
 
-from jpegenc.subblocks.rgb2ycbcr import ColorSpace, RGB, YCbCr, rgb2ycbcr
+from jpegenc.subblocks.color_converters import ColorSpace, RGB, YCbCr, rgb2ycbcr
+from jpegenc.testing import sim_available, run_testbench
+from jpegenc.testing import clock_driver, reset_on_start, pulse_reset
 
-
-@myhdl.block
-def clock_driver(clock):
-    @instance
-    def clkgen():
-        clock.next = False
-        while True:
-            yield delay(10)
-            clock.next = not clock
-    return clkgen
-
-
-def reset_on_start(reset, clock):
-    reset.next = True
-    yield delay(40)
-    yield clock.posedge
-    reset.next = not reset
-
-
-@myhdl.block
-def rstonstart(reset, clock):
-    @instance
-    def ros():
-        reset.next = True
-        yield delay(40)
-        yield clock.posedge
-        reset.next = not reset
-    return ros
+simsok = sim_available('iverilog') and sim_available('ghdl')
 
 
 def print_results(inputs, expected_outputs, actual_outputs):
@@ -48,6 +24,7 @@ def print_results(inputs, expected_outputs, actual_outputs):
               % (actual_outputs['y'][i], actual_outputs['cb'][i],
                  actual_outputs['cr'][i]))
         print("-"*40)
+
 
 class InputsAndOutputs(object):
 
@@ -88,6 +65,7 @@ class InputsAndOutputs(object):
         b = [in_r, in_g, in_b]
         return a, b
 
+
 def test_color_translation():
     """
     In the current test are tested the outputs
@@ -112,7 +90,7 @@ def test_color_translation():
 
         @instance
         def tbstim():
-            yield reset_on_start(reset, clock)
+            yield pulse_reset(reset, clock)
             rgb.data_valid.next = True
 
             for i in range(samples):
@@ -137,10 +115,10 @@ def test_color_translation():
 
         return tbdut, tbclk, tbstim
 
-    inst = bench_color_trans()
-    inst.config_sim(trace=True)
-    inst.run_sim()
+    run_testbench(bench_color_trans)
 
+
+@pytest.mark.skipif(not simsok, reason="missing installed simulator")
 def test_block_conversion():
     """
     In the current test are tested the outputs of the
@@ -169,7 +147,7 @@ def test_block_conversion():
     def bench_color_trans():
         tbdut = rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits)
         tbclk = clock_driver(clock)
-        tbrst = rstonstart(reset, clock)
+        tbrst = reset_on_start(reset, clock)
 
         @instance
         def tbstim():

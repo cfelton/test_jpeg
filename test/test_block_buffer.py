@@ -5,6 +5,7 @@ import myhdl
 from myhdl import Signal, ResetSignal, always, delay, instance, StopSimulation
 
 from jpegenc.models.buffers import PixelStream, ImageBlock, mdl_block_buffer
+from jpegenc.testing import run_testbench
 
 
 def test_block_buffer():
@@ -14,6 +15,7 @@ def test_block_buffer():
     pxl = PixelStream()
     bmem = ImageBlock(pxl, )
 
+    @myhdl.block
     def bench_block_buffers():
         pxl.clock = clock
         tbdut = mdl_block_buffer(pxl, bmem)
@@ -41,9 +43,7 @@ def test_block_buffer():
 
         return tbdut, tbpxl, tbclk, tbstim
 
-
-    g = myhdl.traceSignals(bench_block_buffers)
-    myhdl.Simulation(g).run()
+    run_testbench(bench_block_buffers)
 
 
 if __name__ == '__main__':

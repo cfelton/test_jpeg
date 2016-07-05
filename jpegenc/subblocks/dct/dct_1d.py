@@ -4,10 +4,7 @@
 import numpy as np
 from math import sqrt, pi, cos
 import myhdl
-from myhdl import Signal, ResetSignal, intbv, always_comb, always_seq, ConcatSignal
-from myhdl.conversion import analyze
-from jpegenc.subblocks.common import (input_interface,
-                                      output_interface)
+from myhdl import Signal, intbv, always_comb, always_seq
 
 
 class dct_1d_transformation(object):
@@ -180,28 +177,3 @@ def dct_1d(input_interface, output_interface, clock, reset,
 
     return (input_reg, outputs, counters, mul_add, coeff_assign,
             mux_after_adder_reg, outputs_assignment)
-
-"""
-def convert():
-    num_fractional_bits = 14
-    out_precision = 10
-    N = 8
-
-    inputs = input_interface()
-    outputs = output_interface()
-
-    clock = Signal(bool(0))
-    reset = ResetSignal(1, active=True, async=True)
-
-    analyze.simulator = 'ghdl'
-    assert dct_1d(inputs, outputs, clock, reset,
-                  num_fractional_bits, out_precision, N).analyze_convert() == 0
-    analyze.simulator = 'iverilog'
-    assert dct_1d(inputs, outputs, clock, reset,
-                  num_fractional_bits, out_precision, N).analyze_convert() == 0
-
-
-
-if __name__ == '__main__':
-    convert()
-"""

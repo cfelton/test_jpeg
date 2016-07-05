@@ -4,6 +4,7 @@ from __future__ import print_function, division
 from math import ceil
 from random import randint
 
+import myhdl
 from myhdl import Signal, intbv, always
 
 
@@ -14,16 +15,18 @@ class PixelStream(object):
         self.resolution = resolution
         self.pformat = pformat
         self.width = sum(pformat)
-        self.pixel = Signal(intbv(0)[self.width:])
+        pmax = (2**self.width)-1
+        self.pixel = Signal(intbv(pmax)[self.width:])
         self.valid = Signal(bool(0))
         self.clock = Signal(bool(0))
 
+    @myhdl.block
     def generate_stream(self):
 
         @always(self.clock.posedge)
         def mdl_stream():
             self.valid.next = True
-            #self.pixel.next = randint(0, self.pixel.max-1)
+            # self.pixel.next = randint(0, self.pixel.max-1)
             if self.pixel == self.pixel.max-1:
                 self.pixel.next = 0
             else:
@@ -74,6 +77,7 @@ def _dump_info(resolution, block_size, pwidth):
     return bytes, mem_bytes
 
 
+@myhdl.block
 def mdl_block_buffer(pxl, bmem):
     """ Generate the MxN (rows x columns) block buffers.
 

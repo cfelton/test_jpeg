@@ -1,42 +1,20 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-import myhdl
-from myhdl import (StopSimulation, block, Signal, ResetSignal, intbv,
-                                      delay, instance, always_comb, always_seq)
-from myhdl.conversion import verify
-from jpegenc.subblocks.common import  output_interface, input_1d_1st_stage
-from jpegenc.subblocks.dct_1d import dct_1d, dct_1d_transformation
 from random import randrange
 
+import pytest
+import myhdl
+from myhdl import (StopSimulation, block, Signal, ResetSignal, intbv,
+                   delay, instance, always_comb, always_seq)
+from myhdl.conversion import verify
+from jpegenc.subblocks.common import output_interface, input_1d_1st_stage
+from jpegenc.subblocks.dct import dct_1d
+from jpegenc.subblocks.dct.dct_1d import dct_1d_transformation
+from jpegenc.testing import sim_available, run_testbench
+from jpegenc.testing import clock_driver, reset_on_start, pulse_reset
 
-@myhdl.block
-def clock_driver(clock):
-    @instance
-    def clkgen():
-        clock.next = False
-        while True:
-            yield delay(10)
-            clock.next = not clock
-    return clkgen
-
-
-def reset_on_start(reset, clock):
-    reset.next = True
-    yield delay(40)
-    yield clock.posedge
-    reset.next = not reset
-
-
-@myhdl.block
-def rstonstart(reset, clock):
-    @instance
-    def ros():
-        reset.next = True
-        yield delay(40)
-        yield clock.posedge
-        reset.next = not reset
-    return ros
+simsok = sim_available('iverilog') and sim_available('ghdl')
 
 
 class InputsAndOutputs(object):
@@ -100,7 +78,7 @@ def test_dct_1d():
 
         @instance
         def tbstim():
-            yield reset_on_start(reset, clock)
+            yield pulse_reset(reset, clock)
             inputs.data_valid.next = True
 
             for i in range(samples):
@@ -124,11 +102,10 @@ def test_dct_1d():
 
         return tdut, tbclk, tbstim, monitor
 
-    inst = bench_dct_1d()
-    inst.config_sim(trace=True)
-    inst.run_sim()
+    run_testbench(bench_dct_1d)
 
 
+@pytest.mark.skipif(not simsok, reason="missing installed simulator")
 def test_dct_1d_conversion():
 
     samples, fract_bits, out_prec, N = 10, 14, 10, 8
@@ -147,13 +124,13 @@ def test_dct_1d_conversion():
     @myhdl.block
     def bench_dct_1d():
         print_sig = [Signal(intbv(0, min=-2**out_prec, max=2**out_prec))
-                 for _ in range(N)]
+                     for _ in range(N)]
         print_sig_1 = [Signal(intbv(0, min=-2**out_prec, max=2**out_prec))
-                 for _ in range(N)]
+                       for _ in range(N)]
 
         tdut = dct_1d(inputs, outputs, clock, reset, fract_bits, out_prec, N)
         tbclk = clock_driver(clock)
-        tbrst = rstonstart(reset, clock)
+        tbrst = reset_on_start(reset, clock)
 
         @instance
         def tbstim():
@@ -169,7 +146,7 @@ def test_dct_1d_conversion():
         @instance
         def monitor():
             outputs_count = 0
-            while(outputs_count != samples):
+            while outputs_count != samples:
                 yield clock.posedge
                 yield delay(1)
                 if outputs.data_valid:
@@ -189,7 +166,6 @@ def test_dct_1d_conversion():
 
         return tdut, tbclk, tbstim, monitor, tbrst, print_assign
 
-
     # verify and convert with GHDL
     verify.simulator = 'ghdl'
     assert bench_dct_1d().verify_convert() == 0
@@ -198,5 +174,6 @@ def test_dct_1d_conversion():
     assert bench_dct_1d().verify_convert() == 0
 
 
-test_dct_1d()
-test_dct_1d_conversion()
+if __name__ == '__main__':
+    test_dct_1d()
+    test_dct_1d_conversion()

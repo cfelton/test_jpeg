@@ -15,7 +15,10 @@ from myhdl import *
 from support import (prep_cosim, JPEGEncV1, JPEGEncV2, 
                      set_default_args, get_cli_args)
 
+from jpegenc.testing import skip_ref_test
 
+
+@skip_ref_test
 def test_jpegenc(args=None):
     args = set_default_args(args)
 
@@ -29,7 +32,7 @@ def test_jpegenc(args=None):
     tbdut = prep_cosim(clock, reset, jpgv1, jpgv2, args=args)   
     
     # save the bitstreams here
-    v1_bic,v2_bic = [None],[None]
+    v1_bic, v2_bic = [None], [None]
 
     # clock generator (20 tick period)
     @always(delay(10))
@@ -48,7 +51,7 @@ def test_jpegenc(args=None):
         for ii, bb in enumerate(v1_bic):
             print("  [%6d]  %08X" % (ii, int(bb),))
             if ii > 4 and not args.dump_bitstreams:
-                break;
+                break
         print("V1 max frame rate %8.3f @ %s" % (jpgv1.max_frame_rate, str(jpgv2.img_size),))
 
         print("V2 bitstream, len %d" % (len(v2_bic),))
@@ -156,7 +159,7 @@ def test_jpegenc(args=None):
         return tbclk, tbstim, tbintf, tbstimv1, tbstimv2
 
     if args.trace:
-        traceSignals.name = 'vcd/test_jpegenc'
+        traceSignals.name = 'output/vcd/test_jpegenc'
         traceSignals.timescale = '1ns'    
         fn = traceSignals.name + '.vcd'
         if os.path.isfile(fn):

@@ -1,16 +1,19 @@
 """The above testbench tests rle functioning and conversion"""
 
+# @todo: this is temporary until `rle` parameters are updated
+from argparse import Namespace as Constants
+
 from myhdl import StopSimulation
 from myhdl import block
 from myhdl import ResetSignal, Signal, instance
 from myhdl.conversion import verify
 
-from jpegenc.subblocks.RLE.RLECore.rlecore import DataStream, rle, Pixel
-from jpegenc.subblocks.RLE.RLECore.rlecore import RLESymbols, RLEConfig
-from testcases import *
+from jpegenc.subblocks.rle.rlecore import DataStream, rle, Pixel
+from jpegenc.subblocks.rle.rlecore import RLESymbols, RLEConfig
 
-from common import tbclock, reset_on_start, resetonstart, Constants
-from common import numofbits, start_of_block
+from jpegenc.testing import toggle_signal, clock_driver, reset_on_start, pulse_reset
+from rle_test_inputs import (red_pixels_1, green_pixels_1, blue_pixels_1,
+                             red_pixels_2, green_pixels_2, blue_pixels_2,)
 
 
 def block_process(
@@ -21,7 +24,7 @@ def block_process(
     rleconfig.color_component.next = color
 
     # wait till start signal asserts
-    yield start_of_block(clock, datastream.start)
+    yield toggle_signal(datastream.start, clock)
 
     # read input from the block
     datastream.input_val.next = block[rleconfig.read_addr]
@@ -74,7 +77,10 @@ def test_rle_core():
     reset = ResetSignal(0, active=1, async=True)
 
     # constants for input, runlength, size width
-    constants = Constants(6, 12, 63, 4)
+    width = 6
+    constants = Constants(width_addr=width, width_data=12,
+                          max_write_cnt=63, rlength=4,
+                          size=width.bit_length())
     pixel = Pixel()
 
     # interfaces to the rle core
@@ -88,7 +94,7 @@ def test_rle_core():
         constants.rlength)
 
     # selects the color component, manages address values
-    rleconfig = RLEConfig(numofbits(constants.max_write_cnt))
+    rleconfig = RLEConfig(constants.max_write_cnt.bit_length())
 
     @block
     def bench_rle_core():
@@ -102,20 +108,20 @@ def test_rle_core():
             )
 
         # clock instantiation
-        inst_clock = tbclock(clock)
+        inst_clock = clock_driver(clock)
 
         @instance
         def tbstim():
 
             # reset before sending data
-            yield reset_on_start(clock, reset)
+            yield pulse_reset(reset, clock)
 
             # components of type Y1 or Y2 processed
             yield block_process(
                 constants, clock,
                 red_pixels_1, datastream, rlesymbols, rleconfig, pixel.Y1)
 
-            print ("======================")
+            print("======================")
 
             # components of type Y1 or Y2 processed
             yield block_process(
@@ -126,7 +132,7 @@ def test_rle_core():
                 rleconfig, pixel.Y2
                 )
 
-            print ("=====================")
+            print("=====================")
 
             # components of type Cb processes
             yield block_process(
@@ -148,7 +154,7 @@ def test_rle_core():
                 rleconfig, pixel.Cb
                 )
 
-            print ("=====================")
+            print("=====================")
 
             # components of type Cr processed
             yield block_process(
@@ -159,7 +165,7 @@ def test_rle_core():
                 rleconfig, pixel.Cr
                 )
 
-            print ("=====================")
+            print("=====================")
 
             # components of type Cr processed
             yield block_process(
@@ -170,7 +176,7 @@ def test_rle_core():
                 rleconfig, pixel.Cr
                 )
 
-            print ("=====================")
+            print("=====================")
 
             # end of stream when sof asserts
             rleconfig.sof.next = True
@@ -190,13 +196,16 @@ def test_rle_conversion():
     clock = Signal(bool(0))
     reset = ResetSignal(0, active=1, async=True)
 
-    constants = Constants(6, 12, 63, 4)
+    width = 6
+    constants = Constants(width_addr=width, width_data=12,
+                          max_write_cnt=63, rlength=4,
+                          size=width.bit_length())
 
     datastream = DataStream(constants.width_data)
     rlesymbols = RLESymbols(
         constants.width_data, constants.size, constants.rlength)
 
-    rleconfig = RLEConfig(numofbits(constants.max_write_cnt))
+    rleconfig = RLEConfig(constants.max_write_cnt.bit_length())
 
     @block
     def bench_rle_core():
@@ -206,8 +215,8 @@ def test_rle_conversion():
             datastream, rlesymbols, rleconfig
             )
 
-        inst_clock = tbclock(clock)
-        inst_reset = resetonstart(clock, reset)
+        inst_clock = clock_driver(clock)
+        inst_reset = reset_on_start(reset, clock)
 
         @instance
         def tbstim():
