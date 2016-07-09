@@ -17,8 +17,9 @@ addons:
 cache:
   directories:
     - $HOME/iverilog
+    - $HOME/ghdl-0.33
       
-# get some stuff to install
+# install the Verilog and VHDL simulation tools
 before_install:
   - export PATH=$PATH:$HOME/iverilog/bin/
   - chmod +x ./scripts/ci/install_iverilog.sh
@@ -30,6 +31,7 @@ before_install:
 # command to install dependencies
 install:
   - pwd
+  # the local script install is used, it copies the vpi files
   - chmod +x ./scripts/ci/install_myhdl.sh
   - ./scripts/ci/install_myhdl.sh
   - pip install -e git://github.com/cfelton/rhea.git#egg=rhea
@@ -37,12 +39,12 @@ install:
   - pip install coveralls
   - pip install Pillow
   - pip install numpy
-  - pip install .
+  - pip install . -r requirements.txt
 
 
 script:
    - cd test
-   - coverage run --source jpegenc -m py.test -s
+   - coverage run --source=jpegenc -m py.test --include-reference
    - cp .coverage ../
 
 after_success:

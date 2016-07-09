@@ -1,9 +1,16 @@
 """The functionality of entire Run Length Encoder is checked here"""
 
+<<<<<<< HEAD
+=======
+# @todo: this is temporary until `rle` parameters are updated
+from argparse import Namespace as Constants
+
+>>>>>>> upstream/master
 from myhdl import StopSimulation
 from myhdl import block
 from myhdl import ResetSignal, Signal, instance
 from myhdl.conversion import verify
+<<<<<<< HEAD
 from testcases import *
 
 from jpegenc.subblocks.RLE.rletop import InDataStream, BufferDataBus
@@ -12,6 +19,18 @@ from jpegenc.subblocks.RLE.RLECore.rlecore import RLEConfig, Pixel
 
 from common import tbclock, reset_on_start, resetonstart, Constants
 from common import numofbits, start_of_block, BufferConstants
+=======
+
+from jpegenc.subblocks.rle import rlencoder, InDataStream, BufferDataBus
+from jpegenc.subblocks.rle import RLEConfig, Pixel
+
+from jpegenc.testing import clock_driver, reset_on_start, pulse_reset, toggle_signal
+from jpegenc.testing import run_testbench
+
+# from testcases import *
+from rle_test_inputs import (red_pixels_1, green_pixels_1, blue_pixels_1,
+                             red_pixels_2, green_pixels_2, blue_pixels_2,)
+>>>>>>> upstream/master
 
 
 def write_block(clock, block, datastream, rleconfig, color):
@@ -21,7 +40,11 @@ def write_block(clock, block, datastream, rleconfig, color):
     rleconfig.color_component.next = color
 
     # wait till start signal asserts
+<<<<<<< HEAD
     yield start_of_block(clock, datastream.start)
+=======
+    yield toggle_signal(datastream.start, clock)
+>>>>>>> upstream/master
 
     # read data into rle module
     datastream.input_val.next = block[rleconfig.read_addr]
@@ -35,11 +58,16 @@ def write_block(clock, block, datastream, rleconfig, color):
     datastream.input_val.next = block[rleconfig.read_addr]
 
     # wait till all the inputs are written into RLE Double Fifo
+<<<<<<< HEAD
     yield clock.posedge
     yield clock.posedge
     yield clock.posedge
     yield clock.posedge
     yield clock.posedge
+=======
+    for _ in range(4):
+        yield clock.posedge
+>>>>>>> upstream/master
 
 
 def read_block(select, bufferdatabus, clock):
@@ -55,12 +83,20 @@ def read_block(select, bufferdatabus, clock):
 
     # pop data out into the bus until fifo becomes empty
     while bufferdatabus.fifo_empty != 1:
+<<<<<<< HEAD
         print ("runlength %d size %d amplitude %d" % (
+=======
+        print("runlength %d size %d amplitude %d" % (
+>>>>>>> upstream/master
             bufferdatabus.runlength,
             bufferdatabus.size, bufferdatabus.amplitude))
         yield clock.posedge
 
+<<<<<<< HEAD
     print ("runlength %d size %d amplitude %d" % (
+=======
+    print("runlength %d size %d amplitude %d" % (
+>>>>>>> upstream/master
         bufferdatabus.runlength, bufferdatabus.size, bufferdatabus.amplitude))
 
     # disable readmode
@@ -69,7 +105,11 @@ def read_block(select, bufferdatabus, clock):
 
 
 def test_rle():
+<<<<<<< HEAD
     """This block checks the functionality of the Run Length Encoder"""
+=======
+    """This test checks the functionality of the Run Length Encoder"""
+>>>>>>> upstream/master
     @block
     def bench_rle():
 
@@ -77,7 +117,14 @@ def test_rle():
         reset = ResetSignal(0, active=1, async=True)
 
         # constants for input, runlength, size width
+<<<<<<< HEAD
         constants = Constants(6, 12, 63, 4)
+=======
+        width = 6
+        constants = Constants(width_addr=width, width_data=12,
+                              max_write_cnt=63, rlength=4,
+                              size=width.bit_length())
+>>>>>>> upstream/master
         pixel = Pixel()
 
         # interfaces to the rle module
@@ -89,6 +136,7 @@ def test_rle():
             constants.width_data, constants.size, constants.rlength)
 
         # selects the color component, manages address values
+<<<<<<< HEAD
         rleconfig = RLEConfig(numofbits(constants.max_write_cnt))
 
         # rle double buffer constants
@@ -101,12 +149,31 @@ def test_rle():
             indatastream, bufferdatabus, rleconfig)
 
         inst_clock = tbclock(clock)
+=======
+        rleconfig = RLEConfig(constants.max_write_cnt.bit_length())
+
+        # rle double buffer constants
+        width_dbuf = constants.width_data + constants.size + constants.rlength
+        dfifo_const = Constants(width=width_dbuf, depth=constants.max_write_cnt + 1)
+
+        # instantiation for clock and rletop module
+        inst = rlencoder(
+            dfifo_const, constants, reset, clock,
+            indatastream, bufferdatabus, rleconfig
+        )
+
+        inst_clock = clock_driver(clock)
+>>>>>>> upstream/master
 
         @instance
         def tbstim():
 
             # reset the stimulus before sending data in
+<<<<<<< HEAD
             yield reset_on_start(clock, reset)
+=======
+            yield pulse_reset(reset, clock)
+>>>>>>> upstream/master
 
             # write Y1 component into 1st buffer
             bufferdatabus.buffer_sel.next = False
@@ -117,7 +184,11 @@ def test_rle():
                 rleconfig, pixel.Y1
                 )
             yield clock.posedge
+<<<<<<< HEAD
             print ("============================")
+=======
+            print("============================")
+>>>>>>> upstream/master
 
             # read Y1 component from 1st Buffer
             yield read_block(True, bufferdatabus, clock)
@@ -130,7 +201,11 @@ def test_rle():
                 )
             yield clock.posedge
 
+<<<<<<< HEAD
             print ("============================")
+=======
+            print("============================")
+>>>>>>> upstream/master
 
             # read Y2 component from 2nd Buffer
             yield read_block(False, bufferdatabus, clock)
@@ -142,7 +217,11 @@ def test_rle():
                 rleconfig, pixel.Cb
                 )
             yield clock.posedge
+<<<<<<< HEAD
             print ("=============================")
+=======
+            print("=============================")
+>>>>>>> upstream/master
 
             # read Cb component from 1st Buffer
             yield read_block(True, bufferdatabus, clock)
@@ -154,7 +233,11 @@ def test_rle():
                 rleconfig, pixel.Cb
                 )
             yield clock.posedge
+<<<<<<< HEAD
             print ("==============================")
+=======
+            print("==============================")
+>>>>>>> upstream/master
 
             # read Cb component from 2nd Buffer
             yield read_block(False, bufferdatabus, clock)
@@ -166,7 +249,11 @@ def test_rle():
                 rleconfig, pixel.Cr
                 )
             yield clock.posedge
+<<<<<<< HEAD
             print ("==============================")
+=======
+            print("==============================")
+>>>>>>> upstream/master
 
             # read Cr component from 1st Buffer
             yield read_block(True, bufferdatabus, clock)
@@ -178,12 +265,20 @@ def test_rle():
                 rleconfig, pixel.Cr
                 )
             yield clock.posedge
+<<<<<<< HEAD
             print ("==============================")
+=======
+            print("==============================")
+>>>>>>> upstream/master
 
             # read Cr component from 1st Buffer
             yield read_block(False, bufferdatabus, clock)
 
+<<<<<<< HEAD
             print ("==============================")
+=======
+            print("==============================")
+>>>>>>> upstream/master
 
             # end of stream when sof asserts
             yield clock.posedge
@@ -194,9 +289,13 @@ def test_rle():
 
         return tbstim, inst_clock, inst
 
+<<<<<<< HEAD
     instance_rle = bench_rle()
     instance_rle.config_sim(trace=True)
     instance_rle.run_sim()
+=======
+    run_testbench(bench_rle)
+>>>>>>> upstream/master
 
 
 def test_rle_conversion():
@@ -205,7 +304,14 @@ def test_rle_conversion():
     @block
     def bench_rle_conversion():
 
+<<<<<<< HEAD
         constants = Constants(6, 12, 63, 4)
+=======
+        width = 6
+        constants = Constants(width_addr=width, width_data=12,
+                              max_write_cnt=63, rlength=4,
+                              size=width.bit_length())
+>>>>>>> upstream/master
 
         clock = Signal(bool(0))
         reset = ResetSignal(0, active=1, async=True)
@@ -214,6 +320,7 @@ def test_rle_conversion():
         bufferdatabus = BufferDataBus(
             constants.width_data, constants.size, constants.rlength)
 
+<<<<<<< HEAD
         rleconfig = RLEConfig(numofbits(constants.max_write_cnt))
 
         width_dbuf = constants.width_data + constants.size + constants.rlength
@@ -225,14 +332,38 @@ def test_rle_conversion():
 
         inst_clock = tbclock(clock)
         inst_reset = resetonstart(clock, reset)
+=======
+        rleconfig = RLEConfig(constants.max_write_cnt.bit_length())
+
+        width_dbuf = constants.width_data + constants.size + constants.rlength
+        dfifo_const = Constants(width=width_dbuf, depth=constants.max_write_cnt + 1)
+
+        inst = rlencoder(
+            dfifo_const, constants, reset, clock,
+            indatastream, bufferdatabus, rleconfig)
+
+        inst_clock = clock_driver(clock)
+        inst_reset = reset_on_start(reset, clock)
+>>>>>>> upstream/master
 
         @instance
         def tbstim():
             yield clock.posedge
+<<<<<<< HEAD
             print ("Conversion done!!")
+=======
+            print("Conversion done!!")
+>>>>>>> upstream/master
             raise StopSimulation
 
         return tbstim, inst, inst_clock, inst_reset
 
     verify.simulator = 'iverilog'
     assert bench_rle_conversion().verify_convert() == 0
+<<<<<<< HEAD
+=======
+
+
+if __name__ == "__main__":
+    test_rle()
+>>>>>>> upstream/master

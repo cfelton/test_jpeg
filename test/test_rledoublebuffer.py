@@ -3,6 +3,7 @@
 from myhdl import block, StopSimulation
 from myhdl import ResetSignal, Signal, instance
 from myhdl.conversion import verify
+<<<<<<< HEAD
 from rhea import Global
 
 from jpegenc.subblocks.RLE.RleDoubleFifo.rledoublebuffer import DoubleFifoBus
@@ -10,6 +11,12 @@ from jpegenc.subblocks.RLE.RleDoubleFifo.rledoublebuffer import rledoublefifo
 
 from common import BufferConstants
 from common import tbclock, reset_on_start, resetonstart
+=======
+
+from jpegenc.subblocks.rle.doublebuffer import doublefifo, DoubleFifoBus
+
+from jpegenc.testing import clock_driver, pulse_reset, reset_on_start
+>>>>>>> upstream/master
 
 
 def test_doublebuffer():
@@ -18,16 +25,28 @@ def test_doublebuffer():
     @block
     def bench_doublebuffer():
 
+<<<<<<< HEAD
         # buffer constant for depth of fifo's and data width
         buffer_constants = BufferConstants(20, 64)
 
+=======
+>>>>>>> upstream/master
         clock = Signal(bool(0))
         reset = ResetSignal(0, active=1, async=True)
 
         # instantiation of fifo-bus, clock and rledoublefifo
+<<<<<<< HEAD
         dfifo_bus = DoubleFifoBus(buffer_constants.width)
         inst = rledoublefifo(buffer_constants, reset, clock, dfifo_bus)
         inst_clock = tbclock(clock)
+=======
+        dfifo_bus = DoubleFifoBus(20)
+        # @todo: remove "width" from doublefifo parameter, it is redundant
+        #        `doublefifo` can get it from the DoubleFifoBus (and
+        #        (DoubleFifoBus is reduntant, use FIFOBus)
+        inst = doublefifo(clock, reset, dfifo_bus, width=20, depth=64)
+        inst_clock = clock_driver(clock)
+>>>>>>> upstream/master
 
         @instance
         def tbstim():
@@ -40,7 +59,11 @@ def test_doublebuffer():
             dfifo_bus.read_req.next = False
 
             # reset before sending data
+<<<<<<< HEAD
             yield reset_on_start(clock, reset)
+=======
+            yield pulse_reset(reset, clock)
+>>>>>>> upstream/master
             assert dfifo_bus.fifo_empty
 
             # select first buffer
@@ -158,16 +181,28 @@ def test_doublebuffer_conversion():
     @block
     def bench_doublebuffer_conversion():
         """ test bench """
+<<<<<<< HEAD
         buffer_constants = BufferConstants(20, 64)
+=======
+>>>>>>> upstream/master
 
         clock = Signal(bool(0))
         reset = ResetSignal(0, active=1, async=True)
 
+<<<<<<< HEAD
         dfifo_bus = DoubleFifoBus(buffer_constants.width)
 
         inst = rledoublefifo(buffer_constants, reset, clock, dfifo_bus)
         inst_clock = tbclock(clock)
         inst_reset = resetonstart(clock, reset)
+=======
+        width = 20
+        dfifo_bus = DoubleFifoBus(width=width)
+
+        inst = doublefifo(clock, reset, dfifo_bus, width=width, depth=64)
+        inst_clock = clock_driver(clock)
+        inst_reset = reset_on_start(reset, clock)
+>>>>>>> upstream/master
 
         @instance
         def tbstim():

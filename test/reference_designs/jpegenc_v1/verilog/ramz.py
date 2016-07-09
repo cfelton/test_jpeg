@@ -10,7 +10,7 @@ def ramz(d, waddr, raddr, we, clk, q):
     mem_size = 2**len(waddr)
     mem = [Signal(intbv(0)[len(d):]) for _ in range(mem_size)]
 
-    read_addr = Signal(raddr)
+    read_addr = Signal(raddr.val)
 
     @always_comb
     def beh_out():

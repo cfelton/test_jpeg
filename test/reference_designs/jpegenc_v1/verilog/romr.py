@@ -12,7 +12,7 @@ def romr(addr, clk, datao):
     rom = [0] + [int(round(((2**16)-1)/float(ii))) 
                  for ii in range(1, rom_size)]
     rom = tuple(rom)
-    raddr = Signal(addr)
+    raddr = Signal(addr.val)
 
     @always(clk.posedge)
     def beh_addr():
