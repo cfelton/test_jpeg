@@ -5,6 +5,8 @@ from .interfaces import output_interface
 from .interfaces import input_1d_2nd_stage
 from .interfaces import RGB
 from .interfaces import YCbCr
+from .interfaces import outputs_frontend
 
 __all__ = ["outputs_2d", "input_interface", "input_1d_1st_stage",
-           "output_interface", "input_1d_2nd_stage", "RGB", "YCbCr"]
+           "output_interface", "input_1d_2nd_stage", "RGB", "YCbCr",
+           "outputs_frontend"]

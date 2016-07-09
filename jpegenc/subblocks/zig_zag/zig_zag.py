@@ -49,7 +49,7 @@ class zig_zag_scan(object):
 
 
 @block
-def zig_zag(inputs, outputs, N):
+def zig_zag(inputs, outputs, N=8):
     """Zig-Zag Module
 
     This module performs the zig-zag reorderding. According to the

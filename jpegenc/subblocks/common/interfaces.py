@@ -25,6 +25,26 @@ class outputs_frontend(object):
         self.cr_dct_out = [Signal(intbv(0, min=-self.out_range,
                                         max=self.out_range)) for _ in range(self.N**2)]
 
+    @block
+    def assignment_1(self, y_array, cb_array, cr_array):
+
+        # avoid verilog indexing
+        @block
+        def assign(y, x):
+            @always_comb
+            def assign():
+                y.next = x
+            return assign
+
+        y = [None for _ in range(self.N**2)]
+        cb = [None for _ in range(self.N**2)]
+        cr = [None for _ in range(self.N**2)]
+        for i in range(self.N**2):
+            y[i] = assign(self.y_dct_out[i], y_array[i])
+            cb[i] = assign(self.cb_dct_out[i], cb_array[i])
+            cr[i] = assign(self.cr_dct_out[i], cr_array[i])
+
+        return y, cb, cr
 
 
 class RGB(object):
