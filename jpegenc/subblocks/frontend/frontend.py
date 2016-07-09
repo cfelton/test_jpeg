@@ -94,6 +94,8 @@ def frontend_top_level(inputs, outputs, clock, reset, N=8):
                 outputs.cb_dct_out[i].next = cb_zig_zag_out.out_sigs[i]
                 outputs.cr_dct_out[i].next = cr_zig_zag_out.out_sigs[i]
             outputs.data_valid.next = y_zig_zag_out.data_valid
+        else:
+            outputs.data_valid.next = False
 
     return (color_space_converter, y_2d_dct, cb_2d_dct, cr_2d_dct, y_zig_zag, cb_zig_zag,
             cr_zig_zag, color_space_to_dct, zig_zag_to_output)
