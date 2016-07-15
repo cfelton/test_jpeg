@@ -6,7 +6,8 @@ from myhdl import (StopSimulation, block, Signal, ResetSignal, intbv,
                    delay, instance, always_comb, always_seq)
 from myhdl.conversion import verify
 
-from jpegenc.subblocks.color_converters import ColorSpace, RGB, YCbCr, rgb2ycbcr
+from jpegenc.subblocks.color_converters import ColorSpace, rgb2ycbcr
+from jpegenc.subblocks.common import RGB, YCbCr
 from jpegenc.testing import sim_available, run_testbench
 from jpegenc.testing import clock_driver, reset_on_start, pulse_reset
 

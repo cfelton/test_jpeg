@@ -8,7 +8,7 @@ import myhdl
 from myhdl import (StopSimulation, block, Signal, ResetSignal, intbv,
                    delay, instance, always_comb, always_seq)
 from myhdl.conversion import verify
-from jpegenc.subblocks.common import output_interface, input_1d_1st_stage
+from jpegenc.subblocks.common import assign_array, output_interface, input_1d_1st_stage
 from jpegenc.subblocks.dct import dct_1d
 from jpegenc.subblocks.dct.dct_1d import dct_1d_transformation
 from jpegenc.testing import sim_available, run_testbench
@@ -141,7 +141,7 @@ def test_dct_1d_conversion():
                 inputs.data_in.next = inputs_rom[i]
                 yield clock.posedge
 
-        print_assign = outputs.assignment_2(print_sig_1)
+        print_assign = assign_array(print_sig_1, outputs.out_sigs)
 
         @instance
         def monitor():

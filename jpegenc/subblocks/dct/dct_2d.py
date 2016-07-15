@@ -4,8 +4,8 @@ import myhdl
 from myhdl import Signal, intbv, always_comb, always_seq, block
 
 from jpegenc.subblocks.common import (input_1d_1st_stage, input_interface,
-                                      output_interface, outputs_2d,
-                                      input_1d_2nd_stage)
+                                      output_interface, outputs_2d, assign,
+                                      input_1d_2nd_stage, assign_array)
 from .dct_1d import dct_1d
 
 
@@ -88,57 +88,19 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14,
         inputs_2nd_stage += [input_1d_2nd_stage(first_1d_output.out_precision)]
         outputs_2nd_stage += [output_interface(out_prec, N)]
 
-    """the blocks below are used for the list of signal elaboration"""
-
-    @block
-    def assign(data_in, data_valid, data_in_temp, data_valid_temp):
-        """used to assign the signals data_in and data_valid of the first 1d-dct module
-        to the second stage 1d-dct modules"""
-        @always_comb
-        def assign():
-            data_in.next = data_in_temp
-            data_valid.next = data_valid_temp
-
-        return assign
-
-    @block
-    def assign_2(outputs, outputs_2nd_stage, io):
-        """used to assigns the output signals of the 2nd stage 1d-dct modules
-        to the outputs signals of the top level 2d-dct"""
-        @block
-        def assign(y, x):
-            @always_comb
-            def assign():
-                y.next = x
-            return assign
-
-        g = [None for _ in range(N)]
-        for i in range(N):
-                g[i] = assign(outputs.out_sigs[i*N + io], outputs_2nd_stage.out_sigs[i])
-        return g
-
-    @block
-    def assign_3(y, x):
-        """used to make a simple assignment of the data_valid signals of the 2nd stage
-        1d-dct modules to a temp signal which used in the 2d-dct module"""
-        @always_comb
-        def assign():
-            y.next = x
-
-        return assign
-
 
     stage_2_insts = []
     for i in range(N):
         stage_2_insts += [dct_1d(inputs_2nd_stage[i], outputs_2nd_stage[i], clock,
                                 reset, num_fractional_bits, stage_1_prec, N)]
 
-        stage_2_insts += [assign(inputs_2nd_stage[i].data_in, inputs_2nd_stage[i].data_valid,
-                                 first_1d_output.out_sigs[i], first_1d_output.data_valid)]
+        stage_2_insts += [assign(inputs_2nd_stage[i].data_in, first_1d_output.out_sigs[i])]
+        stage_2_insts += [assign(inputs_2nd_stage[i].data_valid, first_1d_output.data_valid)]
 
-        stage_2_insts += [assign_2(outputs, outputs_2nd_stage[i], i)]
+        for j in range(N):
+            stage_2_insts += [assign(outputs.out_sigs[j * N + i], outputs_2nd_stage[i].out_sigs[j])]
 
-    stage_2_insts += [assign_3(outputs_data_valid, outputs_2nd_stage[0].data_valid)]
+    stage_2_insts += [assign(outputs_data_valid, outputs_2nd_stage[0].data_valid)]
 
     @always_seq(clock.posedge, reset=reset)
     def input_subtract():
