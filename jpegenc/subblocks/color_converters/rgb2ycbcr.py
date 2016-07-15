@@ -73,32 +73,6 @@ def build_coeffs(fract_bits):
     Cr = int_coef[2]
     return Y, Cb, Cr, Offset
 
-
-class RGB(object):
-
-    """Red, Green, Blue Signals with nbits bitwidth for RGB input"""
-
-    def __init__(self, nbits=8):
-        """member variables initialize"""
-        self.nbits = nbits
-        self.red = Signal(intbv(0)[nbits:])
-        self.green = Signal(intbv(0)[nbits:])
-        self.blue = Signal(intbv(0)[nbits:])
-        self.data_valid = Signal(bool(0))
-
-
-class YCbCr(object):
-
-    """Y, Cb, Cr output signals"""
-
-    def __init__(self, nbits=8):
-        self.nbits = nbits
-        self.y = Signal(intbv(0)[nbits:])
-        self.cb = Signal(intbv(0)[nbits:])
-        self.cr = Signal(intbv(0)[nbits:])
-        self.data_valid = Signal(bool(0))
-
-
 @myhdl.block
 def rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits=14):
     """Color Space Conversion module
@@ -206,18 +180,3 @@ def rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits=14):
 
     return logic, logic2
 
-
-def convert():
-    """convert rgb2ycbcr module"""
-    ycbcr = YCbCr()
-    rgb = RGB()
-
-    clock = Signal(bool(0))
-    reset = ResetSignal(1, active=True, async=True)
-
-    analyze.simulator = 'ghdl'
-    assert rgb2ycbcr(rgb, ycbcr, clock, reset,
-                     num_fractional_bits=14).analyze_convert() == 0
-
-if __name__ == '__main__':
-    convert()
