@@ -17,6 +17,23 @@ class outputs_2d(object):
                                      max=self.out_range)) for _ in range(self.N**2)]
 
     @block
+    def assignment_1(self, array):
+
+        # avoid verilog indexing
+        @block
+        def assign(y, x):
+            @always_comb
+            def assign():
+                y.next = x
+            return assign
+
+        g = [None for _ in range(self.N**2)]
+        for i in range(self.N**2):
+            g[i] = assign(self.out_sigs[i], array[i])
+        return g
+
+
+    @block
     def assignment_2(self, array):
 
         # avoid verilog indexing
