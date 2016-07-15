@@ -9,7 +9,7 @@ from myhdl import (StopSimulation, block, Signal, ResetSignal, intbv,
                                       delay, instance, always_comb, always_seq)
 from myhdl.conversion import verify
 
-from jpegenc.subblocks.common import outputs_2d
+from jpegenc.subblocks.common import outputs_2d, assign_array
 from jpegenc.subblocks.zig_zag import zig_zag_scan, zig_zag
 from jpegenc.testing import sim_available, run_testbench
 from jpegenc.testing import clock_driver, reset_on_start, pulse_reset
@@ -137,8 +137,8 @@ def test_zig_zag_conversion():
                 for j in range(N**2):
                     in_sigs[j].next = inputs_rom[i*(N**2) + j]
 
-        print_assign = outputs.assignment_2(print_sig_1)
-        input_assign = inputs.assignment_1(in_sigs)
+        print_assign = assign_array(print_sig_1, outputs.out_sigs)
+        input_assign = assign_array(inputs.out_sigs, in_sigs)
 
         @instance
         def monitor():
