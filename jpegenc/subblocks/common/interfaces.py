@@ -25,27 +25,6 @@ class outputs_frontend(object):
         self.cr_dct_out = [Signal(intbv(0, min=-self.out_range,
                                         max=self.out_range)) for _ in range(self.N**2)]
 
-    @block
-    def assignment_1(self, y_array, cb_array, cr_array):
-
-        # avoid verilog indexing
-        @block
-        def assign(y, x):
-            @always_comb
-            def assign():
-                y.next = x
-            return assign
-
-        y = [None for _ in range(self.N**2)]
-        cb = [None for _ in range(self.N**2)]
-        cr = [None for _ in range(self.N**2)]
-        for i in range(self.N**2):
-            y[i] = assign(self.y_dct_out[i], y_array[i])
-            cb[i] = assign(self.cb_dct_out[i], cb_array[i])
-            cr[i] = assign(self.cr_dct_out[i], cr_array[i])
-
-        return y, cb, cr
-
 
 class RGB(object):
 
@@ -71,6 +50,30 @@ class YCbCr(object):
         self.cr = Signal(intbv(0)[nbits:])
         self.data_valid = Signal(bool(0))
 
+@block
+def assign(a, b):
+
+    @always_comb
+    def assign():
+            a.next = b
+
+    return assign
+
+
+@block
+def assign_array(a, b):
+
+    assert isinstance(a, list)
+    assert isinstance(b, list)
+    assert len(a) == len(b)
+
+
+    g = []
+    for i in range(len(a)):
+        g += [assign(a[i], b[i])]
+    return g
+
+
 class outputs_2d(object):
 
     """Output interface for the 2D-DCT module"""
@@ -83,39 +86,6 @@ class outputs_2d(object):
         self.data_valid = Signal(bool(0))
         self.out_sigs =[Signal(intbv(0, min=-self.out_range,
                                      max=self.out_range)) for _ in range(self.N**2)]
-
-    @block
-    def assignment_1(self, array):
-
-        # avoid verilog indexing
-        @block
-        def assign(y, x):
-            @always_comb
-            def assign():
-                y.next = x
-            return assign
-
-        g = [None for _ in range(self.N**2)]
-        for i in range(self.N**2):
-            g[i] = assign(self.out_sigs[i], array[i])
-        return g
-
-
-    @block
-    def assignment_2(self, array):
-
-        # avoid verilog indexing
-        @block
-        def assign(y, x):
-            @always_comb
-            def assign():
-                y.next = x
-            return assign
-
-        g = [None for _ in range(self.N**2)]
-        for i in range(self.N**2):
-            g[i] = assign(array[i], self.out_sigs[i])
-        return g
 
 
 class input_interface(object):
@@ -154,37 +124,6 @@ class output_interface(object):
                          for _ in range(N)]
         self.data_valid = Signal(bool(0))
 
-    @block
-    def assignment(self, array):
-
-        # avoid verilog indexing
-        @block
-        def assign(y, x):
-            @always_comb
-            def assign():
-                y.next = x
-            return assign
-
-        g = [None for _ in range(self.N)]
-        for i in range(self.N):
-            g[i] = assign(self.out_sigs[i], array[i])
-        return g
-
-    @block
-    def assignment_2(self, array):
-
-        # avoid verilog indexing
-        @block
-        def assign(y, x):
-            @always_comb
-            def assign():
-                y.next = x
-            return assign
-
-        g = [None for _ in range(self.N)]
-        for i in range(self.N):
-            g[i] = assign(array[i], self.out_sigs[i])
-        return g
 
 class input_1d_2nd_stage(object):
 
@@ -197,17 +136,4 @@ class input_1d_2nd_stage(object):
         self.data_in = Signal(intbv(0, min=-in_range, max=in_range))
         self.data_valid = Signal(bool(0))
 
-    @block
-    def assignment(self, data_in, data_valid):
 
-        # avoid verilog indexing
-        @block
-        def assign(y1, x1, y2, x2):
-            @always_comb
-            def assign():
-                y1.next = x1
-                y2.next = x2
-            return assign
-
-        g = [assign(self.data_in, data_in, self.data_valid, data_valid)]
-        return g

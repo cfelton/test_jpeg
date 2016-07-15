@@ -4,7 +4,7 @@
 import myhdl
 from myhdl import Signal, intbv, always_comb, block
 
-from jpegenc.subblocks.common import outputs_2d
+from jpegenc.subblocks.common import outputs_2d, assign_array
 
 
 class zig_zag_scan(object):
@@ -77,8 +77,8 @@ def zig_zag(inputs, outputs, N=8):
             output_sigs[int(index)].next = input_sigs[int(i)]
         outputs.data_valid.next = inputs.data_valid
 
-    output_assignments = outputs.assignment_1(output_sigs)
-    input_assignments = inputs.assignment_2(input_sigs)
+    output_assignments =assign_array(outputs.out_sigs, output_sigs)
+    input_assignments = assign_array(input_sigs, inputs.out_sigs)
 
     return zig_zag_assign, output_assignments, input_assignments
 
