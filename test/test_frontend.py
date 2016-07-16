@@ -131,6 +131,7 @@ def test_frontend():
 
     run_testbench(bench_frontend)
 
+@pytest.mark.skipif(not simsok, reason="missing installed simulator")
 def test_frontend_conversion():
 
     samples, N = 1, 8
