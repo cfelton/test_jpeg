@@ -12,9 +12,7 @@ from .bytestuffer import bytestuffer
 __all__ = [
     'rgb2ycbcr', 'dct_2d', 'rlencoder', 'zigzag', 'frontend', 'quantizer_top',
     'bytestuffer'
-=======
 
 __all__ = [
     'rgb2ycbcr', 'dct_2d', 'rlencoder', 'zigzag', 'quantizer_top'
->>>>>>> upstream/master
 ]
