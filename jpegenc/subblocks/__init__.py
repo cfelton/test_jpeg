@@ -7,7 +7,6 @@ from .rle import rlencoder
 from .zig_zag import zig_zag
 from .quantizer import quantizer_top
 
-
 __all__ = [
     'rgb2ycbcr', 'dct_2d', 'rlencoder', 'zigzag', 'quantizer_top'
 ]

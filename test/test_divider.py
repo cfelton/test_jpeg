@@ -102,7 +102,7 @@ def test_block_conversion():
         """Wrapper used for conversion purpose"""
 
         # instantiatiom of divider, clock and reset
-        inst = divider(reset, clock, dividend, divisor, quotient)
+        inst = divider(clock, reset, dividend, divisor, quotient)
 
         inst_clock = clock_driver(clock)
         inst_reset = reset_on_start(reset, clock)

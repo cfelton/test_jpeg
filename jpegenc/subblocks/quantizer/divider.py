@@ -2,7 +2,7 @@
     divider used for Quantiser"""
 
 from myhdl import always_seq, block, intbv, always_comb, Signal
-from jpegenc.subblocks.quantizer.romr import romr
+from .romr import romr
 
 
 def divider_ref(dividend, divisor):
