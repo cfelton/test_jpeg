@@ -6,9 +6,15 @@ from .dct import dct_2d
 from .rle import rlencoder
 from .zig_zag import zig_zag
 from .quantizer import quantizer_top
+<<<<<<< HEAD
 from .bytestuffer import bytestuffer
 
 __all__ = [
     'rgb2ycbcr', 'dct_2d', 'rlencoder', 'zigzag', 'frontend', 'quantizer_top',
     'bytestuffer'
+=======
+
+__all__ = [
+    'rgb2ycbcr', 'dct_2d', 'rlencoder', 'zigzag', 'quantizer_top'
+>>>>>>> upstream/master
 ]
