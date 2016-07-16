@@ -147,3 +147,6 @@ def test_block_conversion():
     # verify conversion using iverilog
     verify.simulator = 'iverilog'
     assert bench_entropycoder().verify_convert() == 0
+
+if __name__ == '__main__':
+    test_bytestuffer()
