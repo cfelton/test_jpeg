@@ -9,6 +9,6 @@ from .quantizer import quantizer_top
 from .bytestuffer import bytestuffer
 
 __all__ = [
-    'rgb2ycbcr', 'dct_2d', 'rlencoder', 'zigzag', 'quantizer_top',
+    'rgb2ycbcr', 'dct_2d', 'rlencoder', 'zigzag', 'frontend', 'quantizer_top',
     'bytestuffer'
 ]
