@@ -43,8 +43,8 @@ install:
 
 script:
    - cd test
-   - coverage run --source=jpegenc -m py.test --sim=ghdl --include-reference
-   - coverage run --source=jpegenc -m py.test --sim=iverilog --include-reference
+   - coverage run --source=jpegenc -m py.test --sim=ghdl 
+   - coverage run --source=jpegenc -m py.test --sim=iverilog
    - cp .coverage ../
 
 after_success:
