@@ -18,7 +18,9 @@ from jpegenc.subblocks.frontend import frontend_top_level, frontend_transform
 from jpegenc.testing import sim_available, run_testbench
 from jpegenc.testing import clock_driver, reset_on_start, pulse_reset
 
-simsok = sim_available('ghdl') and sim_available('iverilog')
+simsok = sim_available('ghdl')
+"""default simulator"""
+verify.simulator = "ghdl"
 
 class InputsAndOutputs(object):
 
@@ -131,6 +133,7 @@ def test_frontend():
 
     run_testbench(bench_frontend)
 
+@pytest.mark.skipif(not simsok, reason="missing installed simulator")
 def test_frontend_conversion():
 
     samples, N = 1, 8
@@ -153,6 +156,7 @@ def test_frontend_conversion():
 
         tdut = frontend_top_level(inputs, outputs, clock, reset)
         tbclock = clock_driver(clock)
+        tbrst = reset_on_start(reset, clock)
 
         print_sig_y = [Signal(intbv(0, min=-2**output_bits, max=2**output_bits))
                      for _ in range(N**2)]
@@ -169,7 +173,7 @@ def test_frontend_conversion():
 
         @instance
         def tbstim():
-            yield pulse_reset(reset, clock)
+            yield reset.negedge
             inputs.data_valid.next = True
 
             for i in range(samples):
@@ -225,9 +229,9 @@ def test_frontend_conversion():
                     outputs_count += 1
             raise StopSimulation
 
-        return tdut, tbclock, tbstim, monitor, print_assign
+        return tdut, tbclock, tbstim, monitor, print_assign, tbrst
 
-    run_testbench(bench_frontend)
+    assert bench_frontend().verify_convert() == 0
 
 if __name__ == '__main__':
     test_frontend()

@@ -1,4 +1,4 @@
-
+import py
 import sys
 import os
 import subprocess
@@ -16,10 +16,7 @@ if hasattr(sys, '_called_from_test'):
 
 def sim_available(sim='ghdl'):
     ok = True
-    version = '-V' if sim == 'iverilog' else '-v'
-    try:
-        subprocess.call([sim, version])
-    except FileNotFoundError as err:
+    if not py.path.local.sysfind(sim):
         ok = False
     return ok
 
