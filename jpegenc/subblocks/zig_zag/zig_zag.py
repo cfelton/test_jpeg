@@ -72,10 +72,11 @@ def zig_zag(inputs, outputs, N=8):
 
     @always_comb
     def zig_zag_assign():
-        for i in range(N**2):
-            index = zig_zag_rom[i]
-            output_sigs[int(index)].next = input_sigs[int(i)]
-        outputs.data_valid.next = inputs.data_valid
+        if inputs.data_valid:
+            for i in range(N**2):
+                index = zig_zag_rom[i]
+                output_sigs[int(index)].next = input_sigs[int(i)]
+            outputs.data_valid.next = inputs.data_valid
 
     output_assignments =assign_array(outputs.out_sigs, output_sigs)
     input_assignments = assign_array(input_sigs, inputs.out_sigs)

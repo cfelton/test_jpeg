@@ -25,6 +25,14 @@ class outputs_frontend(object):
         self.cr_dct_out = [Signal(intbv(0, min=-self.out_range,
                                         max=self.out_range)) for _ in range(self.N**2)]
 
+class outputs_frontend_new(object):
+
+    def __init__(self, precision_factor=10):
+        self.out_precision = precision_factor
+        self.out_range = 2**precision_factor
+        self.data_valid = Signal(bool(0))
+        self.end_of_block_conversion = Signal(bool(0))
+        self.data_out = Signal(intbv(0, min=-self.out_range, max=self.out_range))
 
 class RGB(object):
 
