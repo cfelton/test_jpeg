@@ -5,7 +5,7 @@ import numpy as np
 from math import sqrt, pi, cos
 import myhdl
 from myhdl import Signal, intbv, always_comb, always_seq
-
+from jpegenc.subblocks.common import assign_array
 
 class dct_1d_transformation(object):
 
@@ -173,7 +173,7 @@ def dct_1d(input_interface, output_interface, clock, reset,
             output_interface.data_valid.next = False
 
     # avoid verilog indexing error
-    outputs_assignment = output_interface.assignment(output_sigs)
+    outputs_assignment = assign_array(output_interface.out_sigs,output_sigs)
 
     return (input_reg, outputs, counters, mul_add, coeff_assign,
             mux_after_adder_reg, outputs_assignment)

@@ -1,119 +1,145 @@
+"""This module is the MyHDL implementation of
+    run length encoder top module"""
+
 from myhdl import always_seq, always_comb, block
-from myhdl import intbv, Signal, concat
+from myhdl import Signal, concat, modbv
 from .rlecore import DataStream, rle
 from .rlecore import RLESymbols, RLEConfig
 from .doublebuffer import doublefifo
-from .doublebuffer import DoubleFifoBus
-
-
-class InDataStream(DataStream):
-    """
-    InputData Interface Class
-    ready: module asserts ready if its ready for next block
-
-    start: start signal triggers the module to start
-            processing data
-
-    input_val: input to the rle module
-    """
-    def __init__(self, width):
-        super(InDataStream, self).__init__(width)
-        self.ready = Signal(bool(0))
+from rhea.system import FIFOBus
 
 
 class BufferDataBus(RLESymbols):
     """
-    Output Interface Class
-    Amplitude: amplitude of the number
+    Connections related to output data buffer
 
-    size: size required to store amplitude
-
-    runlength: number of zeros
-
-    dovalid: asserts if ouput is valid
-    buffer_sel: It selects the buffer in double buffer
-    read_enable: enables
-    fifo_empty: asserts if any of the two fifos are empty
+    Amplitude   : amplitude of the number
+    size        : size required to store amplitude
+    runlength   : number of zeros
+    dovalid     : asserts if ouput data is valid
+    buffer_sel  : select the buffer in double buffer
+    read_enable : read data from the output fifo
+    fifo_empty  : asserts if any of the two fifos are empty
 
     """
-    def __init__(self, width, size, rlength):
-        super(BufferDataBus, self).__init__(width, size, rlength)
+    def __init__(self, width_data, width_size, width_runlength):
+        super(BufferDataBus, self).__init__(
+            width_data, width_size, width_runlength)
+
         self.buffer_sel = Signal(bool(0))
         self.read_enable = Signal(bool(0))
         self.fifo_empty = Signal(bool(0))
 
 
 @block
-def rlencoder(dfifo_const, constants, reset, clock,
-              indatastream, bufferdatabus, rleconfig):
-    """The top module connects rle core and rle double buffer"""
+def rlencoder(clock, reset, datastream, bufferdatabus, rleconfig):
+    """
+    The top module connects rle core and rle double buffer
 
-    assert isinstance(indatastream, InDataStream)
+    I/O Ports:
+
+    datastream      : input datastream bus
+    buffer data bus : output data bus
+    rleconfig       : configuration bus
+
+    Constants:
+
+    width_data      : input data width
+    width_addr      : address width
+    width_size      : width of register to store amplitude size
+    max_addr_cnt    : maximum address of the block being processed
+    width_runlength : width of runlength value that can be stored
+    limit           : value of maximum runlength value
+    width_depth     : width of the FIFO Bus
+
+    """
+
+    assert isinstance(datastream, DataStream)
     assert isinstance(bufferdatabus, BufferDataBus)
     assert isinstance(rleconfig, RLEConfig)
 
+    # width of input data
+    width_data = len(datastream.data_in)
+
+    # width of the address register
+    width_addr = len(datastream.read_addr)
+
+    # width of register to store amplitude size
+    width_size = len(bufferdatabus.size)
+
+    # width to store the runlength value
+    width_runlength = len(bufferdatabus.runlength)
+
+    # maximum address of block
+    max_addr_cnt = int((2**(width_addr)) - 1)
+
+    # depth of the FIFO
+    width_depth = max_addr_cnt + 1
+
     # Signals used to temporarily process data
     rlesymbols_temp = RLESymbols(
-        constants.width_data, constants.size, constants.rlength)
-
-    datastream_temp = DataStream(constants.width_data)
+        width_data, width_size, width_runlength)
+    assert isinstance(rlesymbols_temp, RLESymbols)
 
     # maximum number of zeroes that can be count
-    limit = int((2**constants.rlength) - 1)
+    limit = int((2**width_runlength) - 1)
 
     # width of data to be stored in rle double fifo
-    width_dbuf = constants.width_data + constants.size + constants.rlength
+    width_dbuf_data = width_data + width_size + width_runlength
 
     # instantiation of double buffer bus
-    dfifo = DoubleFifoBus(width_dbuf)
+    dfifo = FIFOBus(width_dbuf_data)
+    assert isinstance(dfifo, FIFOBus)
+
+    buffer_sel = Signal(bool(0))
 
     # maximum number of pixels that can be processes for one time
-    wr_cnt = Signal(intbv(0)[(constants.max_write_cnt + 1):])
+    wr_cnt = Signal(modbv(0)[width_addr:])
 
     @always_comb
     def assign0():
-        dfifo.buffer_sel.next = bufferdatabus.buffer_sel
-        dfifo.read_req.next = bufferdatabus.read_enable
-        bufferdatabus.fifo_empty.next = dfifo.fifo_empty
-        datastream_temp.start.next = indatastream.start
+        """assign data to the output bus"""
+
+        buffer_sel.next = bufferdatabus.buffer_sel
+        dfifo.read.next = bufferdatabus.read_enable
+        bufferdatabus.fifo_empty.next = dfifo.empty
 
     @always_comb
     def assign1():
         """runlength, size and amplitude read from double buffer"""
-        bufferdatabus.runlength.next = dfifo.data_out[(
-            constants.width_data+constants.size+constants.rlength):(
-            constants.width_data+constants.size)]
 
-        bufferdatabus.size.next = dfifo.data_out[(
-            constants.width_data+constants.size):constants.width_data]
+        bufferdatabus.runlength.next = dfifo.read_data[(
+            width_data+width_size+width_runlength):(
+            width_data+width_size)]
 
-        bufferdatabus.amplitude.next = dfifo.data_out[constants.width_data:0].signed()
+        bufferdatabus.size.next = dfifo.read_data[(
+            width_data+width_size):width_data]
+
+        bufferdatabus.amplitude.next = dfifo.read_data[width_data:0].signed()
 
     # send the inputdata into rle core
-    rle_core = rle(
-        constants, reset, clock, datastream_temp, rlesymbols_temp, rleconfig)
-
-    @always_comb
-    def assign2():
-        datastream_temp.input_val.next = indatastream.input_val
+    rle_core = rle(clock, reset, datastream, rlesymbols_temp, rleconfig)
 
     # write the processed data to rle double fifo
-    # @todo: remove dfifo_const
-    rle_doublefifo = doublefifo(clock, reset, dfifo,
-                                width=dfifo_const.width, depth=dfifo_const.depth)
+    rle_doublefifo = doublefifo(
+        clock, reset, dfifo, buffer_sel, depth=width_depth)
 
     @always_comb
     def assign3():
-        dfifo.data_in.next = concat(
+        """write data into the FIFO Bus"""
+
+        dfifo.write_data.next = concat(
             rlesymbols_temp.runlength, rlesymbols_temp.size,
             rlesymbols_temp.amplitude)
 
-        dfifo.write_enable.next = rlesymbols_temp.dovalid
+        dfifo.write.next = rlesymbols_temp.dovalid
 
     @always_seq(clock.posedge, reset=reset)
     def seq1():
-        indatastream.ready.next = False
-        if indatastream.start:
+        """process the block using rlecore"""
+
+        rleconfig.ready.next = False
+        if rleconfig.start:
             wr_cnt.next = 0
 
         # select the data to be written
@@ -126,16 +152,17 @@ def rlencoder(dfifo_const, constants, reset, clock,
             else:
                 wr_cnt.next = wr_cnt + 1 + rlesymbols_temp.runlength
 
-        if dfifo.data_in == 0 and wr_cnt != 0:
-            indatastream.ready.next = 1
+        if dfifo.write_data == 0 and wr_cnt != 0:
+            rleconfig.ready.next = True
         else:
-            if (wr_cnt + rlesymbols_temp.runlength) == constants.max_write_cnt:
-                indatastream.ready.next = True
+            if (wr_cnt + rlesymbols_temp.runlength) == max_addr_cnt:
+                rleconfig.ready.next = True
 
     @always_comb
     def assign4():
-        # output data valid signal
+        """output data valid signal generation"""
+
         bufferdatabus.dovalid.next = bufferdatabus.read_enable
 
-    return (assign0, assign1, rle_core, assign2,
-            rle_doublefifo, assign3, seq1, assign4)
+    return (assign0, assign1, rle_core, rle_doublefifo,
+            assign3, seq1, assign4)

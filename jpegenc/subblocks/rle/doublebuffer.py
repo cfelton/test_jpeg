@@ -1,4 +1,5 @@
-"""The above module is a double buffer to store runlength encoded outputs"""
+"""The above module is a double buffer
+    to store runlength encoded data"""
 
 from myhdl import always_comb, always_seq, block
 from myhdl import intbv, Signal
@@ -8,71 +9,74 @@ from rhea.system import FIFOBus
 from rhea import Global
 
 
-class DoubleFifoBus(object):
-    """
-        data_in        : input for double fifo
-        write_enable   : write access to double fifo
-        buffer_sel     : select a buffer
-        read_req       : request to read fifo
-        fifo_empty     : asserts if fifo is emtpy
-        data_out       : data at the output port of fifo
-    """
-    def __init__(self, width):
-        self.data_in = Signal(intbv(0)[width:])
-        self.write_enable = Signal(bool(0))
-        self.buffer_sel = Signal(bool(0))
-        self.read_req = Signal(bool(0))
-        self.fifo_empty = Signal(bool(1))
-        self.data_out = Signal(intbv(0)[width:])
-
-
 @block
-def doublefifo(clock, reset, dfifo_bus, width=8, depth=16):
-    """double fifo core function"""
+def doublefifo(clock, reset, dfifo_bus, buffer_sel, depth=16):
+    """
+    I/O ports:
 
-    fifo_data_in = Signal(intbv(0)[width:])
+    dfifo_bus : A FIFOBus connection interace
+    buffer_sel : select a buffer
 
+    Constants :
+
+    depth : depth of the fifo used
+    width_data : width of the data to be stored in FIFO
+
+    """
+
+    # width of the input data
+    width_data = len(dfifo_bus.write_data)
+
+    # input to both the FIFO's
+    fifo_data_in = Signal(intbv(0)[width_data:])
+
+    # FIFOBus instantiation from rhea
     glbl = Global(clock, reset)
-    fbus1 = FIFOBus(width=width)
-    fbus2 = FIFOBus(width=width)
+    fbus1 = FIFOBus(width=width_data)
+    fbus2 = FIFOBus(width=width_data)
 
     assert isinstance(glbl, Global)
     assert isinstance(fbus1, FIFOBus)
     assert isinstance(fbus2, FIFOBus)
 
+    # instantiate two sync FIFO's
     fifo_sync1 = fifo_sync(glbl, fbus1, depth)
     fifo_sync2 = fifo_sync(glbl, fbus2, depth)
 
     @always_comb
     def assign():
-        """write into fifo bus"""
+        """write data into FIFO's"""
+
         fbus1.write_data.next = fifo_data_in
         fbus2.write_data.next = fifo_data_in
 
     @always_seq(clock.posedge, reset=reset)
     def mux2_logic():
-        """select which buffer to enable"""
-        if dfifo_bus.buffer_sel == 0:
-            fbus1.write.next = dfifo_bus.write_enable
-        else:
-            fbus2.write.next = dfifo_bus.write_enable
+        """select buffer to pump data"""
 
-        fifo_data_in.next = dfifo_bus.data_in
+        if not buffer_sel:
+            fbus1.write.next = dfifo_bus.write
+
+        else:
+            fbus2.write.next = dfifo_bus.write
+
+        fifo_data_in.next = dfifo_bus.write_data
 
     @always_comb
     def logic():
         """read or write into buffer"""
-        fbus1.read.next = dfifo_bus.read_req if (
-            dfifo_bus.buffer_sel == 1) else 0
 
-        fbus2.read.next = dfifo_bus.read_req if (
-            dfifo_bus.buffer_sel == 0) else 0
+        fbus1.read.next = dfifo_bus.read if (
+            buffer_sel) else False
 
-        dfifo_bus.data_out.next = fbus1.read_data if (
-            dfifo_bus.buffer_sel == 1) else fbus2.read_data
+        fbus2.read.next = dfifo_bus.read if (
+            not buffer_sel) else False
 
-        dfifo_bus.fifo_empty.next = fbus1.empty if (
-            dfifo_bus.buffer_sel == 1) else fbus2.empty
+        dfifo_bus.read_data.next = fbus1.read_data if (
+            buffer_sel) else fbus2.read_data
+
+        dfifo_bus.empty.next = fbus1.empty if (
+            buffer_sel) else fbus2.empty
 
     return (
         fifo_sync1, fifo_sync2, assign, mux2_logic, logic)

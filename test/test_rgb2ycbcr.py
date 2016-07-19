@@ -6,11 +6,14 @@ from myhdl import (StopSimulation, block, Signal, ResetSignal, intbv,
                    delay, instance, always_comb, always_seq)
 from myhdl.conversion import verify
 
-from jpegenc.subblocks.color_converters import ColorSpace, RGB, YCbCr, rgb2ycbcr
+from jpegenc.subblocks.color_converters import ColorSpace, rgb2ycbcr
+from jpegenc.subblocks.common import RGB, YCbCr
 from jpegenc.testing import sim_available, run_testbench
 from jpegenc.testing import clock_driver, reset_on_start, pulse_reset
 
-simsok = sim_available('iverilog') and sim_available('ghdl')
+simsok = sim_available('ghdl')
+"""default simulator"""
+verify.simulator = "ghdl"
 
 
 def print_results(inputs, expected_outputs, actual_outputs):
@@ -178,9 +181,4 @@ def test_block_conversion():
 
         return tbdut, tbclk, tbstim, tbrst
 
-    # verify and convert with iverilog
-    verify.simulator = 'iverilog'
-    assert bench_color_trans().verify_convert() == 0
-    # verify and convert with GHDL
-    verify.simulator = 'ghdl'
     assert bench_color_trans().verify_convert() == 0

@@ -1,10 +1,10 @@
 
 from __future__ import absolute_import
 
-from .rle import rlencoder, InDataStream, BufferDataBus
-from .rlecore import RLEConfig, Pixel
+from .rle import rlencoder, BufferDataBus
+from .rlecore import RLEConfig, Component, DataStream
 
 __all__ = [
-    'rlencoder', 'InDataStream', 'BufferDataBus',
-    'RLEConfig', 'Pixel'
+    'rlencoder', 'DataStream',
+    'RLEConfig', 'Component', 'BufferDataBus'
 ]
