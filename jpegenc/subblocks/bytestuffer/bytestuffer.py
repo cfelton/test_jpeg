@@ -52,21 +52,19 @@ class BSOutputDataStream(object):
 @block
 def bytestuffer(
         clock, reset, bs_in_stream, bs_out_stream, bs_cntrl, num_enc_bytes):
-    """
-    Byte stuffer checks for 0xFF byte and adds a 0xFF00 Byte
+    """Byte stuffer checks for 0xFF byte and adds a 0xFF00 Byte
 
     Constants:
-
     width_addr_out : maximum adress width of the output RAM
-    width_out      : width of the data in the ouput RAM
+    width_out : width of the data in the ouput RAM
 
-    I/O Ports :
+    Args :
+    bs_in_stream : input interface to the byte stuffer
+    bs_cntrl : control interface to the byte stuffer
 
-    bs_in_stream  : input interface to the byte stuffer
-    bs_cntrl      : control interface to the byte stuffer
+    Returns:
     bs_out_stream : output interface to the byte stuffer
-    num_enc_byte  : number of bytes encoded to output RAM
-
+    num_enc_byte : number of bytes encoded to output RAM
     """
 
     assert isinstance(bs_in_stream, BSInputDataStream)
