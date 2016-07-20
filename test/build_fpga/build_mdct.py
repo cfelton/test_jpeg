@@ -1,4 +1,5 @@
 
+import argparse
 from argparse import Namespace
 
 import myhdl
@@ -10,6 +11,8 @@ from rhea.build import get_board
 
 from jpegenc.subblocks.common import input_interface, outputs_2d
 from jpegenc.subblocks import dct_2d
+
+from board_map import board_map
 
 
 @myhdl.block
@@ -25,8 +28,8 @@ def mdct_stub(clock, sdi, sdo, reset=None):
     if reset is None:
         reset = ResetSignal(1, active=0, async=True)
 
-    # the following should be something like, reused common
-    # interface types.
+    # the following should be something like (reused common
+    # interface types):
     #     ycbcr = YCbCrStream()
     #     imgfreq = ImageBlock(size=(8,8), data_width=precision)
     #
@@ -97,16 +100,8 @@ def run_flow(args=None):
         # args = Namespace(brd='nexys_video')
         args = Namespace(brd='zybo')
 
-    # define a port to map the serial IO to.
-    fpga_map = {
-        'zybo': 'pmod_jb',
-        'nexys_video': 'pmod_jb',
-        'atlys': 'pmod',
-        'de0nano': 'gpio',
-    }
-
     brd = get_board(args.brd)
-    port = fpga_map[args.brd]
+    port = board_map[args.brd]
     brd.add_port_name('sdi', port, 0)
     brd.add_port_name('sdo', port, 1)
 
@@ -117,7 +112,14 @@ def run_flow(args=None):
     return info
 
 
+def getargs():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('brd', choices=board_map.keys())
+    args = parser.parse_args()
+    return args
+
 if __name__ == '__main__':
-    run_flow()
+    args = getargs()
+    run_flow(args)
         
     
