@@ -14,7 +14,9 @@ from jpegenc.subblocks.dct.dct_1d import dct_1d_transformation
 from jpegenc.testing import sim_available, run_testbench
 from jpegenc.testing import clock_driver, reset_on_start, pulse_reset
 
-simsok = sim_available('iverilog') and sim_available('ghdl')
+simsok = sim_available('ghdl')
+"""default simulator"""
+verify.simulator = "ghdl"
 
 
 class InputsAndOutputs(object):
@@ -166,13 +168,7 @@ def test_dct_1d_conversion():
 
         return tdut, tbclk, tbstim, monitor, tbrst, print_assign
 
-    # verify and convert with GHDL
-    verify.simulator = 'ghdl'
     assert bench_dct_1d().verify_convert() == 0
-    # verify and convert with iverilog
-    verify.simulator = 'iverilog'
-    assert bench_dct_1d().verify_convert() == 0
-
 
 if __name__ == '__main__':
     test_dct_1d()

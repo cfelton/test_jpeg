@@ -16,7 +16,9 @@ from jpegenc.testing import clock_driver, reset_on_start, pulse_reset
 
 from random import randrange
 
-simsok = sim_available('ghdl') and sim_available('iverilog')
+simsok = sim_available('ghdl')
+"""default simulator"""
+verify.simulator = "ghdl"
 
 class InputsAndOutputs(object):
 
@@ -160,11 +162,6 @@ def test_zig_zag_conversion():
 
         return tdut, tbclock, tbstim, monitor, print_assign, input_assign
 
-    # verify and convert with GHDL
-    verify.simulator = 'ghdl'
-    assert bench_zig_zag().verify_convert() == 0
-    # verify and convert with iverilog
-    verify.simulator = 'iverilog'
     assert bench_zig_zag().verify_convert() == 0
 
 if __name__ == '__main__':
