@@ -84,25 +84,26 @@ class VLControl(object):
 @block
 def huffman(clock, reset, huffmancntrl, bufferdatabus,
             huffmandatastream, img_size, rle_fifo_empty):
-    """
-    HDL Implementation of Huffman Module
+    """HDL Implementation of Huffman Module. This module takes
+    Variable Length Encoded Inputs and serialise them to VLC
+    using Huffman Rom Tables
 
-    I/O Ports:
-
+    Args:
     huffmancntrl : control signals interface
-    bufferdatabus : Output FIFO Interface
     huffmandatastream : Input Interface
     img_size : Image data class
     rle_fifo_empty : asserts when Input buffer is empty
 
-    Constants:
+    Returns:
+    bufferdatabus : Output FIFO Interface
 
-    block_size        : size of each block
-    vlcontrol         : contains the states used to run huff_fsm
-    image_size.width  : width of image
+    Constants:
+    block_size : size of each block
+    vlcontrol : contains the states used to run huff_fsm
+    image_size.width : width of image
     image_size.heigth : height of image
-    bits_block_count  : width to store number of blocks in image
-    width_word        : maximum width of the word register
+    bits_block_count : width to store number of blocks in image
+    width_word : maximum width of the word register
 
     """
 
