@@ -46,6 +46,28 @@ class RGB(object):
         self.blue = Signal(intbv(0)[nbits:])
         self.data_valid = Signal(bool(0))
 
+class RGB_v2(object):
+
+    """Red, Green, Blue Signals with nbits bitwidth for RGB input"""
+
+    def __init__(self, nbits=8):
+        """member variables initialize"""
+        self.nbits = nbits
+        self.red = Signal(intbv(0)[nbits:])
+        self.green = Signal(intbv(0)[nbits:])
+        self.blue = Signal(intbv(0)[nbits:])
+        self.color_mode = Signal(intbv(0, min=0, max=3))
+        self.data_valid = Signal(bool(0))
+
+
+class YCbCr_v2(object):
+
+    """Y, Cb, Cr output signal"""
+
+    def __init__(self, nbits=8):
+        self.nbits = nbits
+        self.data_out = Signal(intbv(0)[nbits:])
+        self.data_valid = Signal(bool(0))
 
 class YCbCr(object):
 

@@ -7,10 +7,10 @@ from itertools import chain
 import myhdl
 from myhdl import Signal, intbv, always_comb, always_seq, block, ResetSignal
 
-from jpegenc.subblocks.color_converters import ColorSpace, rgb2ycbcr
+from jpegenc.subblocks.color_converters import ColorSpace, rgb2ycbcr_v2
 from jpegenc.subblocks.dct.dct_2d import dct_2d_transformation, dct_2d
 from jpegenc.subblocks.zig_zag import zig_zag_scan, zig_zag
-from jpegenc.subblocks.common import YCbCr, input_interface, outputs_2d, RGB, outputs_frontend_new
+from jpegenc.subblocks.common import YCbCr_v2, input_interface, outputs_2d, RGB_v2, outputs_frontend_new
 
 
 def frontend_transform(blockr, blockg, blockb, N=8):
@@ -49,9 +49,9 @@ def frontend_top_level_v2(inputs, outputs, clock, reset, N=8):
     """
 
     """Color Space Conversion"""
-    rgb2ycbcr_out = YCbCr()
-    inputs_reg = RGB()
-    color_space_converter = rgb2ycbcr(inputs_reg, rgb2ycbcr_out, clock, reset)
+    rgb2ycbcr_out = YCbCr_v2()
+    inputs_reg = RGB_v2()
+    color_space_converter = rgb2ycbcr_v2(inputs_reg, rgb2ycbcr_out, clock, reset)
 
     """2D-DCT Transformation"""
     dct_2d_input = input_interface()
@@ -77,25 +77,20 @@ def frontend_top_level_v2(inputs, outputs, clock, reset, N=8):
         inputs_reg.green.next = inputs.green
         inputs_reg.blue.next = inputs.blue
         inputs_reg.data_valid.next = inputs.data_valid
+        inputs_reg.color_mode.next = color_mode
 
     @always_comb
-    def color_space_to_dct_mux():
+    def color_space_to_dct():
         """signal assignment from color_space_conversion module to dct_2d inputs"""
         if rgb2ycbcr_out.data_valid:
-            if color_mode == 0:
-                dct_2d_input.data_in.next = rgb2ycbcr_out.y
-            elif color_mode == 1:
-                dct_2d_input.data_in.next = rgb2ycbcr_out.cb
-            else:
-                dct_2d_input.data_in.next = rgb2ycbcr_out.cr
-
+            dct_2d_input.data_in.next = rgb2ycbcr_out.data_out
             dct_2d_input.data_valid.next = rgb2ycbcr_out.data_valid
 
     @always_seq(clock.posedge, reset=reset)
     def first_control_signals_update():
         """Is used to update the control signal color_mode for the first mux of the rgb2ycbcr
         output to 2d dct"""
-        if rgb2ycbcr_out.data_valid:
+        if inputs.data_valid:
             if input_counter == 63:
                 input_counter.next = 0
                 if color_mode == 2:
@@ -128,13 +123,13 @@ def frontend_top_level_v2(inputs, outputs, clock, reset, N=8):
             else:
                 output_counter.next = output_counter + 1
 
-    return (color_space_converter, zig_zag_inst, dct_2d_inst, color_space_to_dct_mux,
+    return (color_space_converter, zig_zag_inst, dct_2d_inst, color_space_to_dct,
             zig_zag_to_output_mux, first_control_signals_update, set_start_out,
             output_counter_reset, input_reg)
 
 def convert():
 
-    input_interface = RGB()
+    input_interface = RGB_v2()
     output_interface = outputs_frontend_new()
     clock = Signal(bool(0))
     reset = ResetSignal(0, active=True, async=False)
@@ -144,4 +139,4 @@ def convert():
     inst.convert(hdl='vhdl')
     inst.convert(hdl='verilog')
 
-#convert()
+# convert()
