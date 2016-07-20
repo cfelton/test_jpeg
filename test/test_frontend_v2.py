@@ -121,6 +121,8 @@ def test_frontend():
                 yield clock.posedge
                 yield delay(1)
                 if outputs.data_valid:
+                    yield clock.posedge
+                    clock_cycle_counter += 1
                     for i in range(3):
                         while(outputs_count != 64):
                             yield delay(1)
