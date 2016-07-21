@@ -63,7 +63,7 @@ def frontend_top_level_v2(inputs, outputs, clock, reset, N=8):
     """Zig-Zag Module"""
     zig_zag_out = outputs_2d()
 
-    zig_zag_inst = zig_zag(dct_2d_output, zig_zag_out)
+    zig_zag_inst = zig_zag(dct_2d_output, zig_zag_out, clock, reset)
 
     """Intermediate signals"""
     input_counter = Signal(intbv(0, min=0, max=64))
@@ -139,4 +139,4 @@ def convert():
     inst.convert(hdl='vhdl')
     inst.convert(hdl='verilog')
 
-# convert()
+convert()

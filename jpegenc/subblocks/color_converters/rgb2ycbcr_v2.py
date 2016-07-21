@@ -71,7 +71,7 @@ def build_coeffs(fract_bits):
     Y = int_coef[0]
     Cb = int_coef[1]
     Cr = int_coef[2]
-    return tuple(Y), tuple(Cb), tuple(Cr), tuple(Offset)
+    return tuple(Y), tuple(Cb), tuple(Cr), Offset
 
 @myhdl.block
 def rgb2ycbcr_v2(rgb, ycbcr, clock, reset, num_fractional_bits=14):
@@ -97,7 +97,7 @@ def rgb2ycbcr_v2(rgb, ycbcr, clock, reset, num_fractional_bits=14):
     b = fract_bits
 
     # make rom from the coeffs
-    y_rom, Cb_rom, Cr_rom, Offset_rom = build_coeffs(fract_bits)
+    y_rom, Cb_rom, Cr_rom, Offset = build_coeffs(fract_bits)
 
     # Ranges for multiplication and addition signals
     mult_max_range = 2**(nbits + fract_bits + 1)
@@ -125,7 +125,7 @@ def rgb2ycbcr_v2(rgb, ycbcr, clock, reset, num_fractional_bits=14):
 
     third_adder_sum = Signal(intbv(0, min=-mult_max_range, max=mult_max_range))
 
-    offset = [Signal(intbv(0, min=-mult_max_range,
+    offset = [Signal(intbv(Offset[i], min=-mult_max_range,
                            max=mult_max_range)) for i in range(3)]
 
     color_mode_reg = Signal(intbv(0, min=0, max=3))
@@ -138,75 +138,65 @@ def rgb2ycbcr_v2(rgb, ycbcr, clock, reset, num_fractional_bits=14):
         B_s.next = rgb.blue
 
     @always_comb
-    def offset_assign():
-        if rgb.data_valid:
-            offset[0].next = Offset_rom[0]
-            offset[1].next = Offset_rom[1]
-            offset[2].next = Offset_rom[2]
-
-    @always_comb
     def coeff_mux():
-        if rgb.data_valid:
-            if rgb.color_mode == 0:
-                for i in range(3):
-                    coeffs[i].next = y_rom[i]
-            if rgb.color_mode == 1:
-                for i in range(3):
-                    coeffs[i].next = Cb_rom[i]
-            if rgb.color_mode == 2:
-                for i in range(3):
-                    coeffs[i].next = Cr_rom[i]
+        if rgb.color_mode == 0:
+            for i in range(3):
+                coeffs[i].next = y_rom[i]
+        if rgb.color_mode == 1:
+            for i in range(3):
+                coeffs[i].next = Cb_rom[i]
+        if rgb.color_mode == 2:
+            for i in range(3):
+                coeffs[i].next = Cr_rom[i]
 
     @always_comb
     def mul_reg_sign():
-        if rgb.data_valid:
-            if color_mode_reg == 0:
-                mul_reg_1[0].next = mul_reg[0]
-                mul_reg_1[1].next = mul_reg[1]
-                mul_reg_1[2].next = mul_reg[2]
-            if color_mode_reg == 1:
-                mul_reg_1[0].next = - mul_reg[0]
-                mul_reg_1[1].next = - mul_reg[1]
-                mul_reg_1[2].next = mul_reg[2]
-            if color_mode_reg == 2:
-                mul_reg_1[0].next = mul_reg[0]
-                mul_reg_1[1].next = - mul_reg[1]
-                mul_reg_1[2].next = - mul_reg[2]
+        if color_mode_reg == 0:
+            mul_reg_1[0].next = mul_reg[0]
+            mul_reg_1[1].next = mul_reg[1]
+            mul_reg_1[2].next = mul_reg[2]
+        if color_mode_reg == 1:
+            mul_reg_1[0].next = - mul_reg[0]
+            mul_reg_1[1].next = - mul_reg[1]
+            mul_reg_1[2].next = mul_reg[2]
+        if color_mode_reg == 2:
+            mul_reg_1[0].next = mul_reg[0]
+            mul_reg_1[1].next = - mul_reg[1]
+            mul_reg_1[2].next = - mul_reg[2]
 
 
 
     @always_seq(clock.posedge, reset=reset)
     def logic():
         """Color Space Equation Conversion Implementation"""
-        if rgb.data_valid:
 
-            mul_reg[0].next = R_s * coeffs[0]
-            mul_reg[1].next = G_s * coeffs[1]
-            mul_reg[2].next = B_s * coeffs[2]
+        mul_reg[0].next = R_s * coeffs[0]
+        mul_reg[1].next = G_s * coeffs[1]
+        mul_reg[2].next = B_s * coeffs[2]
 
-            color_mode_reg.next = rgb.color_mode
+        color_mode_reg.next = rgb.color_mode
 
-            first_adder_sum.next = mul_reg_1[0] + mul_reg_1[1]
-            second_adder_sum.next = mul_reg_1[2] + offset[color_mode_reg]
-            third_adder_sum.next = first_adder_sum + second_adder_sum
+        first_adder_sum.next = mul_reg_1[0] + mul_reg_1[1]
+        second_adder_sum.next = mul_reg_1[2] + offset[color_mode_reg]
+        third_adder_sum.next = first_adder_sum + second_adder_sum
 
-            # rounding the part from signal[fract_bits + nbits:fract_bits]
-            if third_adder_sum[b - 1] == 1 and third_adder_sum[a:b] != (2**nbits):
-                ycbcr.data_out.next = third_adder_sum[a:b] + 1
-            else:
-               ycbcr.data_out.next = third_adder_sum[a:b]
-
-            # data_valid delayed for 4 cycles
-            data_valid_reg[0].next = rgb.data_valid
-            data_valid_reg[1].next = data_valid_reg[0]
-            data_valid_reg[2].next = data_valid_reg[1]
-            ycbcr.data_valid.next = data_valid_reg[2]
-
+        # rounding the part from signal[fract_bits + nbits:fract_bits]
+        if third_adder_sum[b - 1] == 1 and third_adder_sum[a:b] != (2**nbits):
+            ycbcr.data_out.next = third_adder_sum[a:b] + 1
         else:
+            ycbcr.data_out.next = third_adder_sum[a:b]
 
+        # data_valid delayed for 4 cycles
+        data_valid_reg[0].next = rgb.data_valid
+        data_valid_reg[1].next = data_valid_reg[0]
+        data_valid_reg[2].next = data_valid_reg[1]
+
+        if rgb.data_valid:
+            ycbcr.data_valid.next = data_valid_reg[2]
+        else:
             ycbcr.data_valid.next = False
 
-    return logic, logic2, offset_assign, coeff_mux, mul_reg_sign
+    return logic, logic2, coeff_mux, mul_reg_sign
 
 
 def convert():
