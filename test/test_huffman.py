@@ -262,4 +262,4 @@ def test_block_conversion():
 
 if __name__ == "__main__":
     test_huffman()
-    #test_block_conversion()
+    test_block_conversion()

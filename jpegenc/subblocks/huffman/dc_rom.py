@@ -1,30 +1,23 @@
-import csv
-import myhdl
-from myhdl import Signal, always, always_comb, block, intbv
+"""MyHDL implementation of DC ROM
+   used for Huffman Encoder"""
 
-
-def build_huffman_rom_tables(csvfile):
-    code = []
-    size = []
-    with open(csvfile, 'r') as csvfp:
-        csvreader = csv.reader(csvfp, delimiter=',')
-        for row in csvreader:
-            code.append(row[0])
-            size.append(row[1])
-
-    code = tuple(code)
-    size = tuple(size)
-    return code, size
+from myhdl import Signal, always
+from myhdl import block, always_comb
+from .tablebuilder import build_huffman_rom_tables
 
 
 @block
 def dc_rom(clock, address, data_out_size, data_out_code):
+    """build dc rom here"""
 
-    code, size = build_huffman_rom_tables('../jpegenc/subblocks/huffman/dc_rom.csv')
+    code, size = build_huffman_rom_tables(
+        '../jpegenc/subblocks/huffman/dc_rom.csv')
 
     rom_code_size = len(code)
     rom_code = [0 for _ in range(rom_code_size)]
-    rom_code = [int(code[0])] + [int(code[ii+1]) for ii in range(rom_code_size-1)]
+    rom_code = [int(code[0])] + [int(
+        code[ii+1]) for ii in range(rom_code_size-1)]
+
     rom_code = tuple(rom_code)
 
     rom_depth = len(size)
@@ -36,29 +29,17 @@ def dc_rom(clock, address, data_out_size, data_out_code):
 
     @always(clock.posedge)
     def beh_addr():
+        """assign adrress value to a signal"""
         raddr.next = address
 
     @always_comb
     def beh_out_code():
+        """read code output"""
         data_out_code.next = rom_code[raddr]
 
     @always_comb
     def beh_out_size():
+        """read size output"""
         data_out_size.next = rom_size[raddr]
 
     return beh_addr, beh_out_code, beh_out_size
-
-def convert():
-
-    clock = Signal(bool(0))
-
-    address = Signal(intbv(0)[5:])
-    data_out_size = Signal(intbv(0)[8:])
-    data_out_code = Signal(intbv(0)[8:])
-
-    inst = dc_rom(address, clock, data_out_size, data_out_code)
-    inst.convert(hdl='Verilog')
-
-
-if __name__ == '__main__':
-    convert()

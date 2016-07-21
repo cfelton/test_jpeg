@@ -1,27 +1,22 @@
-import csv
-import myhdl
-from myhdl import Signal, always, always_comb, block, intbv, concat
+"""MyHDL implementation of AC Chrominance ROM"""
 
+from myhdl import Signal, always, always_comb
+from myhdl import block, intbv, concat
+from .tablebuilder import build_huffman_rom_tables
 
-def build_huffman_rom_tables(csvfile):
-    code = []
-    size = []
-    with open(csvfile, 'r') as csvfp:
-        csvreader = csv.reader(csvfp, delimiter=',', quotechar="'" )
-        for row in csvreader:
-            code.append(row[0])
-            size.append(row[1])
-    code = tuple(code)
-    size = tuple(size)
-    return code, size
 
 @block
 def ac_cr_rom(clock, address1, address2, data_out_size, data_out_code):
-    code, size = build_huffman_rom_tables('../jpegenc/subblocks/huffman/ac_cr_rom.csv')
-    
+    """build ac ROM for chrominance"""
+
+    code, size = build_huffman_rom_tables(
+        '../jpegenc/subblocks/huffman/ac_cr_rom.csv')
+
     rom_code_size = len(code)
     rom_code = [0 for _ in range(rom_code_size)]
-    rom_code = [int(code[0], 2)] + [int(code[ii+1], 2) for ii in range(rom_code_size-1)]
+    rom_code = [int(code[0], 2)] + [int(
+        code[ii+1], 2) for ii in range(rom_code_size-1)]
+
     rom_code = tuple(rom_code)
 
     rom_depth = len(size)
@@ -33,35 +28,22 @@ def ac_cr_rom(clock, address1, address2, data_out_size, data_out_code):
 
     @always_comb
     def assign1():
-        """assign rom address"""
+        """concat address1 and address2"""
         address.next = concat(address1, address2)
 
     @always(clock.posedge)
     def beh_addr():
+        """assign address to a signal"""
         raddr.next = address
 
     @always_comb
     def beh_out_code():
+        """asssign output code"""
         data_out_code.next = rom_code[raddr]
 
     @always_comb
     def beh_out_size():
+        """assign output size"""
         data_out_size.next = rom_size[raddr]
 
     return assign1, beh_addr, beh_out_code, beh_out_size
-
-def convert():
-
-    clock = Signal(bool(0))
-
-    address1 = Signal(intbv(0)[4:])
-    address2 = Signal(intbv(0)[4:])
-    data_out_size = Signal(intbv(0)[8:])
-    data_out_code = Signal(intbv(0)[8:])
-
-    inst = ac_cr_rom(address1, address2, clock, data_out_size, data_out_code)
-    inst.convert(hdl='Verilog')
-
-
-if __name__ == '__main__':
-    convert()
