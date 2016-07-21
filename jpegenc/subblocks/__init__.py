@@ -7,8 +7,9 @@ from .rle import rlencoder
 from .zig_zag import zig_zag
 from .quantizer import quantizer_top
 from .bytestuffer import bytestuffer
+from .huffman import huffman
 
 __all__ = [
     'rgb2ycbcr', 'dct_2d', 'rlencoder', 'zigzag', 'frontend', 'quantizer_top',
-    'bytestuffer'
+    'bytestuffer', 'huffman'
 ]
