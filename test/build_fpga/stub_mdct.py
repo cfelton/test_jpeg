@@ -1,22 +1,17 @@
 
-import argparse
-from argparse import Namespace
 
 import myhdl
 from myhdl import Signal, ResetSignal, intbv, always, always_comb
 
 from rhea import Signals
 from rhea.cores.misc import io_stub
-from rhea.build import get_board
 
 from jpegenc.subblocks.common import input_interface, outputs_2d
 from jpegenc.subblocks import dct_2d
 
-from board_map import board_map
-
 
 @myhdl.block
-def mdct_stub(clock, sdi, sdo, reset=None):
+def stub_mdct(clock, sdi, sdo, reset=None):
     """This is a top-level wrapper around the jpegenc DCT2.
 
     This module is used to simply test the synthesis results 
@@ -84,33 +79,3 @@ def mdct_stub(clock, sdi, sdo, reset=None):
     # dct2_cr_inst = dct_2d(cr, crf, clock, reset)
 
     return myhdl.instances()
-        
-        
-def run_flow(args=None):
-    if args is None:
-        # args = Namespace(brd='nexys_video')
-        args = Namespace(brd='zybo')
-
-    brd = get_board(args.brd)
-    port = board_map[args.brd]
-    brd.add_port_name('sdi', port, 0)
-    brd.add_port_name('sdo', port, 1)
-
-    flow = brd.get_flow(top=mdct_stub)
-    flow.run()
-    info = flow.get_utilization()
-
-    return info
-
-
-def getargs():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('brd', choices=board_map.keys())
-    args = parser.parse_args()
-    return args
-
-if __name__ == '__main__':
-    args = getargs()
-    run_flow(args)
-        
-    
