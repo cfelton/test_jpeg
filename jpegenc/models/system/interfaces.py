@@ -1,18 +1,8 @@
 """
-This example demonstrates how interfaces can be used in the 2D-DCT.
-The 2D-DCT streams in a sample at a time, these samples are sent to
-parallel 1D-DCT (pipelined).
-
-There are two interfaces used:
-
-    ImageBlock: this represents the 2D image block that is being
-     transformed
-
-    DataBlock: which is a generic parallel data interface.
-
-These interfaces give an example how to use a list-of-signals (LoS)
-
+Example (exploration) of interface types useful for a JPEG eoncder
+system.
 """
+
 
 from random import randint
 
@@ -29,13 +19,42 @@ except ImportError:
 
 
 class PixelStream(object):
+    def __init__(self, data_width=24):
+        """A pixel-stream """
+        self.data = Signal(intbv(0)[data_width:0])
+        self.data_valid = Signal(bool(0))
+
+
+class RGBStream(PixelStream):
     def __init__(self, color_space=(8, 8, 8)):
-        """An red-green-blue interface """
         assert len(color_space) == 3
+        data_width = sum(color_space)
+
+        super(PixelStream, self).__init__(data_width=data_width)
+
         rbits, gbits, bbits = color_space
         self.red = Signal(intbv(0)[rbits:0])
         self.green = Signal(intbv(0)[gbits:0])
         self.blue = Signal(intbv(0)[rbits:0])
+
+        # alias to the above signals
+        self.data = ConcatSignal(self.red, self.green, self.blue)
+
+
+class YCbCrStream(PixelStream):
+    def __init__(self, color_space=(8, 8, 8)):
+        assert len(color_space) == 3
+        data_width = sum(color_space)
+
+        super(YCbCrStream, self).__init__(data_width=data_width)
+
+        ybits, cbbits, crbits = color_space
+        self.y = Signal(intbv(0)[ybits:])
+        self.cb = Signal(intbv(0)[cbbits:])
+        self.cr = Signal(intbv(0)[crbits:])
+
+        # alias to the above color signals
+        self.data = ConcatSignal(self.y, self.cb, self.cr)
 
 
 class DataStream(object):
@@ -122,5 +141,3 @@ class ImageBlock(object):
             flat.next = flats
 
         return beh_assign
-
-
