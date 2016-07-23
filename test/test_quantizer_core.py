@@ -1,12 +1,11 @@
 """This module is the testbench for the
-    divider used in Quantiser core module"""
+    divider used in quantizer core module"""
 
 from myhdl import block, instance, StopSimulation
 from myhdl import intbv, ResetSignal, Signal
 from myhdl.conversion import verify
 
-from jpegenc.subblocks.quantizer import (QuantInputStream, QuantConfig,
-                                         QuantOutputStream, quantizer,
+from jpegenc.subblocks.quantizer import (QuantDataStream, quantizer_core,
                                          divider_ref,)
 
 from jpegenc.subblocks.rle import Component
@@ -24,8 +23,8 @@ def quant_block_process(
         input_interface, output_interface, max_cnt):
     """Processing the block of pixels here"""
 
-    assert isinstance(input_interface, QuantInputStream)
-    assert isinstance(output_interface, QuantOutputStream)
+    assert isinstance(input_interface, QuantDataStream)
+    assert isinstance(output_interface, QuantDataStream)
 
     # select Y1 or Y2 or Cb or Cr
     color_component.next = color
@@ -44,30 +43,32 @@ def quant_block_process(
         list_ouput_ref.append(int(result))
 
     # assert input valid signal
-    input_interface.data_valid.next = True
+    input_interface.data.next = True
 
     # send 64 input samples into the quantizer core
     for i in range(max_cnt):
-        input_interface.data_in.next = input_q[i]
+        input_interface.data.next = input_q[i]
+        input_interface.valid.next = True
         yield clock.posedge
+        input_interface.valid.next = False
         # print the outputs
-        if output_interface.dovalid:
-            print ("output is %d" % output_interface.data_out)
-            assert list_ouput_ref.pop(0) == output_interface.data_out
+        if output_interface.valid:
+            print ("output is %d" % output_interface.data)
+            assert list_ouput_ref.pop(0) == output_interface.data
 
     # de-assert data_valid signal
-    input_interface.data_valid.next = False
+    input_interface.valid.next = False
     yield clock.posedge
 
     # print some more outputs
     for i in range(5):
-        if output_interface.dovalid:
-            print ("output is %d" % output_interface.data_out)
-            assert list_ouput_ref.pop(0) == output_interface.data_out
+        if output_interface.valid:
+            print ("output is %d" % output_interface.data)
+            assert list_ouput_ref.pop(0) == output_interface.data
         yield clock.posedge
 
 
-def test_quantiser_core():
+def test_quantizer_core():
     """The functionality of the module is tested here"""
 
     # clock and reset signals declared here
@@ -77,29 +78,17 @@ def test_quantiser_core():
     # width of the input data
     width_data = 12
 
-    # width of the address used for Dual Port RAM
-    width_qaddr = 7
-
-    # width of data stored in DualPortRAM
-    width_qdata = 8
-
     # width of input address
     width_addr = 6
 
     # bus signals declaration for the module
-    quant_output_stream = QuantOutputStream(width_data)
-    assert isinstance(quant_output_stream, QuantOutputStream)
+    quant_output_stream = QuantDataStream(width_data)
+    assert isinstance(quant_output_stream, QuantDataStream)
 
-    quant_input_stream = QuantInputStream(width_data)
-    assert isinstance(quant_input_stream, QuantInputStream)
-
-    quant_config = QuantConfig(width_qdata, width_qaddr)
-    assert isinstance(quant_config, QuantConfig)
+    quant_input_stream = QuantDataStream(width_data)
+    assert isinstance(quant_input_stream, QuantDataStream)
 
     color_component = Signal(intbv(0)[3:])
-
-    # maximum quantization address
-    max_quant_addr = 2**width_qaddr
 
     max_addr = 2**width_addr
 
@@ -111,9 +100,9 @@ def test_quantiser_core():
     def bench_quant_core():
         """instantiation of quantizer core module and clock signals"""
 
-        inst = quantizer(
+        inst = quantizer_core(
             clock, reset, quant_output_stream,
-            quant_input_stream, quant_config, color_component)
+            quant_input_stream, color_component)
 
         inst_clock = clock_driver(clock)
 
@@ -123,20 +112,6 @@ def test_quantiser_core():
 
             # reset the module before sending inputs
             yield pulse_reset(reset, clock)
-
-            # write enable the quantizer ram
-            quant_config.qwren.next = True
-            yield clock.posedge
-
-            # fill the quantizer ram with quantization values
-            for i in range(max_quant_addr):
-                quant_config.qdata.next = quant_rom[i]
-                quant_config.qwaddr.next = i
-                yield clock.posedge
-
-            # write disable the quantizer ram
-            quant_config.qwren.next = False
-            yield clock.posedge
 
             # select Cb or Cr component
             color = component.y2_space
@@ -174,21 +149,12 @@ def test_block_conversion():
     # width of the input data
     width_data = 12
 
-    # width of the address used for Dual Port RAM
-    width_qaddr = 7
-
-    # width of data stored in DualPortRAM
-    width_qdata = 8
-
     # bus signals declaration for the module
-    quant_output_stream = QuantOutputStream(width_data)
-    assert isinstance(quant_output_stream, QuantOutputStream)
+    quant_output_stream = QuantDataStream(width_data)
+    assert isinstance(quant_output_stream, QuantDataStream)
 
-    quant_input_stream = QuantInputStream(width_data)
-    assert isinstance(quant_input_stream, QuantInputStream)
-
-    quant_config = QuantConfig(width_qdata, width_qaddr)
-    assert isinstance(quant_config, QuantConfig)
+    quant_input_stream = QuantDataStream(width_data)
+    assert isinstance(quant_input_stream, QuantDataStream)
 
     color_component = Signal(intbv(0)[3:])
 
@@ -197,9 +163,8 @@ def test_block_conversion():
         """wrapper used for conversion purpose"""
 
         # instantiatiom of divider, clock and reset
-        inst = quantizer(
-            clock, reset, quant_output_stream,
-            quant_input_stream, quant_config, color_component)
+        inst = quantizer_core(clock, reset, quant_output_stream,
+                              quant_input_stream, color_component)
 
         inst_clock = clock_driver(clock)
         inst_reset = reset_on_start(reset, clock)
@@ -215,5 +180,3 @@ def test_block_conversion():
 
     verify.simulator = 'iverilog'
     assert bench_quant_core().verify_convert() == 0
-test_quantiser_core()
-test_block_conversion()

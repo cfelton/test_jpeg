@@ -1,18 +1,17 @@
 
 from __future__ import absolute_import
 
-from .quantiser_core import (QuantInputStream, QuantOutputStream,
-                             QuantConfig, quantizer,)
+from .quantizer_core import QuantDataStream, quantizer_core
 
-from .quantiser import (QuantIDataStream, QuantCtrl,
-                        QuantODataStream, quantizer_top,)
+from .quantizer import (QuantIODataStream, QuantCtrl,
+                        quantizer)
 
 from .divider import divider, divider_ref
 from .ramz import ramz
+from .quant_rom import quant_rom
 
 __all__ = [
-    'QuantInputStream', 'QuantOutputStream', 'QuantConfig',
-    'quantizer', 'QuantCtrl', 'quantizer_top',
-    'QuantIDataStream', 'QuantODataStream', 'divider',
-    'divider_ref', 'ramz'
+    'QuantDataStream', 'quantizer_core', 'QuantCtrl',
+    'quantizer', 'QuantIODataStream', 'divider',
+    'divider_ref', 'ramz', 'quant_rom',
 ]
