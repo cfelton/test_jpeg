@@ -25,6 +25,14 @@ class outputs_frontend(object):
         self.cr_dct_out = [Signal(intbv(0, min=-self.out_range,
                                         max=self.out_range)) for _ in range(self.N**2)]
 
+class outputs_frontend_new(object):
+
+    def __init__(self, precision_factor=10):
+        self.out_precision = precision_factor
+        self.out_range = 2**precision_factor
+        self.data_valid = Signal(bool(0))
+        self.end_of_block_conversion = Signal(bool(0))
+        self.data_out = Signal(intbv(0, min=-self.out_range, max=self.out_range))
 
 class RGB(object):
 
@@ -38,6 +46,28 @@ class RGB(object):
         self.blue = Signal(intbv(0)[nbits:])
         self.data_valid = Signal(bool(0))
 
+class RGB_v2(object):
+
+    """Red, Green, Blue Signals with nbits bitwidth for RGB input"""
+
+    def __init__(self, nbits=8):
+        """member variables initialize"""
+        self.nbits = nbits
+        self.red = Signal(intbv(0)[nbits:])
+        self.green = Signal(intbv(0)[nbits:])
+        self.blue = Signal(intbv(0)[nbits:])
+        self.color_mode = Signal(intbv(0, min=0, max=3))
+        self.data_valid = Signal(bool(0))
+
+
+class YCbCr_v2(object):
+
+    """Y, Cb, Cr output signal"""
+
+    def __init__(self, nbits=8):
+        self.nbits = nbits
+        self.data_out = Signal(intbv(0)[nbits:])
+        self.data_valid = Signal(bool(0))
 
 class YCbCr(object):
 

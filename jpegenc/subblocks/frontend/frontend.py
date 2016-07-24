@@ -112,4 +112,3 @@ def convert():
     inst.convert(hdl='vhdl')
     inst.convert(hdl='verilog')
 
-
