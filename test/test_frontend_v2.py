@@ -79,7 +79,7 @@ def out_print(expected_outputs, actual_outputs, N, i):
 
 def test_frontend():
 
-    samples, N = 1, 8
+    samples, N = 2, 8
 
     clock = Signal(bool(0))
     reset = ResetSignal(1, active=True, async=True)
@@ -116,23 +116,23 @@ def test_frontend():
             outputs_count = 0
             outputs_list = []
             clock_cycle_counter = 0
-            while samples_count != samples:
-                clock_cycle_counter += 1
+            while(outputs.data_valid == False):
                 yield clock.posedge
-                yield delay(1)
-                if outputs.data_valid:
-                    for i in range(3):
-                        while(outputs_count != 64):
-                            yield delay(1)
-                            outputs_list.append(int(outputs.data_out))
-                            outputs_count += 1
-                            clock_cycle_counter += 1
-                            yield clock.posedge
-                        out_print(in_out_data.outputs[samples_count],
-                                    outputs_list, N, i)
-                        outputs_count = 0
-                        outputs_list = []
-                    samples_count += 1
+                clock_cycle_counter += 1
+            while samples_count != samples:
+                print("Processing Block %d" %(samples_count+1))
+                for i in range(3):
+                    while(outputs_count != 64):
+                        yield delay(1)
+                        outputs_list.append(int(outputs.data_out))
+                        outputs_count += 1
+                        clock_cycle_counter += 1
+                        yield clock.posedge
+                    out_print(in_out_data.outputs[samples_count],
+                                outputs_list, N, i)
+                    outputs_count = 0
+                    outputs_list = []
+                samples_count += 1
             print("Clock Cycles taken for the block conversion:",
                   clock_cycle_counter)
             raise StopSimulation
