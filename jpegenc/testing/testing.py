@@ -16,7 +16,7 @@ if hasattr(sys, '_called_from_test'):
 skipif_no_sim = pytest.mark.skipif(False, reason="simulator is not available")
 if hasattr(sys, '_called_from_test'):
     skip_if_no_sim = pytest.mark.skipif(
-        True,
+        sim_is_ok,
         reason="simulator is not ok "
     )
 

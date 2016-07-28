@@ -79,7 +79,7 @@ def frontend_top_level_v2(inputs, outputs, clock, reset, N=8):
         inputs_reg.data_valid.next = inputs.data_valid
         inputs_reg.color_mode.next = color_mode
 
-    @always_comb
+    @always_seq(clock.posedge, reset=reset)
     def color_space_to_dct():
         """signal assignment from color_space_conversion module to dct_2d inputs"""
         if rgb2ycbcr_out.data_valid:
@@ -139,4 +139,4 @@ def convert():
     inst.convert(hdl='vhdl')
     inst.convert(hdl='verilog')
 
-convert()
+#convert()
