@@ -106,10 +106,14 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14,
     def input_subtract():
         """Align to zero each input"""
         if inputs.data_valid:
-            data_in_signed.next = inputs.data_in
             input_1d_stage_1.data_in.next = data_in_signed - 128
-            data_valid_reg.next = inputs.data_valid
             input_1d_stage_1.data_valid.next = data_valid_reg
+
+    @always_seq(clock.posedge, reset=reset)
+    def reg_input():
+        if inputs.data_valid:
+            data_in_signed.next = inputs.data_in
+            data_valid_reg.next = inputs.data_valid
 
     @always_comb
     def second_stage_output():
@@ -132,6 +136,6 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14,
         else:
             data_valid_reg2.next = False
 
-    return (stage_2_insts, input_subtract, second_stage_output,
+    return (reg_input, stage_2_insts, input_subtract, second_stage_output,
             counter_update, data_valid_2d, first_1d)
 
