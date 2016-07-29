@@ -140,6 +140,7 @@ def rgb2ycbcr_v2(rgb, ycbcr, clock, reset, num_fractional_bits=14):
 
     @always_comb
     def coeff_mux():
+        """multiplexer for the coefficients"""
         if rgb.color_mode == 0:
             for i in range(3):
                 coeffs[i].next = y_rom[i]
@@ -152,6 +153,7 @@ def rgb2ycbcr_v2(rgb, ycbcr, clock, reset, num_fractional_bits=14):
 
     @always_seq(clock.posedge, reset=reset)
     def mul_reg_sign():
+        """multiplexer for the sign of the multiplication"""
         if color_mode_reg == 0:
             mul_reg_1[0].next = mul_reg[0]
             mul_reg_1[1].next = mul_reg[1]

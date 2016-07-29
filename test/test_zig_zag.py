@@ -106,8 +106,7 @@ def test_zig_zag():
 
     run_testbench(bench_zig_zag)
 
-'''
-#TODO make the same changes in the convertible testbench
+
 @pytest.mark.skipif(not simsok, reason="missing installed simulator")
 def test_zig_zag_conversion():
 
@@ -124,10 +123,14 @@ def test_zig_zag_conversion():
 
     inputs_rom, expected_outputs_rom = in_out_data.get_rom_tables()
 
+    clock = Signal(bool(0))
+    reset = ResetSignal(1, active=True, async=True)
+
     @block
     def bench_zig_zag():
-        tdut = zig_zag(inputs, outputs, N)
+        tdut = zig_zag(inputs, outputs, clock, reset, N)
         tbclock = clock_driver(clock)
+        tbrst = reset_on_start(reset, clock)
 
         print_sig = [Signal(intbv(0, min=-2**output_bits, max=2**output_bits))
                      for _ in range(N**2)]
@@ -141,9 +144,9 @@ def test_zig_zag_conversion():
             inputs.data_valid.next = True
 
             for i in range(samples):
-                yield clock.posedge
                 for j in range(N**2):
                     in_sigs[j].next = inputs_rom[i*(N**2) + j]
+                yield clock.posedge
 
         print_assign = assign_array(print_sig_1, outputs.out_sigs)
         input_assign = assign_array(inputs.out_sigs, in_sigs)
@@ -151,8 +154,9 @@ def test_zig_zag_conversion():
         @instance
         def monitor():
             outputs_count = 0
+            yield outputs.data_valid.posedge
+            yield delay(1)
             while(outputs_count != samples):
-                yield clock.posedge
                 for i in range(N**2):
                     print_sig[i].next = expected_outputs_rom[outputs_count * (N**2) + i]
                 yield delay(1)
@@ -164,14 +168,17 @@ def test_zig_zag_conversion():
                     print("%d " % print_sig_1[i])
                 print("------------------------------")
                 outputs_count += 1
+                yield clock.posedge
             raise StopSimulation
 
-        return tdut, tbclock, tbstim, monitor, print_assign, input_assign
+        return tdut, tbclock, tbstim, monitor, print_assign, input_assign, tbrst
+
 
     assert bench_zig_zag().verify_convert() == 0
+
 
 if __name__ == '__main__':
     test_zig_zag()
     test_zig_zag_conversion()
 
-'''
+
