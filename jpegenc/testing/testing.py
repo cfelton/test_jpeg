@@ -1,11 +1,11 @@
-import py
+
 import sys
 import os
 import subprocess
 import pytest
 import myhdl
 
-sim_is_ok = False
+
 skip_ref_test = pytest.mark.skipif(reason="skip reference cosimulation")
 if hasattr(sys, '_called_from_test'):
     skip_ref_test = pytest.mark.skipif(
@@ -13,16 +13,13 @@ if hasattr(sys, '_called_from_test'):
         reason="reference tests, needs --include-reference option to run"
     )
 
-skipif_no_sim = pytest.mark.skipif(False, reason="simulator is not available")
-if hasattr(sys, '_called_from_test'):
-    skip_if_no_sim = pytest.mark.skipif(
-        sim_is_ok,
-        reason="simulator is not ok "
-    )
 
 def sim_available(sim='ghdl'):
     ok = True
-    if not py.path.local.sysfind(sim):
+    version = '-V' if sim == 'iverilog' else '-v'
+    try:
+        subprocess.call([sim, version])
+    except FileNotFoundError as err:
         ok = False
     return ok
 
