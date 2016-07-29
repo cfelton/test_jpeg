@@ -15,8 +15,13 @@ from jpegenc.subblocks.common import (input_interface, output_interface,
 
 from jpegenc.subblocks.dct import dct_2d
 from jpegenc.subblocks.dct.dct_2d import dct_2d_transformation
-from jpegenc.testing import skipif_no_sim, run_testbench
+from jpegenc.testing import sim_available, run_testbench
 from jpegenc.testing import clock_driver, reset_on_start, pulse_reset
+
+simsok = sim_available('ghdl')
+"""default simulator"""
+verify.simulator = "ghdl"
+
 
 class InputsAndOutputs(object):
 
@@ -118,8 +123,7 @@ def test_dct_2d():
     run_testbench(bench_dct_2d)
 
 
-#@pytest.mark.skipif(not simsok, reason="missing installed simulator")
-@skipif_no_sim
+@pytest.mark.skipif(not simsok, reason="missing installed simulator")
 def test_dct_2d_conversion():
 
     samples, fract_bits, output_bits, stage_1_prec, N = 5, 14, 10, 10, 8
