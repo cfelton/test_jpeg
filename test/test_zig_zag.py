@@ -16,7 +16,9 @@ from jpegenc.testing import clock_driver, reset_on_start, pulse_reset
 
 from random import randrange
 
-simsok = sim_available('ghdl') and sim_available('iverilog')
+simsok = sim_available('ghdl')
+"""default simulator"""
+verify.simulator = "ghdl"
 
 class InputsAndOutputs(object):
 
@@ -64,6 +66,7 @@ def test_zig_zag():
     samples, output_bits, N = 5, 10, 8
 
     clock = Signal(bool(0))
+    reset = ResetSignal(1, active=True, async=True)
 
     inputs = outputs_2d(output_bits, N)
     outputs = outputs_2d(output_bits, N)
@@ -73,32 +76,36 @@ def test_zig_zag():
 
     @block
     def bench_zig_zag():
-        tdut = zig_zag(inputs, outputs, N)
+        tdut = zig_zag(inputs, outputs, clock, reset, N)
         tbclock = clock_driver(clock)
 
         @instance
         def tbstim():
+            yield pulse_reset(reset, clock)
             inputs.data_valid.next = True
 
             for i in range(samples):
-                yield clock.posedge
                 for j in range(N**2):
                     inputs.out_sigs[j].next = in_out_data.inputs[i][j]
+                yield clock.posedge
 
         @instance
         def monitor():
             outputs_count = 0
+            yield outputs.data_valid.posedge
+            yield delay(1)
             while(outputs_count != samples):
-                yield clock.posedge
-                yield delay(1)
                 out_print(in_out_data.outputs[outputs_count],
                           outputs.out_sigs, N)
+                yield clock.posedge
+                yield delay(1)
                 outputs_count += 1
             raise StopSimulation
 
         return tdut, tbclock, tbstim, monitor
 
     run_testbench(bench_zig_zag)
+
 
 @pytest.mark.skipif(not simsok, reason="missing installed simulator")
 def test_zig_zag_conversion():
@@ -116,10 +123,14 @@ def test_zig_zag_conversion():
 
     inputs_rom, expected_outputs_rom = in_out_data.get_rom_tables()
 
+    clock = Signal(bool(0))
+    reset = ResetSignal(1, active=True, async=True)
+
     @block
     def bench_zig_zag():
-        tdut = zig_zag(inputs, outputs, N)
+        tdut = zig_zag(inputs, outputs, clock, reset, N)
         tbclock = clock_driver(clock)
+        tbrst = reset_on_start(reset, clock)
 
         print_sig = [Signal(intbv(0, min=-2**output_bits, max=2**output_bits))
                      for _ in range(N**2)]
@@ -133,9 +144,9 @@ def test_zig_zag_conversion():
             inputs.data_valid.next = True
 
             for i in range(samples):
-                yield clock.posedge
                 for j in range(N**2):
                     in_sigs[j].next = inputs_rom[i*(N**2) + j]
+                yield clock.posedge
 
         print_assign = assign_array(print_sig_1, outputs.out_sigs)
         input_assign = assign_array(inputs.out_sigs, in_sigs)
@@ -143,8 +154,9 @@ def test_zig_zag_conversion():
         @instance
         def monitor():
             outputs_count = 0
+            yield outputs.data_valid.posedge
+            yield delay(1)
             while(outputs_count != samples):
-                yield clock.posedge
                 for i in range(N**2):
                     print_sig[i].next = expected_outputs_rom[outputs_count * (N**2) + i]
                 yield delay(1)
@@ -156,17 +168,17 @@ def test_zig_zag_conversion():
                     print("%d " % print_sig_1[i])
                 print("------------------------------")
                 outputs_count += 1
+                yield clock.posedge
             raise StopSimulation
 
-        return tdut, tbclock, tbstim, monitor, print_assign, input_assign
+        return tdut, tbclock, tbstim, monitor, print_assign, input_assign, tbrst
 
-    # verify and convert with GHDL
-    verify.simulator = 'ghdl'
+
     assert bench_zig_zag().verify_convert() == 0
-    # verify and convert with iverilog
-    verify.simulator = 'iverilog'
-    assert bench_zig_zag().verify_convert() == 0
+
 
 if __name__ == '__main__':
     test_zig_zag()
     test_zig_zag_conversion()
+
+

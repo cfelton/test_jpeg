@@ -2,7 +2,7 @@
 # coding=utf-8
 
 import myhdl
-from myhdl import Signal, intbv, always_comb, block
+from myhdl import Signal, intbv, always_comb, always_seq, block
 
 from jpegenc.subblocks.common import outputs_2d, assign_array
 
@@ -49,7 +49,7 @@ class zig_zag_scan(object):
 
 
 @block
-def zig_zag(inputs, outputs, N=8):
+def zig_zag(inputs, outputs, clock, reset, N=8):
     """Zig-Zag Module
 
     This module performs the zig-zag reorderding. According to the
@@ -70,12 +70,17 @@ def zig_zag(inputs, outputs, N=8):
     input_sigs = [Signal(intbv(0, min =-inputs.out_range, max=inputs.out_range))
                    for _ in range(N**2)]
 
-    @always_comb
+    @always_seq(clock.posedge, reset=reset)
     def zig_zag_assign():
-        for i in range(N**2):
-            index = zig_zag_rom[i]
-            output_sigs[int(index)].next = input_sigs[int(i)]
-        outputs.data_valid.next = inputs.data_valid
+        if inputs.data_valid:
+            for i in range(N**2):
+                index = zig_zag_rom[i]
+                output_sigs[int(index)].next = input_sigs[int(i)]
+            outputs.data_valid.next = inputs.data_valid
+        else:
+            outputs.data_valid.next = False
+
+
 
     output_assignments =assign_array(outputs.out_sigs, output_sigs)
     input_assignments = assign_array(input_sigs, inputs.out_sigs)
