@@ -110,7 +110,8 @@ def quantizer(clock, reset, quanti_datastream,
         buffer_data.next = quant_output_stream_temp.data
         buffer_waddr.next = concat(not quanto_datastream.buffer_sel, write_cnt)
         buffer_we.next = quant_output_stream_temp.valid
-        buffer_raddr.next = concat(quanto_datastream.buffer_sel, quanto_datastream.addr)
+        buffer_raddr.next = concat(quanto_datastream.buffer_sel,
+                                   quanto_datastream.addr)
 
     @always_seq(clock.posedge, reset=reset)
     def rdcnt():
@@ -153,7 +154,9 @@ def quantizer(clock, reset, quanti_datastream,
 
     @always_seq(clock.posedge, reset=reset)
     def buf_sel():
+        """Input Buffer selection"""
         if quant_ctrl.start:
-            quanti_datastream.buffer_sel.next = not quanti_datastream.buffer_sel
+            quanti_datastream.buffer_sel.next = (
+                not quanti_datastream.buffer_sel)
 
     return assign, inst_quant, inst_buffer, assign1, rdcnt, wrcnt, buf_sel

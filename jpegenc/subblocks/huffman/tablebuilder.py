@@ -1,4 +1,7 @@
+"""Used to build Huffman Tables"""
+
 import csv
+
 
 def build_huffman_rom_tables(csvfile):
     """build huffman tables"""

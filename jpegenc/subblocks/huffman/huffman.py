@@ -222,8 +222,10 @@ def huffman(clock, reset, huffmancntrl, bufferdatabus,
 
     @always_seq(clock.posedge, reset=reset)
     def assign_in_buf():
+        """Input Buffer Selection"""
         if huffmancntrl.start:
-            huffmandatastream.buffer_sel.next = not huffmandatastream.buffer_sel
+            huffmandatastream.buffer_sel.next = (
+                not huffmandatastream.buffer_sel)
 
     @always_comb
     def assign_out():

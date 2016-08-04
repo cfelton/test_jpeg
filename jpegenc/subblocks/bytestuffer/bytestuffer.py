@@ -104,6 +104,7 @@ def bytestuffer(
 
     @always_seq(clock.posedge, reset=reset)
     def toggle():
+        """Input Buffer Selection"""
         if bs_cntrl.start:
             bs_in_stream.buffer_sel.next = not bs_in_stream.buffer_sel
 

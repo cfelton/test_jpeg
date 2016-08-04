@@ -160,6 +160,7 @@ def rlencoder(clock, reset, datastream, bufferdatabus, rleconfig):
 
     @always_seq(clock.posedge, reset=reset)
     def assign3_buf():
+        """Input buffer selection"""
         if rleconfig.start:
             datastream.buffer_sel.next = not datastream.buffer_sel
 
@@ -170,37 +171,3 @@ def rlencoder(clock, reset, datastream, bufferdatabus, rleconfig):
 
     return (assign0, assign1, rle_core, rle_doublefifo,
             assign3, seq1, assign3_buf, assign4)
-
-
-def bench_rle_conversion():
-    clock = Signal(bool(0))
-    reset = ResetSignal(0, active=1, async=True)
-
-        # width of input data
-    width_data = 12
-
-        # width of address bus
-    width_addr = 6
-
-        # width to store the size
-    width_size = width_data.bit_length()
-    width_runlength = 4
-
-        # input data bus for rle module
-    datastream = DataStream(width_data, width_addr)
-    assert isinstance(datastream, DataStream)
-
-        # connections between output symbols
-    bufferdatabus = BufferDataBus(width_data, width_size, width_runlength)
-    assert isinstance(bufferdatabus, BufferDataBus)
-
-        # selects the color component, manages address values
-    rleconfig = RLEConfig()
-    assert isinstance(rleconfig, RLEConfig)
-
-    inst = rlencoder(clock, reset, datastream, bufferdatabus, rleconfig)
-
-    inst.convert('verilog')
-
-if __name__ == "__main__":
-    bench_rle_conversion()
