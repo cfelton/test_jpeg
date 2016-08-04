@@ -50,6 +50,7 @@ def doublefifo(clock, reset, dfifo_bus, buffer_sel, depth=16):
         fbus1.write_data.next = fifo_data_in
         fbus2.write_data.next = fifo_data_in
 
+
     @always_seq(clock.posedge, reset=reset)
     def mux2_logic():
         """select buffer to pump data"""

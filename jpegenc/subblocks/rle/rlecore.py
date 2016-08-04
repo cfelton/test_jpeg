@@ -2,7 +2,7 @@
     run length encoder module """
 
 from myhdl import always_comb, always_seq, block
-from myhdl import intbv, Signal, modbv
+from myhdl import intbv, Signal, modbv, concat
 from .entropycoder import entropycoder
 
 
@@ -25,7 +25,8 @@ class DataStream(object):
     """
     def __init__(self, width_data=12, width_addr=6):
         self.data_in = Signal(intbv(0)[width_data:].signed())
-        self.read_addr = Signal(intbv(0)[width_addr:])
+        self.read_addr = Signal(modbv(0)[width_addr:])
+        self.buffer_sel = Signal(bool(0))
 
 
 class RLESymbols(object):
@@ -143,7 +144,7 @@ def rle(clock, reset, datastream, rlesymbols, rleconfig):
 
         rlesymbols.size.next = rlesymbols_temp.size
         rlesymbols.amplitude.next = rlesymbols_temp.amplitude
-        datastream.read_addr.next = read_cnt
+        datastream.read_addr.next = concat(datastream.buffer_sel, read_cnt)
 
     @always_seq(clock.posedge, reset=reset)
     def mainprocessing():

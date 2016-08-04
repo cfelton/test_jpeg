@@ -3,13 +3,11 @@
 
 from myhdl import always_seq, block, always_comb
 from myhdl import Signal, concat, modbv, intbv
-
 from .ramz import ramz
-from .quantiser_core import (quantizer, QuantOutputStream,
-                             QuantInputStream, QuantConfig)
+from .quantizer_core import quantizer_core, QuantDataStream
 
 
-class QuantIDataStream(object):
+class QuantIODataStream(object):
     """
     Input datastream into the Quantizer top module
 
@@ -17,9 +15,10 @@ class QuantIDataStream(object):
     read_addr : read the data from the input buffer
 
     """
-    def __init__(self, width, addr):
-        self.data_in = Signal(intbv(0)[width:].signed())
-        self.read_addr = Signal(modbv(0)[addr:])
+    def __init__(self, width_data=12, width_addr=6):
+        self.data = Signal(intbv(0)[width_data:].signed())
+        self.addr = Signal(modbv(0)[width_addr:])
+        self.buffer_sel = Signal(bool(0))
 
 
 class QuantCtrl(object):
@@ -37,48 +36,50 @@ class QuantCtrl(object):
         self.color_component = Signal(intbv(0)[3:])
 
 
-class QuantODataStream(object):
-    """
-    Output data stream from quantizer module
-
-    data_out : output data sent from the output buffer
-    read_addr : read data from the output buffer
-
-    """
-    def __init__(self, width, addr):
-        self.data_out = Signal(intbv(0)[width:].signed())
-        self.read_addr = Signal(modbv(0)[addr:])
-
-
 @block
-def quantizer_top(
-        clock, reset, quanti_datastream,
-        quant_ctrl, quant_config, quanto_datastream):
-    """HDL modeling of top module"""
+def quantizer(clock, reset, quanti_datastream,
+              quant_ctrl, quanto_datastream):
+    """The Quantizer module divides the input
+    data and data in the ROM
+
+    Arguments:
+    quanti_datastream : Input datastream to the module
+    quant_ctrl : control signals to the module
+
+    Returns:
+    quanto_datastream : Output datastream from the module
+
+    """
 
     assert isinstance(quant_ctrl, QuantCtrl)
-    assert isinstance(quanto_datastream, QuantODataStream)
-    assert isinstance(quanti_datastream, QuantIDataStream)
-    assert isinstance(quant_config, QuantConfig)
+    assert isinstance(quanto_datastream, QuantIODataStream)
+    assert isinstance(quanti_datastream, QuantIODataStream)
 
-    # address length and data length declared here
-    width_len = len(quanti_datastream.data_in)
-    width_addr = len(quanti_datastream.read_addr)
+    # input and output data width
+    width_data = len(quanti_datastream.data)
+    # address width input and output RAM
+    width_addr = len(quanti_datastream.addr)
+
+    # total number of blocks the module process
     max_block_addr = (2**width_addr) - 1
 
-    # declare signals used for output buffer
-    buffer_data = Signal(intbv(0)[width_len:].signed())
-    buffer_q = Signal(intbv(0)[width_len:].signed())
+    # input data to the buffer
+    buffer_data = Signal(intbv(0)[width_data:].signed())
+    # output data from the buffer
+    buffer_q = Signal(intbv(0)[width_data:].signed())
+    # buffer write enable signal
     buffer_we = Signal(bool(0))
-    buffer_waddr = Signal(modbv(0)[width_addr:])
-    buffer_raddr = Signal(modbv(0)[width_addr:])
+    # buffer write address
+    buffer_waddr = Signal(modbv(0)[width_addr+1:])
+    # buffer read addressS
+    buffer_raddr = Signal(modbv(0)[width_addr+1:])
 
     # declare input and output signals for core module
-    quant_input_stream_temp = QuantInputStream(width_len)
-    assert isinstance(quant_input_stream_temp, QuantInputStream)
+    quant_input_stream_temp = QuantDataStream(width_data)
+    assert isinstance(quant_input_stream_temp, QuantDataStream)
 
-    quant_output_stream_temp = QuantOutputStream(width_len)
-    assert isinstance(quant_output_stream_temp, QuantOutputStream)
+    quant_output_stream_temp = QuantDataStream(width_data)
+    assert isinstance(quant_output_stream_temp, QuantDataStream)
 
     # counters used for reading and writing purpose
     write_cnt = Signal(modbv(0)[width_addr:])
@@ -89,16 +90,15 @@ def quantizer_top(
     @always_comb
     def assign():
         """assign signals to bus interface"""
-        quanti_datastream.read_addr.next = read_cnt
-        quanto_datastream.data_out.next = buffer_q
-        quant_input_stream_temp.data_in.next = quanti_datastream.data_in
-        quant_input_stream_temp.data_valid.next = read_enable_temp[0]
+        quanti_datastream.addr.next = read_cnt
+        quanto_datastream.data.next = buffer_q
+        quant_input_stream_temp.data.next = quanti_datastream.data
+        quant_input_stream_temp.valid.next = read_enable_temp[0]
 
     # instantiantion of quantizer core
-    inst_quant = quantizer(
+    inst_quant = quantizer_core(
         clock, reset, quant_output_stream_temp,
-        quant_input_stream_temp, quant_config,
-        quant_ctrl.color_component)
+        quant_input_stream_temp, quant_ctrl.color_component)
 
     # instantiation of quantizer ram
     inst_buffer = ramz(
@@ -107,10 +107,10 @@ def quantizer_top(
     @always_comb
     def assign1():
         """assign quantizer core signals to buffer interface"""
-        buffer_data.next = quant_output_stream_temp.data_out
-        buffer_waddr.next = write_cnt
-        buffer_we.next = quant_output_stream_temp.dovalid
-        buffer_raddr.next = quanto_datastream.read_addr
+        buffer_data.next = quant_output_stream_temp.data
+        buffer_waddr.next = concat(not quanto_datastream.buffer_sel, write_cnt)
+        buffer_we.next = quant_output_stream_temp.valid
+        buffer_raddr.next = concat(quanto_datastream.buffer_sel, quanto_datastream.addr)
 
     @always_seq(clock.posedge, reset=reset)
     def rdcnt():
@@ -141,7 +141,7 @@ def quantizer_top(
             write_cnt.next = 0
 
         # start write counters
-        if quant_output_stream_temp.dovalid:
+        if quant_output_stream_temp.valid:
             if write_cnt == max_block_addr:
                 write_cnt.next = 0
             else:
@@ -151,4 +151,9 @@ def quantizer_top(
             if write_cnt == (max_block_addr-3):
                 quant_ctrl.ready.next = True
 
-    return assign, inst_quant, inst_buffer, assign1, rdcnt, wrcnt
+    @always_seq(clock.posedge, reset=reset)
+    def buf_sel():
+        if quant_ctrl.start:
+            quanti_datastream.buffer_sel.next = not quanti_datastream.buffer_sel
+
+    return assign, inst_quant, inst_buffer, assign1, rdcnt, wrcnt, buf_sel

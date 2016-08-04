@@ -33,7 +33,7 @@ class ImgSize(object):
     height : height of the image
 
     """
-    def __init__(self, width, height):
+    def __init__(self, width=8, height=8):
         self.width = width
         self.height = height
 
@@ -54,9 +54,10 @@ class HuffmanDataStream(object):
         self.vli = Signal(intbv(0)[width_amplitude:])
         self.data_valid = Signal(bool(0))
         self.read_addr = Signal(intbv(0)[width_addr:])
+        self.buffer_sel = Signal(bool(0))
 
 
-class BufferDataBus(object):
+class HuffBufferDataBus(object):
     """
     Output Interface of the Huffman module
     read_req        : access to read the output data stored in FIFO
@@ -108,7 +109,7 @@ def huffman(clock, reset, huffmancntrl, bufferdatabus,
     """
 
     assert isinstance(huffmandatastream, HuffmanDataStream)
-    assert isinstance(bufferdatabus, BufferDataBus)
+    assert isinstance(bufferdatabus, HuffBufferDataBus)
     assert isinstance(img_size, ImgSize)
     assert isinstance(huffmancntrl, HuffmanCntrl)
 
@@ -119,7 +120,7 @@ def huffman(clock, reset, huffmancntrl, bufferdatabus,
     block_size = 2**len(huffmandatastream.read_addr)
 
     # calculated area of image
-    area = (img_size.width*img_size.height)*(3)
+    area = (img_size.width*img_size.height)*(3)*10
 
     # number of blocks
     bits_block_cnt = area/64
@@ -218,6 +219,11 @@ def huffman(clock, reset, huffmancntrl, bufferdatabus,
 
     inst_dfifo = doublefifo(clock, reset, dfifo, bufferdatabus.buffer_sel,
                             depth=block_size)
+
+    @always_seq(clock.posedge, reset=reset)
+    def assign_in_buf():
+        if huffmancntrl.start:
+            huffmandatastream.buffer_sel.next = not huffmandatastream.buffer_sel
 
     @always_comb
     def assign_out():
@@ -456,6 +462,6 @@ def huffman(clock, reset, huffmancntrl, bufferdatabus,
         if huffmancntrl.sof:
             bit_ptr.next = 0
 
-    return (latch, inst_dc_rom, inst_ac_rom, inst_cr_dc_rom,
+    return (latch, inst_dc_rom, assign_in_buf, inst_ac_rom, inst_cr_dc_rom,
             inst_cr_ac_rom, inst_dfifo, mux_rom, ext, delay_line,
             blk_cntr, fifo_writes, div_by8, huff_fsm, assign_out)
