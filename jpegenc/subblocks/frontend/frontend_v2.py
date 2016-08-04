@@ -70,6 +70,7 @@ def frontend_top_level_v2(inputs, outputs, clock, reset, N=8):
     color_mode = Signal(intbv(0, min=0, max=3))
     output_counter = Signal(intbv(0, min=0, max=64))
     start_out = Signal(bool(0))
+    data_valid_reg = Signal(bool(0))
 
     @always_seq(clock.posedge, reset=reset)
     def input_reg():
@@ -104,9 +105,11 @@ def frontend_top_level_v2(inputs, outputs, clock, reset, N=8):
     def set_start_out():
         if zig_zag_out.data_valid:
             start_out.next = True
+
+    @always_seq(clock.posedge, reset)
+    def data_valid_assign():
+        if zig_zag_out.data_valid:
             outputs.data_valid.next = zig_zag_out.data_valid
-        else:
-            outputs.data_valid.next = False
 
 
     @always_seq(clock.posedge, reset=reset)
@@ -125,7 +128,7 @@ def frontend_top_level_v2(inputs, outputs, clock, reset, N=8):
 
     return (color_space_converter, zig_zag_inst, dct_2d_inst, color_space_to_dct,
             zig_zag_to_output_mux, first_control_signals_update, set_start_out,
-            output_counter_reset, input_reg)
+            output_counter_reset, input_reg, data_valid_assign)
 
 def convert():
 

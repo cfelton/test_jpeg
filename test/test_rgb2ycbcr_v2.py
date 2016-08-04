@@ -125,5 +125,74 @@ def test_color_translation():
 
     run_testbench(bench_color_trans)
 
-test_color_translation()
-#TODO Create the convertible testbench
+@pytest.mark.skipif(not simsok, reason="missing installed simulator")
+def test_color_translation_conversion():
+    """
+    In the current test are tested the outputs
+    of the rgb2ycbcr module with the outputs of a
+    python color space conversion function
+    """
+    samples, frac_bits, nbits = 8, 14, 8
+    pixel_bits, num_fractional_bits = nbits, frac_bits
+
+    rgb, ycbcr = RGB_v2(pixel_bits), YCbCr_v2(pixel_bits)
+
+    clock = Signal(bool(0))
+    reset = ResetSignal(1, active=True, async=True)
+
+    in_out_data = InputsAndOutputs(samples)
+    in_out_data.initialize()
+
+    exp_y, exp_cb, exp_cr = in_out_data.get_rom_tables()[0]
+
+    in_r, in_g, in_b = in_out_data.get_rom_tables()[1]
+
+    print_sig = Signal(intbv(0, min=0, max=2**nbits))
+
+    @myhdl.block
+    def bench_color_trans():
+        tbdut = rgb2ycbcr_v2(rgb, ycbcr, clock, reset, num_fractional_bits)
+        tbclk = clock_driver(clock)
+        tbrst = reset_on_start(reset, clock)
+
+        @instance
+        def tbstim():
+            yield reset.negedge
+            rgb.data_valid.next = True
+
+            for i in range(samples):
+                for j in range(3):
+                    # rgb signal assignment in the dut
+                    rgb.red.next = in_r[i]
+                    rgb.green.next = in_g[i]
+                    rgb.blue.next = in_b[i]
+                    rgb.color_mode.next = j
+                    yield clock.posedge
+
+        @instance
+        def monitor():
+            samples_count = 0
+            yield ycbcr.data_valid.posedge
+            yield delay(1)
+            while samples_count != samples:
+                    for i in range(3):
+                        if i == 0:
+                            print_sig.next = exp_y[samples_count]
+                        elif i == 1:
+                            print_sig.next = exp_cb[samples_count]
+                        else:
+                            print_sig.next = exp_cr[samples_count]
+                        yield delay(1)
+                        print("%d %d" % (ycbcr.data_out, print_sig))
+                        yield clock.posedge
+                    samples_count += 1
+            raise StopSimulation
+
+        return tbdut, tbclk, tbstim, monitor, tbrst
+
+    verify.simulator = "ghdl"
+    assert bench_color_trans().verify_convert() == 0
+
+if __name__ == '__main__':
+    test_color_translation()
+    test_color_translation_conversion()
