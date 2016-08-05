@@ -125,11 +125,13 @@ def rgb2ycbcr_v2(rgb, ycbcr, clock, reset, num_fractional_bits=14):
 
     third_adder_sum = Signal(intbv(0, min=-mult_max_range, max=mult_max_range))
 
-    offset = [Signal(intbv(Offset[i], min=-mult_max_range,
-                           max=mult_max_range)) for i in range(3)]
+    offset_y, offset_cb, offset_cr = [Signal(intbv(Offset[i], min=-mult_max_range,
+                                        max=mult_max_range)) for i in range(3)]
 
     color_mode_reg = Signal(intbv(0, min=0, max=3))
     color_mode_reg_1 = Signal(intbv(0, min=0, max=3))
+
+    offset_sig_mux = Signal(intbv(0, min=-mult_max_range, max=mult_max_range))
 
     @always_comb
     def logic2():
@@ -150,6 +152,16 @@ def rgb2ycbcr_v2(rgb, ycbcr, clock, reset, num_fractional_bits=14):
         else:
             for i in range(3):
                 coeffs[i].next = Cr_rom[i]
+
+    @always_comb
+    def offset_mux():
+        if color_mode_reg_1 == 0:
+            offset_sig_mux.next = offset_y
+        elif color_mode_reg_1 == 1 :
+            offset_sig_mux.next = offset_cb
+        else:
+            offset_sig_mux.next = offset_cr
+
 
     @always_seq(clock.posedge, reset=reset)
     def mul_reg_sign():
@@ -181,7 +193,7 @@ def rgb2ycbcr_v2(rgb, ycbcr, clock, reset, num_fractional_bits=14):
         color_mode_reg_1.next = color_mode_reg
 
         first_adder_sum.next = mul_reg_1[0] + mul_reg_1[1]
-        second_adder_sum.next = mul_reg_1[2] + offset[color_mode_reg_1]
+        second_adder_sum.next = mul_reg_1[2] + offset_sig_mux
         third_adder_sum.next = first_adder_sum + second_adder_sum
 
         # rounding the part from signal[fract_bits + nbits:fract_bits]
@@ -201,7 +213,7 @@ def rgb2ycbcr_v2(rgb, ycbcr, clock, reset, num_fractional_bits=14):
         else:
             ycbcr.data_valid.next = False
 
-    return logic, logic2, coeff_mux, mul_reg_sign
+    return logic, logic2, coeff_mux, mul_reg_sign, offset_mux
 
 
 def convert():

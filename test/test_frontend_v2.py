@@ -123,7 +123,6 @@ def test_frontend():
                 print("Processing Block %d" %(samples_count+1))
                 for i in range(3):
                     while(outputs_count != 64):
-                        yield delay(1)
                         outputs_list.append(int(outputs.data_out))
                         outputs_count += 1
                         clock_cycle_counter += 1
@@ -141,4 +140,73 @@ def test_frontend():
 
     run_testbench(bench_frontend)
 
-test_frontend()
+@pytest.mark.skipif(not simsok, reason="missing installed simulator")
+def test_frontend_conversion():
+
+    samples, N = 2, 8
+
+    clock = Signal(bool(0))
+    reset = ResetSignal(1, active=True, async=True)
+
+    inputs = RGB()
+    outputs = outputs_frontend_new()
+
+    in_out_data = InputsAndOutputs(samples, N)
+    in_out_data.initialize()
+
+    r_rom, g_rom, b_rom, y_out_rom,\
+    cb_out_rom, cr_out_rom = in_out_data.get_rom_tables()
+
+
+    @block
+    def bench_frontend():
+        print_sig = Signal(intbv(0, min=-outputs.out_range, max=outputs.out_range))
+        tdut = frontend_top_level_v2(inputs, outputs, clock, reset)
+        tbclock = clock_driver(clock)
+        tbrst = reset_on_start(reset, clock)
+
+        @instance
+        def tbstim():
+            yield reset.negedge
+            inputs.data_valid.next = True
+
+            for i in range(samples):
+                for n in range(3):
+                    for j in range(64 * i, 64 * (i + 1)):
+                        inputs.red.next = r_rom[j]
+                        inputs.green.next = g_rom[j]
+                        inputs.blue.next = b_rom[j]
+                        yield clock.posedge
+
+        @instance
+        def monitor():
+            samples_count = 0
+            outputs_count = 0
+            clock_cycle_counter = 0
+            yield outputs.data_valid.posedge
+            while(samples_count < samples):
+                print("Processing Block %d" % (samples_count))
+                for i in range(3):
+                    while(outputs_count != 64):
+                        if i == 0:
+                            print_sig.next = y_out_rom[outputs_count + samples_count*64]
+                        elif i == 1:
+                            print_sig.next = cb_out_rom[outputs_count + samples_count*64]
+                        else:
+                            print_sig.next = cr_out_rom[outputs_count + samples_count*64]
+                        yield delay(1)
+                        print("%d %d" % (outputs.data_out, print_sig))
+                        outputs_count += 1
+                        clock_cycle_counter += 1
+                        yield clock.posedge
+                    outputs_count = 0
+                samples_count += 1
+            raise StopSimulation
+
+        return tdut, tbclock, tbstim, monitor, tbrst
+
+    assert bench_frontend().verify_convert() == 0
+
+if __name__ == "__main__":
+    test_frontend()
+    test_frontend_conversion()
