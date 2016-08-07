@@ -32,6 +32,11 @@ class DataStream(object):
         self.valid = Signal(bool(0))
         self.ready = Signal(bool(0))
 
+    def assign(self, stream):
+        assert isinstance(stream, DataStream)
+        self.data.next = stream.data
+        self.valid.next = stream.valid
+
 
 class PixelStream(DataStream):
     def __init__(self, data_width=24):
@@ -41,6 +46,14 @@ class PixelStream(DataStream):
         super(PixelStream, self).__init__(data_width+2)
         self.data = ConcatSignal(self.start_of_frame, self.end_of_frame,
                                  self.data)
+
+    def assign(self, stream):
+        assert isinstance(stream, PixelStream)
+        self.data.next = stream.data
+        self.valid.next = stream.valid
+        self.start_of_frame.next = stream.start_of_frame
+        self.end_of_frame.next = stream.end_of_frame
+
     # def map_to_data(self):
     #     raise NotImplementedError()
 
@@ -75,7 +88,16 @@ class RGBStream(PixelStream):
             # @todo data alias for multiple pixels
             raise NotImplementedError
 
-    def assign_data(self, data):
+    def assign(self, stream):
+        assert isinstance(stream, RGBStream)
+        self.valid.next = stream.valid
+        self.start_of_frame.next = stream.start_of_frame
+        self.end_of_frame.next = stream.end_of_frame
+        self.red.next = stream.red
+        self.green.next = stream.green
+        self.blue.next = stream.blue
+
+    def assign_from_data(self, data):
         """Given a data vector, update the attributes"""
         assert len(data) == len(self.data)
         rbits, gbits, bbits = self.color_depth

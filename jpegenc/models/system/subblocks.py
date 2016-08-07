@@ -10,87 +10,8 @@ from .interfaces import DataStream, RGBStream
 from .fifo_ready_valid import FIFOReadyValid
 
 
-class VideoStreamSource(object):
-    def __init__(self, resolution=(1920, 1080), refresh_rate=60):
-        """A model of a video source
-        This object contains an example of a video source interface and
-        a process to generate the video source.
-
-        Arguments:
-            resolution (tuple): the resolution of the video source, the
-                default is 1920 x 1080 (1080 rows and 1920 columns).
-            refresh_rate (int): the refresh rate of the video source, the
-                default is 60 Hz.
-
-        Usage example:
-            # create a video source object with the defaults
-            video = VideoStreamSource()
-            video_inst = video.process()
-
-            row_buffer_inst = video.row_buffer(video, image_block)
-
-        """
-        self.resolution = resolution
-        self.refresh_rate = refresh_rate
-        self.start_of_frame = Signal(bool(0))
-        self.end_of_frame = Signal(bool(0))
-        self.pixel = RGBStream()
-        # signals that monitor the current row and column
-        self.currow = Signal(intbv(0, min=0, max=resolution[1]))
-        self.curcol = Signal(intbv(0, min=0, max=resolution[0]))
-
-    @myhdl.block
-    def process(self, glbl):
-        res = self.resolution
-        num_cols, num_rows = res
-        clock, reset = glbl.clock, glbl.reset
-
-        # note, if the video rate is not a multiple of the clock then
-        # the video rate will not be exact (which is fine in most )
-        # cases
-        ticks = int(floor(pixels_per_second / clock.frequency))
-
-        @instance
-        def model_video_source():
-            tcnt, row, col = 0, 0, 0
-
-            for ii in range(23):
-                yield clock.posedge
-
-            while True:
-                # default values
-                self.start_of_frame.next = False
-                self.end_of_frame.next = False
-                self.pixel.valid.next = False
-                self.currow.next = row
-                self.curcol.next = col
-
-                if reset == reset.active:
-                    row, col = 0, 0
-                    continue
-
-                tcnt += 1
-                # tick count expired, output a new pixel
-                if tcnt == ticks:
-                    if row == 0 and col == 0:
-                        self.start_of_frame.next = True
-                    if row == num_rows-1 and col == num_cols-1:
-                        self.end_of_frame.next = True
-
-                    self.pixel.red.next = randint(0, self.pixel.red.max-1)
-                    self.pixel.green.next = randint(0, self.pixel.green.max-1)
-                    self.pixel.blue.next = randint(0, self.pixel.blue.max-1)
-                    self.pixel.valid.next = True
-
-                    row = row + 1 if row < num_rows-1 else 0
-                    col = col + 1 if col < num_cols-1 else 0
-                    tcnt = 0
-
-                yield clock.posedge
-
-
 class ProcessingSubblock(object):
-    def __init__(self, cycles_to_process=1, latency=0, process_block=False, block_size=(8, 8)):
+    def __init__(self, cycles_to_process=1, block_size=None, buffered=False):
         """A simple model to represent a processing subblock in the jpegenc
 
         Arguments:
@@ -99,29 +20,46 @@ class ProcessingSubblock(object):
                 `cycles_to_process` is a 2-element tuple a random range is
                 used with the tuple defining the range.
 
-            latency: the latency of the processing, this is additional to
+            @todo: latency is the same (essentially) as cycles_to_process, need
+                   some other argument to indicated successive output gaps,
+                   no gap fully pipelined (latency == ctp) if gap == ctp not
+                   pipelined and stalls in between, the same for sample or
+                   block processing.
+            ~~latency: the latency of the processing, this is additional to
                 the processing time, but the latency represents a pipeline,
                 new samples can.  If `latency` is a 2-element tuple a random
-                range is used with the tuple defining the range.
+                range is used with the tuple defining the range.~~
 
-            process_block: an image block is processed vs. a sample
+            block_size: the size of an image block, if None process
+                sample by sample.
 
-            block_size: the size of an image block, this is only used if
-                `process_block` is True.
+            buffered
         """
         assert isinstance(cycles_to_process, (int, tuple))
         if isinstance(cycles_to_process, tuple):
             assert len(cycles_to_process) == 2
-        assert isinstance(latency, int)
-        assert isinstance(process_block, bool)
+        # assert isinstance(latency, int)
+        # assert isinstance(process_block, bool)
         assert isinstance(block_size, tuple) and len(block_size) == 2
+        assert isinstance(buffered, bool)
 
+        # the cycles to process is the same as latency
         self.ctp = cycles_to_process
-        self.lat = latency
+        # self.lat = latency
+        self.block_size = block_size
+        self.buffered = buffered
 
+        if buffered:
+            # @todo: use buffer_size argument to limit buffer size
+            #        test overruns
+            self.fifo_i = FIFOReadyValid()
+            self.fifo_o = FIFOReadyValid()
+        else:
+            self.fifo_i = None
+            self.fifo_o = None
 
     @myhdl.block
-    def process(self, glbl, datain, dataout, include_fifo=False):
+    def process(self, glbl, datain, dataout):
         assert isinstance(datain, DataStream)
         assert isinstance(dataout, DataStream)
 
@@ -129,74 +67,48 @@ class ProcessingSubblock(object):
         ready = Signal(bool(0))
 
         # include an input and output fifo
-        if include_fifo:
+        if self.buffered:
+            # @todo: implement the FIFO
             raise NotImplementedError
-            fifo_i = FIFOReadyValid()
+
+            # @todo: the interfaces need to override copy ...
+            buffered_data_i = type(datain)()
+            buffered_data_o = type(datain)()
+
+            fifo_i = self.fifo_i
             fifo_i_inst = fifo_i.process(glbl, datain, buffered_data_i)
-            fifo_o = FIFOReadyValid()
+            fifo_o = self.fifo_o
             fifo_o_inst = fifo_o.process(glbl, buffered_data_o, dataout)
         else:
             buffered_data_i = datain
-            buffered_data_o = datain
+            buffered_data_o = None
 
         @always_comb
         def beh_ready():
-            datain.read.next = ready and buffered_data_i.ready
+            # tell upstream ready to process
+            if self.buffered:
+                datain.ready.next = ready and buffered_data_i.ready
+            else:
+                datain.ready.next = ready
+
+        # need an intermediate to hold the signal values
+        # @todo: the interfaces need to overload __copy__,
+        #        To make this generic this needs a new (copy) instance
+        #        with all the same attributes/properties, the current
+        #        only uses the default.
+        dataproc = type(datain)()
 
         @instance
         def processing_model():
-            pass
-
+            ready.next = True
+            while True:
+                # datain -> dataproc -> dataout
+                dataproc.assign(datain)
+                # @todo: fixed at 1 cycle for now
+                #        if the latency is less than
+                # for nn in range(self.ctp):
+                yield clock.posedge
+                dataout.assign(dataproc)
 
         return myhdl.instances()
 
-
-
-def color_conversion(glbl, pixel_in, pixel_out):
-    """
-
-    (arguments == ports)
-    Argumentss:
-        glbl (Global):
-        pixel_in (PixelStream):
-        pixel_out ():
-
-    myhdl convertible
-    """
-
-
-def transformer_twod(glbl, sample_input, matrix_outputs, block_size=(8, 8)):
-    """A two-dimension (2D) transform block
-
-    (arguments == ports)
-    Arguments:
-        sample_input (PixelStream):
-        matrix_outputs (ImageBlock):
-
-    Parameters:
-        block_size (tuple):
-
-    myhdl convertible
-    """
-    pass
-
-
-def transformer_oned(glbl, sample_input, block_output, block_size=8):
-    """A one-dimension (1D) transform block
-
-    This ~~module~~ block will stream in a sample at a time, collecting
-    `block_size` input samples before producing the transform.
-
-    (arguments == ports)
-    Arguments:
-        sample_input (DataStream): input sample stream
-        block_output (DataBlock): output transformed block.
-
-    Parameters:
-        block_size: the size of the transform, the transform will be
-            computed on ``block_size`` data points, typically the
-            *N* in the math equations.
-
-    myhdl convertible
-    """
-    pass
