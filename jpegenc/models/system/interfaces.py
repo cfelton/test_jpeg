@@ -1,6 +1,35 @@
 """
-Example (exploration) of interface types useful for a JPEG eoncder
-system.
+Example (exploration) of interface types useful for a JPEG encoder
+system.  The JPEG encoder (jpegenc) has a collection of processing
+blocks with a data-streaming interface to each.  The data-streaming
+interface is a read-valid flow control interface [1].
+
+The base interface has a ``data``, ``ready``, and ``valid``
+attributes, this interface is sufficient to completely define
+the data flow between processing blocks (for our first system
+definition):
+
+    datain, dataout = [DataStream(), DataStream() for _ in range(nproc)]
+    for nn in range(nproc):
+        processing_element(datain[nn], dataout[nn])
+
+More specific interfaces can be useful, the input to the jpegenc are
+pixels, more specifically RGB pixels, an interface to represent the
+various color space pixels will be useful.  In the jpegenc there are
+two pixel color spaces used: RGB [2] and YCbCr [3].
+
+It is hypothesized
+
+
+[1]: Interfaces: “FIFO” (a.k.a. Ready/Valid),
+     http://inst.eecs.berkeley.edu/~cs150/Documents/Interfaces.pdf
+
+[2]: red-green-blue color model
+     https://en.wikipedia.org/wiki/RGB_color_model
+
+[3]: luma-blue difference-red difference (YCbCr)
+     https://en.wikipedia.org/wiki/YCbCr
+
 """
 
 
@@ -18,37 +47,97 @@ except ImportError:
     from .useful_things import Signals, assign
 
 
-class PixelStream(object):
+class DataStream(object):
     def __init__(self, data_width=24):
-        """A pixel-stream """
+        """Data stream with ready-valid flow control."""
         self.data = Signal(intbv(0)[data_width:0])
-        self.data_valid = Signal(bool(0))
+        self.valid = Signal(bool(0))
+        self.ready = Signal(bool(0))
+
+
+class PixelStream(DataStream):
+    def __init__(self, data_width=24):
+        """Pixel stream."""
+        self.start_of_frame = Signal(bool(0))
+        self.end_of_frame = Signal(bool(0))
+        super(PixelStream, self).__init__(data_width+2)
+        self.data = ConcatSignal(self.start_of_frame, self.end_of_frame,
+                                 self.data)
+    # def map_to_data(self):
+    #     raise NotImplementedError()
 
 
 class RGBStream(PixelStream):
-    def __init__(self, color_space=(8, 8, 8)):
-        assert len(color_space) == 3
-        data_width = sum(color_space)
-
+    def __init__(self, color_depth=(8, 8, 8), num_pixels=1):
+        """A red-green-blue pixel stream.
+        Args:
+            color_depth (tuple): the number of bits for each color component.
+            num_pixels (int): define the number of pixels in this interface,
+                this is used to define a parallel interface.
+        """
+        assert len(color_depth) == 3
+        data_width = sum(color_depth)
         super(PixelStream, self).__init__(data_width=data_width)
 
-        rbits, gbits, bbits = color_space
-        self.red = Signal(intbv(0)[rbits:0])
-        self.green = Signal(intbv(0)[gbits:0])
-        self.blue = Signal(intbv(0)[rbits:0])
+        self.color_depth = color_depth
+        rbits, gbits, bbits = color_depth
 
-        # alias to the above signals
-        self.data = ConcatSignal(self.red, self.green, self.blue)
+        # a single pixel (color component) is the most
+        if num_pixels == 1:
+            self.red = Signal(intbv(0)[rbits:0])
+            self.green = Signal(intbv(0)[gbits:0])
+            self.blue = Signal(intbv(0)[rbits:0])
+            # alias to the above signals
+            self.data = ConcatSignal(self.start_of_frame, self.end_of_frame,
+                                     self.red, self.green, self.blue)
+        else:
+            self.red = Signals(intbv(0)[rbits:0], num_pixels)
+            self.green = Signals(intbv(0)[gbits:0], num_pixels)
+            self.blue = Signals(intbv(0)[rbits:0], num_pixels)
+            # @todo data alias for multiple pixels
+            raise NotImplementedError
+
+    def assign_data(self, data):
+        """Given a data vector, update the attributes"""
+        assert len(data) == len(self.data)
+        rbits, gbits, bbits = self.color_depth
+        self.blue.next = data[bbits:0]
+        self.green.next = data[gbits+bbits:bbits]
+        self.red.next = data[rbits+gbits+bbits:gbits]
+        self.end_of_frame.next = data[rbits]
+        self.start_of_frame.next = data[rbits+1]
+
+    # @myhdl.block
+    # def map_to_data(self):
+    #     """Map red, green, and blue to data
+    #     The base interface to all the subblocks is `DataStream` but in most
+    #     of the subblocks it is more convenient to deal with the color
+    #     components.  When using the color components the data needs to be
+    #     assigned.
+    #
+    #     myhdl convertible
+    #     """
+    #     raise NotImplementedError
+    #
+    #     # insts = []
+    #     # for nn in range(self.num_pixels):
+    #     #     for jj in range(3):
+    #     #         insts = assign()
 
 
 class YCbCrStream(PixelStream):
-    def __init__(self, color_space=(8, 8, 8)):
-        assert len(color_space) == 3
-        data_width = sum(color_space)
+    def __init__(self, color_depth=(8, 8, 8)):
+        """A y-cb-cr pixel stream.
+
+        Args:
+            color_depth (tuple): the number of bits for each color component
+        """
+        assert len(color_depth) == 3
+        data_width = sum(color_depth)
 
         super(YCbCrStream, self).__init__(data_width=data_width)
 
-        ybits, cbbits, crbits = color_space
+        ybits, cbbits, crbits = color_depth
         self.y = Signal(intbv(0)[ybits:])
         self.cb = Signal(intbv(0)[cbbits:])
         self.cr = Signal(intbv(0)[crbits:])
@@ -57,14 +146,9 @@ class YCbCrStream(PixelStream):
         self.data = ConcatSignal(self.y, self.cb, self.cr)
 
 
-class DataStream(object):
-    def __init__(self):
-        pass
-
-
 class DataBlock(object):
     def __init__(self, size=8, min=0, max=8):
-        """
+        """A block of data (parallel data) that is transferred together.
 
         Arguments:
             size: the number of items to have in the block
@@ -93,7 +177,7 @@ class ImageBlock(object):
         assert isinstance(size, tuple)
         assert len(size) == 2
         self.size = size
-        nrows, ncols = size
+        ncols, nrows = size
         self.nitems = nrows * ncols
         dtype = intbv(0, min=min, max=max)
         self.nbits = len(dtype)
