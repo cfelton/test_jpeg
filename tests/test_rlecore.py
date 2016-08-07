@@ -5,90 +5,128 @@ from myhdl import block
 from myhdl import ResetSignal, Signal, instance
 from myhdl.conversion import verify
 
-from jpegenc.subblocks.RLE.RLECore.rlecore import DataStream, rle, Pixel
-from jpegenc.subblocks.RLE.RLECore.rlecore import RLESymbols, RLEConfig
-from testcases import *
+from jpegenc.subblocks.rle.rlecore import DataStream, rle, Component
+from jpegenc.subblocks.rle.rlecore import RLESymbols, RLEConfig
 
-from common import tbclock, reset_on_start, resetonstart, Constants
-from common import numofbits, start_of_block
+from jpegenc.testing import run_testbench
+from jpegenc.testing import (toggle_signal, clock_driver,
+                             reset_on_start, pulse_reset)
+
+from rle_test_inputs import (red_pixels_1, green_pixels_1, blue_pixels_1,
+                             red_pixels_2, green_pixels_2, blue_pixels_2,)
 
 
 def block_process(
-        constants, clock, block, datastream, rlesymbols, rleconfig, color):
-    """This block sends data into rlecore and prints the output"""
+        clock, block_in, input_interface,
+        output_interface, control_unit, color, max_count):
+    """
+    This block sends data into rlecore and prints the output
 
-    # select one among Y1,Y2 or Cb or Cr to be processes
-    rleconfig.color_component.next = color
+    block_in         : input data block
+    input_interface  : datastream bus interface
+    output_interface : bufferdata bus interface
+    control_unit     : rleconfig interface
+    max_count        : depth of fifo
+    color            : color component to be processes
+
+    """
+
+    assert isinstance(input_interface, DataStream)
+    assert isinstance(output_interface, RLESymbols)
+    assert isinstance(control_unit, RLEConfig)
+
+    # select one among y1,y2, cb or cr
+    control_unit.color_component.next = color
 
     # wait till start signal asserts
-    yield start_of_block(clock, datastream.start)
+    yield toggle_signal(control_unit.start, clock)
 
     # read input from the block
-    datastream.input_val.next = block[rleconfig.read_addr]
+    input_interface.data_in.next = block_in[input_interface.read_addr]
     yield clock.posedge
 
     # read more inputs
-    while rleconfig.read_addr != constants.max_write_cnt:
-        datastream.input_val.next = block[rleconfig.read_addr]
+    while input_interface.read_addr != max_count:
+        input_interface.data_in.next = block_in[input_interface.read_addr]
         yield clock.posedge
 
         # print output
-        if rlesymbols.dovalid:
+        if output_interface.dovalid:
             print("amplitude = %d runlength = %d size = %d" % (
-                rlesymbols.amplitude, rlesymbols.runlength, rlesymbols.size))
+                output_interface.amplitude,
+                output_interface.runlength, output_interface.size))
 
-    datastream.input_val.next = block[rleconfig.read_addr]
+    input_interface.data_in.next = block_in[input_interface.read_addr]
 
     yield clock.posedge
-    if rlesymbols.dovalid:
+    if output_interface.dovalid:
         print("amplitude = %d runlength = %d size = %d" % (
-            rlesymbols.amplitude, rlesymbols.runlength, rlesymbols.size))
+            output_interface.amplitude,
+            output_interface.runlength, output_interface.size))
 
     # extra clocks for all the inputs to process
 
     yield clock.posedge
-    if rlesymbols.dovalid:
+    if output_interface.dovalid:
         print("amplitude = %d runlength = %d size = %d" % (
-            rlesymbols.amplitude, rlesymbols.runlength, rlesymbols.size))
+            output_interface.amplitude,
+            output_interface.runlength, output_interface.size))
 
     yield clock.posedge
-    if rlesymbols.dovalid:
+    if output_interface.dovalid:
         print("amplitude = %d runlength = %d size = %d" % (
-            rlesymbols.amplitude, rlesymbols.runlength, rlesymbols.size))
+            output_interface.amplitude,
+            output_interface.runlength, output_interface.size))
 
     yield clock.posedge
-    if rlesymbols.dovalid:
+    if output_interface.dovalid:
         print("amplitude = %d runlength = %d size = %d" % (
-            rlesymbols.amplitude, rlesymbols.runlength, rlesymbols.size))
+            output_interface.amplitude,
+            output_interface.runlength, output_interface.size))
 
     yield clock.posedge
-    if rlesymbols.dovalid:
+    if output_interface.dovalid:
         print("amplitude = %d runlength = %d size = %d" % (
-            rlesymbols.amplitude, rlesymbols.runlength, rlesymbols.size))
+            output_interface.amplitude,
+            output_interface.runlength, output_interface.size))
 
 
 def test_rle_core():
-    """We check the functionality here"""
+    """functionality of rle core tested here"""
 
+    # instantiation of clock and reset
     clock = Signal(bool(0))
     reset = ResetSignal(0, active=1, async=True)
 
-    # constants for input, runlength, size width
-    constants = Constants(6, 12, 63, 4)
-    pixel = Pixel()
+    # instantiation of component select block
+    component = Component()
 
-    # interfaces to the rle core
-    # input to the rle core and start signals sent from here
-    datastream = DataStream(constants.width_data)
+    # input data width into the rlecore
+    width_data = 12
 
-    # signals generated by the rle core
-    rlesymbols = RLESymbols(
-        constants.width_data,
-        constants.size,
-        constants.rlength)
+    # address data width
+    width_addr = 6
+
+    # number of bits required to store amplitude
+    width_size = width_data.bit_length()
+
+    # maximum counter value
+    max_addr_cnt = (2**(width_addr)) - 1
+
+    # maximum width of the runlength value
+    width_runlength = 4
+
+    # input bus to the rlecore
+    datastream = DataStream(width_data, width_addr)
+    assert isinstance(datastream, DataStream)
+
+    # symbols generated by the rle core
+    rlesymbols = RLESymbols(width_data, width_size, width_runlength)
+    assert isinstance(rlesymbols, RLESymbols)
 
     # selects the color component, manages address values
-    rleconfig = RLEConfig(numofbits(constants.max_write_cnt))
+    rleconfig = RLEConfig()
+    assert isinstance(rleconfig, RLEConfig)
 
     @block
     def bench_rle_core():
@@ -96,83 +134,80 @@ def test_rle_core():
 
         # instantiation of the rle core
         inst = rle(
-            constants,
-            reset, clock,
-            datastream, rlesymbols, rleconfig
+            clock, reset, datastream, rlesymbols, rleconfig
             )
 
         # clock instantiation
-        inst_clock = tbclock(clock)
+        inst_clock = clock_driver(clock)
 
         @instance
         def tbstim():
+            """Test inputs given here"""
 
             # reset before sending data
-            yield reset_on_start(clock, reset)
+            yield pulse_reset(reset, clock)
 
-            # components of type Y1 or Y2 processed
+            # components of type y1 or y2 processed
             yield block_process(
-                constants, clock,
-                red_pixels_1, datastream, rlesymbols, rleconfig, pixel.Y1)
+                clock, red_pixels_1,
+                datastream,
+                rlesymbols,
+                rleconfig, component.y1_space, max_count=max_addr_cnt
+                )
 
             print ("======================")
 
-            # components of type Y1 or Y2 processed
+            # components of type y1 or y2 processed
             yield block_process(
-                constants,
                 clock, red_pixels_2,
                 datastream,
                 rlesymbols,
-                rleconfig, pixel.Y2
+                rleconfig, component.y2_space, max_count=max_addr_cnt
                 )
 
             print ("=====================")
 
-            # components of type Cb processes
+            # components of type cb processes
             yield block_process(
-                constants,
                 clock, green_pixels_1,
                 datastream,
                 rlesymbols,
-                rleconfig, pixel.Cb
+                rleconfig, component.cb_space, max_count=max_addr_cnt
                 )
 
             print ("=====================")
 
-            # components od type Cb processed
+            # components od type cb processed
             yield block_process(
-                constants,
                 clock, green_pixels_2,
                 datastream,
                 rlesymbols,
-                rleconfig, pixel.Cb
+                rleconfig, component.cb_space, max_count=max_addr_cnt
                 )
 
             print ("=====================")
 
-            # components of type Cr processed
+            # components of type cr processed
             yield block_process(
-                constants,
                 clock, blue_pixels_1,
                 datastream,
                 rlesymbols,
-                rleconfig, pixel.Cr
+                rleconfig, component.cr_space, max_count=max_addr_cnt
                 )
 
             print ("=====================")
 
-            # components of type Cr processed
+            # components of type cr processed
             yield block_process(
-                constants,
                 clock, blue_pixels_2,
                 datastream,
                 rlesymbols,
-                rleconfig, pixel.Cr
+                rleconfig, component.cr_space, max_count=max_addr_cnt
                 )
 
             print ("=====================")
 
-            # end of stream when sof asserts
+            # start of new frame asserts
             rleconfig.sof.next = True
             yield clock.posedge
 
@@ -180,38 +215,53 @@ def test_rle_core():
 
         return tbstim, inst_clock, inst
 
-    instance_rle = bench_rle_core()
-    instance_rle.config_sim(trace=False)
-    instance_rle.run_sim()
+    run_testbench(bench_rle_core)
 
 
 def test_rle_conversion():
-    """This module checks for conversion"""
+    """This module is used for conversion purpose"""
+
+    # clock and reset instantiation
     clock = Signal(bool(0))
     reset = ResetSignal(0, active=1, async=True)
 
-    constants = Constants(6, 12, 63, 4)
+    # width of the input data
+    width_data = 12
 
-    datastream = DataStream(constants.width_data)
-    rlesymbols = RLESymbols(
-        constants.width_data, constants.size, constants.rlength)
+    # width of the address bud
+    width_addr = 6
 
-    rleconfig = RLEConfig(numofbits(constants.max_write_cnt))
+    # number of bits to store ouput
+    width_size = width_data.bit_length()
+
+    # width of the maximum runlength value
+    width_runlength = 4
+
+    # input datastream
+    datastream = DataStream(width_data, width_addr)
+    assert isinstance(datastream, DataStream)
+
+    # symbols generated by the rle core
+    rlesymbols = RLESymbols(width_data, width_size, width_runlength)
+    assert isinstance(rlesymbols, RLESymbols)
+
+    # selects the color component, manages address values
+    rleconfig = RLEConfig()
+    assert isinstance(rleconfig, RLEConfig)
 
     @block
     def bench_rle_core():
+        """The conversion module for rle core"""
         inst = rle(
-            constants,
-            reset, clock,
+            clock, reset,
             datastream, rlesymbols, rleconfig
             )
-
-        inst_clock = tbclock(clock)
-        inst_reset = resetonstart(clock, reset)
+        inst_clock = clock_driver(clock)
+        inst_reset = reset_on_start(reset, clock)
 
         @instance
         def tbstim():
-
+            """dummy inputs for conversion purpose"""
             yield clock.posedge
             print ("Conversion done!!")
             raise StopSimulation

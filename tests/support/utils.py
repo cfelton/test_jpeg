@@ -36,6 +36,9 @@ def set_default_args(args=None):
 
     args.start_time = datetime.datetime.now()
 
+    if not os.path.isdir('output/vcd'):
+        os.makedirs('output/vcd')
+
     return args
 
 
@@ -66,7 +69,3 @@ def get_cli_args(parser=None):
 
     args = set_default_args(args)
     return args
-    
-
-                         
-        

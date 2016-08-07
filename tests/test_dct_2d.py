@@ -10,12 +10,17 @@ from myhdl import (StopSimulation, block, Signal, ResetSignal, intbv,
 from myhdl.conversion import verify
 
 from jpegenc.subblocks.common import (input_interface, output_interface,
-                                                 input_1d_2nd_stage,outputs_2d)
+                                      input_1d_2nd_stage, outputs_2d,
+                                      assign, assign_array)
 
-from jpegenc.subblocks.dct_2d import dct_2d, dct_2d_transformation
-from jpegenc.testing import sim_available
+from jpegenc.subblocks.dct import dct_2d
+from jpegenc.subblocks.dct.dct_2d import dct_2d_transformation
+from jpegenc.testing import sim_available, run_testbench
+from jpegenc.testing import clock_driver, reset_on_start, pulse_reset
 
-simsok = sim_available('ghdl') and sim_available('iverilog')
+simsok = sim_available('ghdl')
+"""default simulator"""
+verify.simulator = "ghdl"
 
 
 class InputsAndOutputs(object):
@@ -71,35 +76,6 @@ def out_print(expected_outputs, actual_outputs, N):
     print("-"*40)
 
 
-@myhdl.block
-def clock_driver(clock):
-    @instance
-    def clkgen():
-        clock.next = False
-        while True:
-            yield delay(10)
-            clock.next = not clock
-    return clkgen
-
-
-def reset_on_start(reset, clock):
-    reset.next = True
-    yield delay(40)
-    yield clock.posedge
-    reset.next = not reset
-
-
-@myhdl.block
-def rstonstart(reset, clock):
-    @instance
-    def ros():
-        reset.next = True
-        yield delay(40)
-        yield clock.posedge
-        reset.next = not reset
-    return ros
-
-
 def test_dct_2d():
 
     samples, fract_bits, output_bits, stage_1_prec, N = 5, 14, 10, 10, 8
@@ -121,7 +97,7 @@ def test_dct_2d():
 
         @instance
         def tbstim():
-            yield reset_on_start(reset, clock)
+            yield pulse_reset(reset, clock)
             inputs.data_valid.next = True
 
             for i in range(samples):
@@ -133,7 +109,7 @@ def test_dct_2d():
         @instance
         def monitor():
             outputs_count = 0
-            while(outputs_count != samples):
+            while outputs_count != samples:
                 yield clock.posedge
                 yield delay(1)
                 if outputs.data_valid:
@@ -144,9 +120,7 @@ def test_dct_2d():
 
         return tdut, tbclock, tbstim, monitor
 
-    inst = bench_dct_2d()
-    inst.config_sim(trace=True)
-    inst.run_sim()
+    run_testbench(bench_dct_2d)
 
 
 @pytest.mark.skipif(not simsok, reason="missing installed simulator")
@@ -163,7 +137,6 @@ def test_dct_2d_conversion():
     in_out_data = InputsAndOutputs(samples, N)
     in_out_data.initialize()
 
-
     inputs_rom, expected_outputs_rom = in_out_data.get_rom_tables()
 
     @myhdl.block
@@ -171,12 +144,12 @@ def test_dct_2d_conversion():
         tdut = dct_2d(inputs, outputs, clock, reset, fract_bits, output_bits,
                       stage_1_prec, N)
         tbclk = clock_driver(clock)
-        tbrst = rstonstart(reset, clock)
+        tbrst = reset_on_start(reset, clock)
 
         print_sig = [Signal(intbv(0, min=-2**output_bits, max=2**output_bits))
                      for _ in range(N**2)]
         print_sig_1 = [Signal(intbv(0, min=-2**output_bits, max=2**output_bits))
-                     for _ in range(N**2)]
+                       for _ in range(N**2)]
 
         @instance
         def tbstim():
@@ -187,12 +160,12 @@ def test_dct_2d_conversion():
                 inputs.data_in.next = inputs_rom[i]
                 yield clock.posedge
 
-        print_assign = outputs.assignment_2(print_sig_1)
+        print_assign = assign_array(print_sig_1, outputs.out_sigs)
 
         @instance
         def monitor():
             outputs_count = 0
-            while(outputs_count != samples):
+            while outputs_count != samples:
                 yield clock.posedge
                 if outputs.data_valid:
                     for i in range(N**2):
@@ -213,11 +186,6 @@ def test_dct_2d_conversion():
 
         return tdut, tbclk, tbstim, monitor, tbrst, print_assign
 
-    # verify and convert with GHDL
-    verify.simulator = 'ghdl'
-    assert bench_dct_2d().verify_convert() == 0
-    # verify and convert with iverilog
-    verify.simulator = 'iverilog'
     assert bench_dct_2d().verify_convert() == 0
 
 

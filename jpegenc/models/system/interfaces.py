@@ -9,29 +9,7 @@ attributes, this interface is sufficient to completely define
 the data flow between processing blocks (for our first system
 definition):
 
-    datain, dataout = [DataStream(), DataStream() for _ in range(nproc)]
-    for nn in range(nproc):
-        processing_element(datain[nn], dataout[nn])
-
-More specific interfaces can be useful, the input to the jpegenc are
-pixels, more specifically RGB pixels, an interface to represent the
-various color space pixels will be useful.  In the jpegenc there are
-two pixel color spaces used: RGB [2] and YCbCr [3].
-
-It is hypothesized
-
-
-[1]: Interfaces: “FIFO” (a.k.a. Ready/Valid),
-     http://inst.eecs.berkeley.edu/~cs150/Documents/Interfaces.pdf
-
-[2]: red-green-blue color model
-     https://en.wikipedia.org/wiki/RGB_color_model
-
-[3]: luma-blue difference-red difference (YCbCr)
-     https://en.wikipedia.org/wiki/YCbCr
-
 """
-
 
 from random import randint
 

@@ -1,33 +1,45 @@
-"""Test file for RLE Double Buffer to check its conversion and funtioning"""
+"""
+Test file for doublebuffer to
+check its conversion and funtioning
+
+"""
 
 from myhdl import block, StopSimulation
 from myhdl import ResetSignal, Signal, instance
 from myhdl.conversion import verify
-from rhea import Global
 
-from jpegenc.subblocks.RLE.RleDoubleFifo.rledoublebuffer import DoubleFifoBus
-from jpegenc.subblocks.RLE.RleDoubleFifo.rledoublebuffer import rledoublefifo
+from rhea.system import FIFOBus
+from jpegenc.subblocks.rle.doublebuffer import doublefifo
 
-from common import BufferConstants
-from common import tbclock, reset_on_start, resetonstart
+from jpegenc.testing import run_testbench
+from jpegenc.testing import clock_driver, pulse_reset, reset_on_start
 
 
 def test_doublebuffer():
-    """The functionality of Double Buffer is done here"""
+    """The functionality of Double Buffer is tested here"""
 
     @block
     def bench_doublebuffer():
+        """This bench is used to send test cases into module"""
 
-        # buffer constant for depth of fifo's and data width
-        buffer_constants = BufferConstants(20, 64)
-
+        # instantiation of clock and reset
         clock = Signal(bool(0))
         reset = ResetSignal(0, active=1, async=True)
 
-        # instantiation of fifo-bus, clock and rledoublefifo
-        dfifo_bus = DoubleFifoBus(buffer_constants.width)
-        inst = rledoublefifo(buffer_constants, reset, clock, dfifo_bus)
-        inst_clock = tbclock(clock)
+        # buffer selection port instantiation
+        buffer_sel = Signal(bool(0))
+
+        # input data width and depth of FIFO(double)
+        width_data = 20
+        width_depth = 64
+
+        # instantiation of FIFOBus, clock and rledoublefifo
+        dfifo_bus = FIFOBus(width=width_data)
+
+        inst = doublefifo(
+            clock, reset, dfifo_bus, buffer_sel, depth=width_depth)
+
+        inst_clock = clock_driver(clock)
 
         @instance
         def tbstim():
@@ -36,120 +48,122 @@ def test_doublebuffer():
             print("start simulation")
 
             # disable read and write
-            dfifo_bus.write_enable.next = False
-            dfifo_bus.read_req.next = False
+            dfifo_bus.write.next = False
+            dfifo_bus.read.next = False
 
             # reset before sending data
-            yield reset_on_start(clock, reset)
-            assert dfifo_bus.fifo_empty
+            yield pulse_reset(reset, clock)
+
+            # check if FIFO is empty
+            assert dfifo_bus.empty
 
             # select first buffer
-            dfifo_bus.buffer_sel.next = False
+            buffer_sel.next = False
             yield clock.posedge
 
-            # write first data into rle double buffer
-            dfifo_bus.write_enable.next = True
-            dfifo_bus.data_in.next = -1 and 0xFF
-            yield clock.posedge
-            dfifo_bus.write_enable.next = False
-            yield clock.posedge
-            assert dfifo_bus.fifo_empty
+            # write first data into double buffer
+            dfifo_bus.write.next = True
 
-            # write data into rle double buffer
-            dfifo_bus.write_enable.next = True
-            dfifo_bus.data_in.next = 0xA1
+            # convert signed number to unsigned
+            dfifo_bus.write_data.next = -1 and 0xFF
             yield clock.posedge
-            dfifo_bus.write_enable.next = False
+            dfifo_bus.write.next = False
             yield clock.posedge
-            assert dfifo_bus.fifo_empty
+            assert dfifo_bus.empty
 
-            # write data into rle double buffer
-            dfifo_bus.write_enable.next = True
-            dfifo_bus.data_in.next = 0x11
+            # write data into double buffer
+            dfifo_bus.write.next = True
+            dfifo_bus.write_data.next = 0xA1
             yield clock.posedge
-            dfifo_bus.write_enable.next = False
+            dfifo_bus.write.next = False
             yield clock.posedge
+            assert dfifo_bus.empty
 
             # write data into rle double buffer
-            dfifo_bus.write_enable.next = True
-            dfifo_bus.data_in.next = 0x101
+            dfifo_bus.write.next = True
+            dfifo_bus.write_data.next = 0x11
             yield clock.posedge
-            dfifo_bus.write_enable.next = False
+            dfifo_bus.write.next = False
+            yield clock.posedge
+
+            # write data into rle double buffer
+            dfifo_bus.write.next = True
+            dfifo_bus.write_data.next = 0x101
+            yield clock.posedge
+            dfifo_bus.write.next = False
             yield clock.posedge
 
             # write data into rle double buffer
             for test_cases in range(64):
                 if test_cases < 28:
-                    dfifo_bus.buffer_sel.next = False
+                    buffer_sel.next = False
                     yield clock.posedge
                 else:
-                    dfifo_bus.buffer_sel.next = True
+                    buffer_sel.next = True
                     yield clock.posedge
 
-                dfifo_bus.write_enable.next = True
-                dfifo_bus.data_in.next = test_cases
+                dfifo_bus.write.next = True
+                dfifo_bus.write_data.next = test_cases
                 yield clock.posedge
-                dfifo_bus.write_enable.next = False
+                dfifo_bus.write.next = False
                 yield clock.posedge
 
             # read data from rle double buffer
-            dfifo_bus.read_req.next = True
+            dfifo_bus.read.next = True
             yield clock.posedge
-            assert dfifo_bus.data_out and -1 == -1
-            dfifo_bus.read_req.next = False
+            assert dfifo_bus.read_data and -1 == -1
+            dfifo_bus.read.next = False
 
-            dfifo_bus.buffer_sel.next = True
-            yield clock.posedge
-
-            # read data from rle double buffer
-            dfifo_bus.read_req.next = True
-            yield clock.posedge
-            assert dfifo_bus.data_out == 0xA1
-            dfifo_bus.read_req.next = False
-
-            dfifo_bus.buffer_sel.next = True
+            buffer_sel.next = True
             yield clock.posedge
 
             # read data from rle double buffer
-            dfifo_bus.read_req.next = True
+            dfifo_bus.read.next = True
             yield clock.posedge
-            assert dfifo_bus.data_out == 0x11
-            dfifo_bus.read_req.next = False
+            assert dfifo_bus.read_data == 0xA1
+            dfifo_bus.read.next = False
 
-            dfifo_bus.buffer_sel.next = True
+            buffer_sel.next = True
             yield clock.posedge
 
             # read data from rle double buffer
-            dfifo_bus.read_req.next = True
+            dfifo_bus.read.next = True
             yield clock.posedge
-            assert dfifo_bus.data_out == 0x101
-            dfifo_bus.read_req.next = False
+            assert dfifo_bus.read_data == 0x11
+            dfifo_bus.read.next = False
+
+            buffer_sel.next = True
+            yield clock.posedge
+
+            # read data from rle double buffer
+            dfifo_bus.read.next = True
+            yield clock.posedge
+            assert dfifo_bus.read_data == 0x101
+            dfifo_bus.read.next = False
 
             # read data from rle double buffer
             for test_cases in range(64):
                 if test_cases < 28:
-                    dfifo_bus.buffer_sel.next = True
+                    buffer_sel.next = True
                     yield clock.posedge
                 else:
-                    dfifo_bus.buffer_sel.next = False
+                    buffer_sel.next = False
                     yield clock.posedge
 
-                dfifo_bus.read_req.next = True
+                dfifo_bus.read.next = True
                 yield clock.posedge
-                assert dfifo_bus.data_out == test_cases
-                dfifo_bus.read_req.next = False
+                assert dfifo_bus.read_data == test_cases
+                dfifo_bus.read.next = False
 
             yield clock.posedge
 
-            assert dfifo_bus.fifo_empty
+            assert dfifo_bus.empty
 
             raise StopSimulation
 
         return inst, inst_clock, tbstim
 
-    inst_dbuf = bench_doublebuffer()
-    inst_dbuf.config_sim(trace=False)
-    inst_dbuf.run_sim()
+    run_testbench(bench_doublebuffer)
 
 
 def test_doublebuffer_conversion():
@@ -157,20 +171,41 @@ def test_doublebuffer_conversion():
 
     @block
     def bench_doublebuffer_conversion():
-        """ test bench """
-        buffer_constants = BufferConstants(20, 64)
+        """test bench for conversion"""
 
         clock = Signal(bool(0))
         reset = ResetSignal(0, active=1, async=True)
 
-        dfifo_bus = DoubleFifoBus(buffer_constants.width)
+        buffer_sel = Signal(bool(0))
 
-        inst = rledoublefifo(buffer_constants, reset, clock, dfifo_bus)
-        inst_clock = tbclock(clock)
-        inst_reset = resetonstart(clock, reset)
+        width_data = 20
+        width_depth = 64
+        # instantiation of fifo-bus, clock and rledoublefifo
+        dfifo_bus = FIFOBus(width=width_data)
+
+        inst = doublefifo(
+            clock, reset, dfifo_bus, buffer_sel, depth=width_depth)
+
+        inst_clock = clock_driver(clock)
+        inst_reset = reset_on_start(reset, clock)
 
         @instance
         def tbstim():
+            """some tests for conversion purpose"""
+
+            # select first buffer
+            buffer_sel.next = False
+            yield clock.posedge
+
+            # write first data into double buffer
+            dfifo_bus.write.next = True
+
+            # convert signed number to unsigned
+            dfifo_bus.write_data.next = 3
+            yield clock.posedge
+            dfifo_bus.write.next = False
+            yield clock.posedge
+            assert dfifo_bus.empty
 
             yield clock.posedge
             print ("Conversion done!!")

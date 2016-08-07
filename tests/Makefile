@@ -1,11 +1,13 @@
 
 # invoke the test with the python 
-# nosetests --verbosity=2 --with-converage
+# nosetests --verbosity=2 --with-coverage
 all:
 	python test_jpegenc.py
 
 clean:
-	rm bench*.v
-	rm bench*.vhd
-	rm *.o
-	rm *.vcd*	
+	rm -f bench*
+	rm -f bench*.v
+	rm -f bench*.vhd
+	rm -f *.o
+	rm -f *.vcd*
+	rm -f *.log

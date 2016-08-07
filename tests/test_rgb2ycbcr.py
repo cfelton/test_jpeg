@@ -6,39 +6,21 @@ from myhdl import (StopSimulation, block, Signal, ResetSignal, intbv,
                    delay, instance, always_comb, always_seq)
 from myhdl.conversion import verify
 
+<<<<<<< HEAD:tests/test_rgb2ycbcr.py
 from jpegenc.subblocks.rgb2ycbcr import ColorSpace, RGB, YCbCr, rgb2ycbcr
 from jpegenc.testing import sim_available
 
 simsok = sim_available('iverilog') and sim_available('ghdl')
+=======
+from jpegenc.subblocks.color_converters import ColorSpace, rgb2ycbcr
+from jpegenc.subblocks.common import RGB, YCbCr
+from jpegenc.testing import sim_available, run_testbench
+from jpegenc.testing import clock_driver, reset_on_start, pulse_reset
+>>>>>>> 8b955c43d5df8c0688d3bc62f9823286b59fceef:test/test_rgb2ycbcr.py
 
-
-@myhdl.block
-def clock_driver(clock):
-    @instance
-    def clkgen():
-        clock.next = False
-        while True:
-            yield delay(10)
-            clock.next = not clock
-    return clkgen
-
-
-def reset_on_start(reset, clock):
-    reset.next = True
-    yield delay(40)
-    yield clock.posedge
-    reset.next = not reset
-
-
-@myhdl.block
-def rstonstart(reset, clock):
-    @instance
-    def ros():
-        reset.next = True
-        yield delay(40)
-        yield clock.posedge
-        reset.next = not reset
-    return ros
+simsok = sim_available('ghdl')
+"""default simulator"""
+verify.simulator = "ghdl"
 
 
 def print_results(inputs, expected_outputs, actual_outputs):
@@ -118,7 +100,7 @@ def test_color_translation():
 
         @instance
         def tbstim():
-            yield reset_on_start(reset, clock)
+            yield pulse_reset(reset, clock)
             rgb.data_valid.next = True
 
             for i in range(samples):
@@ -143,9 +125,7 @@ def test_color_translation():
 
         return tbdut, tbclk, tbstim
 
-    inst = bench_color_trans()
-    inst.config_sim(trace=True)
-    inst.run_sim()
+    run_testbench(bench_color_trans)
 
 
 @pytest.mark.skipif(not simsok, reason="missing installed simulator")
@@ -177,7 +157,7 @@ def test_block_conversion():
     def bench_color_trans():
         tbdut = rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits)
         tbclk = clock_driver(clock)
-        tbrst = rstonstart(reset, clock)
+        tbrst = reset_on_start(reset, clock)
 
         @instance
         def tbstim():
@@ -208,9 +188,4 @@ def test_block_conversion():
 
         return tbdut, tbclk, tbstim, tbrst
 
-    # verify and convert with iverilog
-    verify.simulator = 'iverilog'
-    assert bench_color_trans().verify_convert() == 0
-    # verify and convert with GHDL
-    verify.simulator = 'ghdl'
     assert bench_color_trans().verify_convert() == 0
