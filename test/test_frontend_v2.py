@@ -119,7 +119,6 @@ def test_frontend():
         def tbstim():
             yield pulse_reset(reset, clock)
             inputs.data_valid.next = True
-            inputs.ready_backend.next = True
 
             for i in range(samples):
                 for n in range(3):
