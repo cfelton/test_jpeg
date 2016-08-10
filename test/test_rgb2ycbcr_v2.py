@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# coding=utf-8
+
 from random import randrange
 
 import pytest
@@ -7,7 +10,7 @@ from myhdl import (StopSimulation, block, Signal, ResetSignal, intbv,
 from myhdl.conversion import verify
 
 from jpegenc.subblocks.color_converters import ColorSpace, rgb2ycbcr_v2
-from jpegenc.subblocks.common import RGB_v2, YCbCr_v2
+from jpegenc.subblocks.common import RGB, YCbCr_v2
 from jpegenc.testing import sim_available, run_testbench
 from jpegenc.testing import clock_driver, reset_on_start, pulse_reset
 
@@ -68,16 +71,16 @@ class InputsAndOutputs(object):
         return a, b
 
 
-def test_color_translation():
+def test_color_translation_v2():
     """
     In the current test are tested the outputs
-    of the rgb2ycbcr module with the outputs of a
+    of the rgb2ycbcr_v2 module with the outputs of a
     python color space conversion function
     """
     samples, frac_bits, nbits = 8, 14, 8
     pixel_bits, num_fractional_bits = nbits, frac_bits
 
-    rgb, ycbcr = RGB_v2(pixel_bits), YCbCr_v2(pixel_bits)
+    rgb, ycbcr = RGB(pixel_bits), YCbCr_v2(pixel_bits)
 
     clock = Signal(bool(0))
     reset = ResetSignal(1, active=True, async=True)
@@ -126,16 +129,16 @@ def test_color_translation():
     run_testbench(bench_color_trans)
 
 @pytest.mark.skipif(not simsok, reason="missing installed simulator")
-def test_color_translation_conversion():
+def test_color_translation_conversion_v2():
     """
     In the current test are tested the outputs
-    of the rgb2ycbcr module with the outputs of a
+    of the rgb2ycbcr_v2 module with the outputs of a
     python color space conversion function
     """
     samples, frac_bits, nbits = 8, 14, 8
     pixel_bits, num_fractional_bits = nbits, frac_bits
 
-    rgb, ycbcr = RGB_v2(pixel_bits), YCbCr_v2(pixel_bits)
+    rgb, ycbcr = RGB(pixel_bits), YCbCr_v2(pixel_bits)
 
     clock = Signal(bool(0))
     reset = ResetSignal(1, active=True, async=True)
@@ -194,5 +197,5 @@ def test_color_translation_conversion():
     assert bench_color_trans().verify_convert() == 0
 
 if __name__ == '__main__':
-    test_color_translation()
-    test_color_translation_conversion()
+    test_color_translation_v2()
+    test_color_translation_conversion_v2()

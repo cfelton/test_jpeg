@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# coding=utf-8
+
 from random import randrange
 
 import pytest
@@ -182,3 +185,7 @@ def test_block_conversion():
         return tbdut, tbclk, tbstim, tbrst
 
     assert bench_color_trans().verify_convert() == 0
+
+if __name__ == '__main__':
+    test_color_translation()
+    test_block_conversion()

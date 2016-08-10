@@ -1,37 +1,73 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-from myhdl import Signal, intbv, block, always_comb
+from myhdl import Signal, intbv
 
-class inputs_frontend(object):
+class ram_in(object):
 
-    """Inputs of the frontend part of the decoder"""
+    def __init__(self, data_width=24, address_width=10, neg=False):
+        self.neg = neg
+        self.address_width = address_width
+        if(neg):
+            self.data_range = 2**data_width
+            self.data_in = Signal(intbv(0, min=-self.data_range, max=self.data_range))
+        else:
+            self.data_width = data_width
+            self.data_in = Signal(intbv(0)[data_width:])
+        self.write_en = Signal(bool(0))
+        self.read_addr = Signal(intbv(0)[address_width:])
+        self.write_addr = Signal(intbv(0)[address_width:])
 
-    def __init__(self):
-        self.data_in = Signal(intbv(0)[24:])
+class ram_out(object):
+
+    def __init__(self, data_width=24, neg=False):
+        if(neg):
+            self.data_range = 2**data_width
+            self.data_out = Signal(intbv(0, min=-self.data_range, max=self.data_range))
+        else:
+            self.data_width = data_width
+            self.data_out = Signal(intbv(0)[data_width:])
+
+
+class block_buffer_in(object):
+
+    def __init__(self, data_width=24):
+        self.data_width = data_width
+        self.data_in = Signal(intbv(0)[data_width:])
+        self.data_valid = Signal(bool(0))
+        self.ready_to_output_data = Signal(bool(0))
+
+class block_buffer_out(object):
+
+    def __init__(self, data_width=24):
+        self.data_out = Signal(intbv(0)[data_width:])
+        self.data_valid = Signal(bool(0))
+        self.write_all = Signal(bool(0))
+        self.read_all = Signal(bool(0))
+
+class triple_buffer_in(object):
+
+    def __init__(self, data_width=24):
+        self.data_width = data_width
+        self.data_in = Signal(intbv(0)[data_width:])
         self.data_valid = Signal(bool(0))
 
-class outputs_frontend(object):
+class triple_buffer_out(object):
 
-    def __init__(self, precision_factor=10, N=8):
-        self.out_precision = precision_factor
-        self.out_range = 2**precision_factor
-        self.N = N
+    def __init__(self, data_width=24):
+        self.data_width = data_width
+        self.data_out = Signal(intbv(0)[data_width:])
         self.data_valid = Signal(bool(0))
-        self.y_dct_out = [Signal(intbv(0, min=-self.out_range,
-                                       max=self.out_range)) for _ in range(self.N**2)]
-        self.cb_dct_out = [Signal(intbv(0, min=-self.out_range,
-                                        max=self.out_range)) for _ in range(self.N**2)]
-        self.cr_dct_out = [Signal(intbv(0, min=-self.out_range,
-                                        max=self.out_range)) for _ in range(self.N**2)]
+        self.stop_source = Signal(bool(0))
 
 class outputs_frontend_new(object):
+
+    """Output signals of the frontend part"""
 
     def __init__(self, precision_factor=10):
         self.out_precision = precision_factor
         self.out_range = 2**precision_factor
         self.data_valid = Signal(bool(0))
-        self.end_of_block_conversion = Signal(bool(0))
         self.data_out = Signal(intbv(0, min=-self.out_range, max=self.out_range))
 
 class RGB(object):
@@ -45,8 +81,9 @@ class RGB(object):
         self.green = Signal(intbv(0)[nbits:])
         self.blue = Signal(intbv(0)[nbits:])
         self.data_valid = Signal(bool(0))
+        self.color_mode = Signal(intbv(0, min=0, max=3))
 
-class RGB_v2(object):
+class inputs_frontend_new(object):
 
     """Red, Green, Blue Signals with nbits bitwidth for RGB input"""
 
@@ -56,13 +93,13 @@ class RGB_v2(object):
         self.red = Signal(intbv(0)[nbits:])
         self.green = Signal(intbv(0)[nbits:])
         self.blue = Signal(intbv(0)[nbits:])
-        self.color_mode = Signal(intbv(0, min=0, max=3))
         self.data_valid = Signal(bool(0))
-
 
 class YCbCr_v2(object):
 
-    """Y, Cb, Cr output signal"""
+    """Data_out Signal. According to color mode the data_out
+    could be Y, Cb or Cr for color mode = 0, 1, 2
+    """
 
     def __init__(self, nbits=8):
         self.nbits = nbits
@@ -80,33 +117,10 @@ class YCbCr(object):
         self.cr = Signal(intbv(0)[nbits:])
         self.data_valid = Signal(bool(0))
 
-@block
-def assign(a, b):
-
-    @always_comb
-    def assign():
-            a.next = b
-
-    return assign
-
-
-@block
-def assign_array(a, b):
-
-    assert isinstance(a, list)
-    assert isinstance(b, list)
-    assert len(a) == len(b)
-
-
-    g = []
-    for i in range(len(a)):
-        g += [assign(a[i], b[i])]
-    return g
-
-
 class outputs_2d(object):
 
-    """Output interface for the 2D-DCT module"""
+    """Output interface for the 2D-DCT module. It is used also
+    as input/output interface for the zig-zag scan module"""
 
     def __init__(self, precision_factor=10, N=8):
         """Output signals for the 2D-DCT module"""
@@ -116,7 +130,6 @@ class outputs_2d(object):
         self.data_valid = Signal(bool(0))
         self.out_sigs =[Signal(intbv(0, min=-self.out_range,
                                      max=self.out_range)) for _ in range(self.N**2)]
-
 
 class input_interface(object):
 
@@ -153,17 +166,3 @@ class output_interface(object):
         self.out_sigs = [Signal(intbv(0, min=-nrange, max=nrange))
                          for _ in range(N)]
         self.data_valid = Signal(bool(0))
-
-
-class input_1d_2nd_stage(object):
-
-    """Input interface for the 2nd 1D-DCT module"""
-
-    def __init__(self, precision_factor=10):
-        """Input signals for the 2nd 1D-DCT module"""
-        self.nbits = precision_factor
-        in_range = 2**(self.nbits)
-        self.data_in = Signal(intbv(0, min=-in_range, max=in_range))
-        self.data_valid = Signal(bool(0))
-
-

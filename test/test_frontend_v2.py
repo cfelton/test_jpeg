@@ -12,7 +12,7 @@ from myhdl import (StopSimulation, block, Signal, ResetSignal, intbv,
                    delay, instance, always_comb, always_seq)
 from myhdl.conversion import verify
 
-from jpegenc.subblocks.common import RGB, outputs_frontend_new, assign_array
+from jpegenc.subblocks.common import outputs_frontend_new, inputs_frontend_new, assign_array
 from jpegenc.subblocks.frontend import frontend_top_level_v2, frontend_transform
 
 from jpegenc.testing import sim_available, run_testbench
@@ -24,6 +24,16 @@ verify.simulator = "ghdl"
 
 class InputsAndOutputs(object):
 
+    """Inputs and Outputs Construction Class
+
+    This class is used to create the inputs and the derive the ouputs from the
+    software reference of the frontend part of the encoder. Each element in the input
+    list is fed in the test module and the outputs of the module are compared with the
+    elements in the outputs list. These list are converted to tuples and used as ROMs
+    in the convertible testbench
+
+    """
+
     def __init__(self, samples=1, N=8):
         self.N = N
         self.inputs = []
@@ -31,6 +41,7 @@ class InputsAndOutputs(object):
         self.samples = samples
 
     def initialize(self):
+        """Initialize the inputs and outputs lists"""
         for i in range(self.samples):
             rgb_blocks = []
             for i in range(3):
@@ -42,6 +53,7 @@ class InputsAndOutputs(object):
             self.outputs.append(front_result)
 
     def random_matrix(self):
+        """Create a random NxN matrix with values from 0 to 255"""
         random_matrix = np.random.rand(self.N, self.N)
         random_matrix = np.rint(255*random_matrix)
         random_matrix = random_matrix.astype(int)
@@ -49,6 +61,7 @@ class InputsAndOutputs(object):
         return random_matrix
 
     def get_rom_tables(self):
+        """Convert the lists to tuples"""
         r_temp, g_temp, b_temp = [[] for _ in range(3)]
         y_dct_temp, cb_dct_temp, cr_dct_temp = [[] for _ in range(3)]
         for i in range(self.samples):
@@ -69,6 +82,7 @@ class InputsAndOutputs(object):
         return  r_rom, g_rom, b_rom, y_out_rom, cb_out_rom, cr_out_rom
 
 def out_print(expected_outputs, actual_outputs, N, i):
+    """Helper function for better printing of the results"""
     component = ["Y", "Cb", "Cr"]
     print("Color Component Processing", component[i])
     print("Expected Outputs ===> ")
@@ -78,13 +92,18 @@ def out_print(expected_outputs, actual_outputs, N, i):
     print("-"*40)
 
 def test_frontend():
+    """Frontend Part of the JPEG Encoder MyHDL Test
+
+    In this test is verified the correct behavior of the frontend part
+    of the endocer
+    """
 
     samples, N = 2, 8
 
     clock = Signal(bool(0))
     reset = ResetSignal(1, active=True, async=True)
 
-    inputs = RGB()
+    inputs = inputs_frontend_new()
     outputs = outputs_frontend_new()
 
     in_out_data = InputsAndOutputs(samples, N)
@@ -100,6 +119,7 @@ def test_frontend():
         def tbstim():
             yield pulse_reset(reset, clock)
             inputs.data_valid.next = True
+            inputs.ready_backend.next = True
 
             for i in range(samples):
                 for n in range(3):
@@ -142,13 +162,17 @@ def test_frontend():
 
 @pytest.mark.skipif(not simsok, reason="missing installed simulator")
 def test_frontend_conversion():
+    """Convertible Frontend Part of the JPEG Encoder Test
+
+    This is the convertible testbench which ensures that the overall
+    design is convertible and verified for its correct behavior"""
 
     samples, N = 2, 8
 
     clock = Signal(bool(0))
     reset = ResetSignal(1, active=True, async=True)
 
-    inputs = RGB()
+    inputs = inputs_frontend_new()
     outputs = outputs_frontend_new()
 
     in_out_data = InputsAndOutputs(samples, N)
@@ -207,6 +231,6 @@ def test_frontend_conversion():
 
     assert bench_frontend().verify_convert() == 0
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     test_frontend()
     test_frontend_conversion()

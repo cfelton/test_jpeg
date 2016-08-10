@@ -3,9 +3,9 @@ from math import sqrt, pi, cos
 import myhdl
 from myhdl import Signal, intbv, always_comb, always_seq, block
 
-from jpegenc.subblocks.common import (input_1d_1st_stage, input_interface,
-                                      output_interface, outputs_2d, assign,
-                                      input_1d_2nd_stage, assign_array)
+from jpegenc.subblocks.common import (input_1d_1st_stage, output_interface,
+                                      outputs_2d, assign, assign_array)
+
 from .dct_1d import dct_1d
 
 
@@ -22,6 +22,7 @@ class dct_2d_transformation(object):
         self.coeff_matrix = self.build_matrix(N)
 
     def build_matrix(self, N):
+        """Create the NxN coefficient matrix"""
         const = sqrt(2.0 / 8)
         a0 = sqrt(1.0 / 2.0)
         ak = 1
@@ -60,12 +61,22 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14,
     This module performs the 2D-DCT Transformation.
     It takes serially the inputs of a NxN block
     and outputs parallely the transformed block in
-    64 signals.
+    64 signals. The row-column decomposition method used to
+    implement the 2d-dct. The parameter num_fractional_bits is used
+    to define the fractional bits for the fixed point representation
+    of the coefficients. The stage_1_prec parameter defines the fractional
+    bits for the fixed point representation of the 1st stage 1d-dct outputs.
+    The out_prec defines the fractional bits for the ouputs of the 2d-dct and
+    the N parameter defines the size of the NxN block.
 
     Inputs:
-        data_in, data_valid
+        data_in, data_valid, clock, reset
+
     Outputs:
         NxN signals in the list out_sigs, data_valid
+
+    Parameters:
+        num_fractional_bits, stage_1_prec, out_prec, N
     """
     first_1d_output = output_interface(stage_1_prec, N)
     input_1d_stage_1 = input_1d_1st_stage()
@@ -85,7 +96,7 @@ def dct_2d(inputs, outputs, clock, reset, num_fractional_bits=14,
     inputs_2nd_stage = []
     outputs_2nd_stage = []
     for i in range(N):
-        inputs_2nd_stage += [input_1d_2nd_stage(first_1d_output.out_precision)]
+        inputs_2nd_stage += [input_1d_1st_stage(first_1d_output.out_precision)]
         outputs_2nd_stage += [output_interface(out_prec, N)]
 
 

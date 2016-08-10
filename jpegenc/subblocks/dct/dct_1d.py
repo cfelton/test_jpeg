@@ -20,6 +20,7 @@ class dct_1d_transformation(object):
         self.coeff_matrix = self.build_matrix(N)
 
     def build_matrix(self, N):
+        """Create the coefficient NxN matrix"""
         const = sqrt(2.0 / 8)
         a0 = sqrt(1.0 / 2.0)
         ak  = 1
@@ -70,12 +71,23 @@ def dct_1d(input_interface, output_interface, clock, reset,
 
     This module performs the 1D-DCT Transformation.
     It takes serially  N inputs and outputs parallely
-    the vector of N signalsv
+    the vector of N signals. The parameter num_fractional_bits
+    defines how many bits will be used for the fixed point representation
+    of the dct coefficient. The out_precision parameter defines how many bits
+    will be used for the fixed point representation of the outputs signals.
+    This module is the building block for the 2d-dct module.
+    The input interface is the input_1d_1st_stage and the output interface is the
+    output_interface.
 
     Inputs:
-        data_in, data_valid
+        data_in, data_valid, clock, reset
+
     Outputs:
         List of N signals: out_sigs, data_valid
+
+    Parameters:
+        num_fractional_bits, out_precision, N
+
     """
     fract_bits = num_fractional_bits
     nbits = input_interface.nbits
