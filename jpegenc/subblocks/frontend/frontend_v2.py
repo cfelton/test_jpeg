@@ -10,11 +10,11 @@ from myhdl import Signal, intbv, always_comb, always_seq, block, ResetSignal
 from jpegenc.subblocks.color_converters import ColorSpace, rgb2ycbcr_v2
 from jpegenc.subblocks.dct.dct_2d import dct_2d_transformation, dct_2d
 from jpegenc.subblocks.zig_zag import zig_zag_scan, zig_zag
-from jpegenc.subblocks.common import YCbCr_v2, input_interface, outputs_2d, RGB_v2, outputs_frontend_new
+from jpegenc.subblocks.common import YCbCr_v2, input_interface, outputs_2d, RGB, outputs_frontend_new
 
 
 def frontend_transform(blockr, blockg, blockb, N=8):
-    """software implementation of the frontend part"""
+    """Software implementation of the frontend part"""
     ycbcr_blocks = [[[] for _ in range(N)] for _ in range(3)]
     dct_blocks, dct_blocks_linear, zig_zag_blocks = [[] for _ in range(3)]
 
@@ -43,14 +43,26 @@ def frontend_transform(blockr, blockg, blockb, N=8):
 @block
 def frontend_top_level_v2(inputs, outputs, clock, reset, N=8):
 
-    """
-    Inputs:red, green , blue, data_valid
-    Outputs: data_out
+    """Frontend Part of the JPEG Encoder
+
+    This part combines the color space conversion, 2D-DCT and  zig-zag scan modules.
+    It takes serially each input pixel (Red, Green, Blue) and when it computes the first block
+    it takes another two times the same block in order to compute the other components. First
+    outputs the Y block, then the Cb block and last the Cr block. The processing of this part
+    is continuous and it never stops.
+
+
+    Inputs:
+        red, green, blue, data_valid, clock, reset
+
+    Outputs:
+        data_out, data_valid
+
     """
 
     """Color Space Conversion"""
     rgb2ycbcr_out = YCbCr_v2()
-    inputs_reg = RGB_v2()
+    inputs_reg = RGB()
     color_space_converter = rgb2ycbcr_v2(inputs_reg, rgb2ycbcr_out, clock, reset)
 
     """2D-DCT Transformation"""
@@ -70,7 +82,6 @@ def frontend_top_level_v2(inputs, outputs, clock, reset, N=8):
     color_mode = Signal(intbv(0, min=0, max=3))
     output_counter = Signal(intbv(0, min=0, max=64))
     start_out = Signal(bool(0))
-    data_valid_reg = Signal(bool(0))
 
     @always_seq(clock.posedge, reset=reset)
     def input_reg():
@@ -106,11 +117,10 @@ def frontend_top_level_v2(inputs, outputs, clock, reset, N=8):
         if zig_zag_out.data_valid:
             start_out.next = True
 
-    @always_seq(clock.posedge, reset)
+    @always_seq(clock.posedge, reset=reset)
     def data_valid_assign():
         if zig_zag_out.data_valid:
             outputs.data_valid.next = zig_zag_out.data_valid
-
 
     @always_seq(clock.posedge, reset=reset)
     def zig_zag_to_output_mux():
@@ -132,7 +142,7 @@ def frontend_top_level_v2(inputs, outputs, clock, reset, N=8):
 
 def convert():
 
-    input_interface = RGB_v2()
+    input_interface = RGB()
     output_interface = outputs_frontend_new()
     clock = Signal(bool(0))
     reset = ResetSignal(0, active=True, async=False)

@@ -9,9 +9,8 @@ from myhdl import (StopSimulation, block, Signal, ResetSignal, intbv,
                    delay, instance, always_comb, always_seq)
 from myhdl.conversion import verify
 
-from jpegenc.subblocks.common import (input_interface, output_interface,
-                                      input_1d_2nd_stage, outputs_2d,
-                                      assign, assign_array)
+from jpegenc.subblocks.common import (input_interface, outputs_2d, assign,
+                                      assign_array)
 
 from jpegenc.subblocks.dct import dct_2d
 from jpegenc.subblocks.dct.dct_2d import dct_2d_transformation
@@ -25,6 +24,16 @@ verify.simulator = "ghdl"
 
 class InputsAndOutputs(object):
 
+    """Inputs and Outputs Construction Class
+
+    This class is used to create the inputs and the derive the ouputs from the
+    software reference of the 2d-dct. Each element in the input list is fed in the
+    test module and the outputs of the module are compared with the elements in the
+    outputs list. These list are converted to tuples and used as ROMs in the
+    convertible testbench
+
+    """
+
     def __init__(self, samples, N):
         self.N = N
         self.inputs = []
@@ -32,6 +41,7 @@ class InputsAndOutputs(object):
         self.samples = samples
 
     def initialize(self):
+        """Initialize the inputs and outputs lists"""
         dct_obj = dct_2d_transformation(self.N)
         for i in range(self.samples):
             random_matrix = self.random_matrix_8_8()
@@ -40,6 +50,7 @@ class InputsAndOutputs(object):
             self.outputs.append(dct_result)
 
     def random_matrix_8_8(self):
+        """Create a random NxN matrix with values from 0 to 255"""
         random_matrix = np.random.rand(self.N, self.N)
         random_matrix = np.rint(255*random_matrix)
         random_matrix = random_matrix.astype(int)
@@ -47,6 +58,7 @@ class InputsAndOutputs(object):
         return random_matrix
 
     def get_rom_tables(self):
+        """Convert the lists to tuples"""
         a, b = [[] for _ in range(2)]
         for i in self.inputs:
             for j in i:
@@ -62,7 +74,7 @@ class InputsAndOutputs(object):
 
 
 def out_print(expected_outputs, actual_outputs, N):
-
+    """Helper function for better printing of the results"""
     print("Expected Outputs ===> ")
     print(expected_outputs)
     print("Actual Outputs   ===> ")
@@ -77,6 +89,10 @@ def out_print(expected_outputs, actual_outputs, N):
 
 
 def test_dct_2d():
+    """2D-DCT MyHDL Test
+
+    In this test is verified the correct behavior of the 2d-dct module
+    """
 
     samples, fract_bits, output_bits, stage_1_prec, N = 5, 14, 10, 10, 8
 
@@ -125,6 +141,10 @@ def test_dct_2d():
 
 @pytest.mark.skipif(not simsok, reason="missing installed simulator")
 def test_dct_2d_conversion():
+    """Convertible 2D-DCT Test
+
+    This is the convertible testbench which ensures that the overall
+    design is convertible and verified for its correct behavior"""
 
     samples, fract_bits, output_bits, stage_1_prec, N = 5, 14, 10, 10, 8
 

@@ -22,6 +22,16 @@ verify.simulator = "ghdl"
 
 class InputsAndOutputs(object):
 
+    """Inputs and Outputs Construction Class
+
+    This class is used to create the inputs and the derive the ouputs from the
+    software reference of the zig zag scan. Each element in the input list is fed in the
+    test module and the outputs of the module are compared with the elements in the
+    outputs list. These list are converted to tuples and used as ROMs in the
+    convertible testbench
+
+    """
+
     def __init__(self, samples, N, precision):
         self.N = N
         self.nrange = 2 ** (precision - 1)
@@ -30,6 +40,7 @@ class InputsAndOutputs(object):
         self.samples = samples
 
     def initialize(self):
+        """Initialize the inputs and outputs lists"""
         zig_zag_obj = zig_zag_scan(self.N)
         for i in range(self.samples):
             random_list = [randrange(-self.nrange, self.nrange-1)
@@ -39,6 +50,7 @@ class InputsAndOutputs(object):
             self.outputs.append(zig_zag_result)
 
     def get_rom_tables(self):
+        """Convert the lists to tuples"""
         a, b = [[] for _ in range(2)]
         for i in self.inputs:
             for j in i:
@@ -51,7 +63,7 @@ class InputsAndOutputs(object):
         return inputs_rom, expected_outputs_rom
 
 def out_print(expected_outputs, actual_outputs, N):
-
+    """Helper function for better printing of the results"""
     print("Expected Outputs ===> ")
     print(expected_outputs)
     print("Actual Outputs   ===> ")
@@ -62,6 +74,10 @@ def out_print(expected_outputs, actual_outputs, N):
     print("-"*40)
 
 def test_zig_zag():
+    """Zig Zag Scan MyHDL Test
+
+    In this test is verified the correct behavior of the zig zag module
+    """
 
     samples, output_bits, N = 5, 10, 8
 
@@ -109,6 +125,10 @@ def test_zig_zag():
 
 @pytest.mark.skipif(not simsok, reason="missing installed simulator")
 def test_zig_zag_conversion():
+    """Convertible Zig Zag Module Test
+
+    This is the convertible testbench which ensures that the overall
+    design is convertible and verified for its correct behavior"""
 
     samples, output_bits, N = 5, 10, 8
 

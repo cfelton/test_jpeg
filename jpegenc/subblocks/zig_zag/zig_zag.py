@@ -53,12 +53,16 @@ def zig_zag(inputs, outputs, clock, reset, N=8):
     """Zig-Zag Module
 
     This module performs the zig-zag reorderding. According to the
-    zig-zag matrix the input list of signals is reordered.
+    zig-zag matrix the input list of signals is reordered. The inputs
+    and the ouputs are parallel. The parameter N defines the size of the
+    NxN block.
 
     Inputs:
         List of signals of a NxN block
+
     Outputs:
         Reordered list of signals of a NxN block
+
     Parameters:
         N = the size of the NxN block
     """

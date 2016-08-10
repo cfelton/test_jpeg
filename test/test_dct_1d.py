@@ -21,6 +21,16 @@ verify.simulator = "ghdl"
 
 class InputsAndOutputs(object):
 
+    """Inputs and Outputs Construction Class
+
+    This class is used to create the inputs and the derive the ouputs from the
+    software reference of the 1d-dct. Each element in the input list is fed in the
+    test module and the outputs of the module are compared with the elements in the
+    outputs list. These list are converted to tuples and used as ROMs in the
+    convertible testbench
+
+    """
+
     def __init__(self, samples, N):
         self.N = N
         self.inputs = []
@@ -28,6 +38,7 @@ class InputsAndOutputs(object):
         self.samples = samples
 
     def initialize(self):
+        """Initialize the inputs and outputs lists"""
         dct_obj = dct_1d_transformation(self.N)
         for i in range(self.samples):
             vector = [randrange(-128, 128) for _ in range(self.N)]
@@ -36,6 +47,7 @@ class InputsAndOutputs(object):
             self.outputs.append(dct_result)
 
     def get_rom_tables(self):
+        """Convert the lists to tuples"""
         a, b = [[] for _ in range(2)]
         for i in self.inputs:
             for j in i:
@@ -49,7 +61,7 @@ class InputsAndOutputs(object):
 
 
 def out_print(expected_outputs, actual_outputs):
-
+    """Helper function for better printing of the results"""
     print("Expected Outputs ===> "),
     for i in range(len(expected_outputs)):
         print(" %d " % expected_outputs[i]),
@@ -61,6 +73,10 @@ def out_print(expected_outputs, actual_outputs):
 
 
 def test_dct_1d():
+    """1D-DCT MyHDL Test
+
+    In this test is verified the correct behavior of the 1d-dct module
+    """
 
     samples, fract_bits, out_prec, N = 10, 14, 10, 9
 
@@ -109,6 +125,10 @@ def test_dct_1d():
 
 @pytest.mark.skipif(not simsok, reason="missing installed simulator")
 def test_dct_1d_conversion():
+    """Convertible 1D-DCT Test
+
+    This is the convertible testbench which ensures that the overall
+    design is convertible and verified for its correct behavior"""
 
     samples, fract_bits, out_prec, N = 10, 14, 10, 8
 
