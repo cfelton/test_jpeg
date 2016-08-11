@@ -96,7 +96,7 @@ class RGBStream(PixelStream):
         self.red.next = stream.red
         self.green.next = stream.green
         self.blue.next = stream.blue
-
+        
     def assign_from_data(self, data):
         """Given a data vector, update the attributes"""
         assert len(data) == len(self.data)

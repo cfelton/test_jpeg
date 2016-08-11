@@ -21,6 +21,11 @@ class VideoSource(object):
             frame_rate (int): the frame rate of the video source, the
                 default is 60 Hz (a.k.a. refresh rate).
 
+        Attributes:
+            pixel (RGBStream): the current pixel in the data stream
+            rowmon (int): current row index
+            colmon (int): current col index
+
         Usage example:
             # create a video source object with the defaults
             video = VideoStreamSource()
@@ -31,10 +36,10 @@ class VideoSource(object):
         """
         self.resolution = resolution
         self.frame_rate = frame_rate
-        self.pixels = RGBStream(color_depth=(8, 8, 8))
+        self.pixel = RGBStream(color_depth=(8, 8, 8))
         # signals that monitor the current row and column
-        self.currow = Signal(intbv(0, min=0, max=resolution[1]))
-        self.curcol = Signal(intbv(0, min=0, max=resolution[0]))
+        self.rowmon = Signal(intbv(0, min=0, max=resolution[1]))
+        self.colmon = Signal(intbv(0, min=0, max=resolution[0]))
 
         # the number of clock ticks per pixel
         self. pixels_per_second = resolution[0] * resolution[1] * frame_rate
@@ -77,11 +82,11 @@ class VideoSource(object):
 
             while True:
                 # default values
-                self.pixels.start_of_frame.next = False
-                self.pixels.end_of_frame.next = False
-                self.pixels.valid.next = False
-                self.currow.next = row
-                self.curcol.next = col
+                self.pixel.start_of_frame.next = False
+                self.pixel.end_of_frame.next = False
+                self.pixel.valid.next = False
+                self.rowmon.next = row
+                self.colmon.next = col
 
                 if reset == reset.active:
                     row, col = 0, 0
@@ -91,14 +96,13 @@ class VideoSource(object):
                 # tick count expired, output a new pixel
                 if tcnt == ticks:
                     if row == 0 and col == 0:
-                        self.pixels.start_of_frame.next = True
+                        self.pixel.start_of_frame.next = True
                     if row == num_rows-1 and col == num_cols-1:
-                        self.pixels.end_of_frame.next = True
+                        self.pixel.end_of_frame.next = True
 
-                    self.pixels.red.next = randint(0, self.pixel.red.max-1)
-                    self.pixels.green.next = randint(0, self.pixel.green.max-1)
-                    self.pixels.blue.next = randint(0, self.pixel.blue.max-1)
-                    self.pixels.valid.next = True
+                    # set the current pixel value
+                    self.pixel_value(row, col)
+                    self.pixel.valid.next = True
 
                     row = row + 1 if row < num_rows-1 else 0
                     col = col + 1 if col < num_cols-1 else 0
@@ -106,8 +110,24 @@ class VideoSource(object):
 
                 yield clock.posedge
 
-    def check_pixel(self, pixel, npixel=None):
+    def pixel_value(self, row, col):
+        self.pixel.red.next = r = randint(0, self.pixel.red.max - 1)
+        self.pixel.green.next = g = randint(0, self.pixel.green.max - 1)
+        self.pixel.blue.next = b = randint(0, self.pixel.blue.max - 1)
+
+        return r, g, b
+
+    def check_pixel(self, rgb, npixel=None):
+        """Check a pixel
+
+        Args:
+            rgb (list):
+            npixel:
+
+        Returns:
+
+        """
         raise NotImplementedError
 
-    def check_buffer(selfs, buffer, offset=0):
+    def check_buffer(self, buffer, frame=0, offset=0):
         raise NotImplementedError
