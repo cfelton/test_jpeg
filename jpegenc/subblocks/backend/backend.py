@@ -285,7 +285,6 @@ def backend(clock, reset, start, data_in, write_addr,
         """output from the Backend Module"""
         data_out.next = bs_out_stream.byte
         addr.next = bs_out_stream.addr
-        print ("%d %d" % (bs_out_stream.byte, bs_out_stream.addr))
 
     return (inst_dbuf, control_ready_valid, assign_quant_in,
             inst_quant, assign_rle_in, inst_rle, counter_huff,
