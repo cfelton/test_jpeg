@@ -338,6 +338,7 @@ def huffman(clock, reset, huffmancntrl, bufferdatabus,
         """divide number of fifowrites by eight"""
         num_fifo_wrs.next = bit_ptr[5:3]
 
+
     @always_seq(clock.posedge, reset=reset)
     def huff_fsm():
         """Huffman Encoder Finite State Machine"""
