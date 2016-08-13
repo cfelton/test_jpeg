@@ -54,7 +54,7 @@ def backend(clock, reset, start, data_in, write_addr,
                                           width_data, width_addr-1)
     bufferdatabus = HuffBufferDataBus(width_byte)
     huffmancntrl = HuffmanCntrl()
-    img_size = ImgSize(8, 8)
+    img_size = ImgSize(100, 100)
     rle_fifo_empty = Signal(bool(0))
 
     bs_in_stream = BSInputDataStream(width_byte)
@@ -68,9 +68,10 @@ def backend(clock, reset, start, data_in, write_addr,
     wait = Signal(intbv(0)[3:])
     enable_huff_read = Signal(bool(0))
     counter = Signal(intbv(0)[3:])
-    value = Signal(intbv(3)[4:])
+    value = Signal(intbv(4)[4:])
     ready_quant = Signal(bool(0))
     ready_bytestuffer = Signal(bool(0))
+    enable_huff_read_s = Signal(bool(0))
 
     # instantiation of DRAM
     inst_dbuf = dram(clock, data_in, write_addr, read_addr,
@@ -215,33 +216,39 @@ def backend(clock, reset, start, data_in, write_addr,
     inst_rle = rlencoder(clock, reset, rle_input_datastream,
                          rle_outputs, rle_config)
 
-
     @always_seq(clock.posedge, reset=reset)
     def counter_huff():
         """counter that increments till three"""
-        if enable_huff_read:
-            counter.next = counter + 1
 
         if huffmancntrl.start:
             enable_huff_read.next = True
-            value.next = 4
             rle_outputs.read_enable.next = True
 
         else:
             rle_outputs.read_enable.next = False
 
+        if enable_huff_read:
+            enable_huff_read_s.next = True
+            enable_huff_read.next = False
+
+        if enable_huff_read_s:
+            if not rle_outputs.fifo_empty:
+                counter.next = counter + 1
+            else:
+                counter.next = 0
+                rle_outputs.read_enable.next = False
+
         if counter >= value:
             rle_outputs.read_enable.next = not rle_outputs.read_enable
             counter.next = 0
-            value.next = 2
-            if huffmancntrl.ready:
+            if huffmancntrl.ready or rle_outputs.fifo_empty:
                 rle_outputs.read_enable.next = False
-                enable_huff_read.next = False
+                enable_huff_read_s.next = False
 
         if huffmancntrl.ready:
             rle_outputs.read_enable.next = False
-            enable_huff_read.next = False
-
+            enable_huff_read_s.next = False
+            counter.next = 0
 
     @always_comb
     def assign_huffman_in():
@@ -278,6 +285,7 @@ def backend(clock, reset, start, data_in, write_addr,
         """output from the Backend Module"""
         data_out.next = bs_out_stream.byte
         addr.next = bs_out_stream.addr
+        print ("%d %d" % (bs_out_stream.byte, bs_out_stream.addr))
 
     return (inst_dbuf, control_ready_valid, assign_quant_in,
             inst_quant, assign_rle_in, inst_rle, counter_huff,

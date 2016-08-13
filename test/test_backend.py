@@ -5,10 +5,90 @@ from myhdl import intbv, ResetSignal, Signal, StopSimulation
 from myhdl.conversion import verify
 
 from jpegenc.subblocks.backend.backend import backend
+from jpegenc.subblocks.backend.backend_soft import backend_ref
 
 from jpegenc.testing import run_testbench
 from jpegenc.testing import (clock_driver, reset_on_start,
                              pulse_reset, toggle_signal)
+
+
+block_1 = [0]*64
+for i in range(64):
+    block_1[i] = i % 25
+
+block_2 = [0]*64
+for i in range(64):
+    block_2[i] = i % 16
+
+block_3 = [0]*64
+for i in range(64):
+    block_3[i] = i % 47
+
+block_4 = [0]*64
+for i in range(64):
+    block_4[i] = i % 28
+
+block_5 = [0]*64
+for i in range(64):
+    block_5[i] = i % 40
+
+block_6 = [0]*64
+for i in range(64):
+    block_6[i] = i % 31
+
+
+def backend_soft():
+    """backend reference model"""
+    # 1st block
+    prev_dc_0 = 0
+    prev_dc_1 = 0
+    prev_dc_2 = 0
+    pointer = 0
+    register = []
+    register = str(register)
+    register = register[2:]
+    outputs_fin = []
+
+    # 1st rgb block
+    prev_dc_0, prev_dc_1, prev_dc_2, register, pointer, outputs = backend_ref(
+        block_1, prev_dc_0, prev_dc_1, prev_dc_2, register, 1, pointer)
+
+    for ind in range(len(outputs)):
+        outputs_fin.append(outputs[ind])
+
+    prev_dc_0, prev_dc_1, prev_dc_2, register, pointer, outputs = backend_ref(
+        block_2, prev_dc_0, prev_dc_1, prev_dc_2, register, 2, pointer)
+
+    for i in range(len(outputs)):
+        outputs_fin.append(outputs[i])
+
+    prev_dc_0, prev_dc_1, prev_dc_2, register, pointer, outputs = backend_ref(
+        block_3, prev_dc_0, prev_dc_1, prev_dc_2, register, 2, pointer)
+
+    for i in range(len(outputs)):
+        outputs_fin.append(outputs[i])
+
+    # need to fix color component
+    # 2nd rgb block
+    prev_dc_0, prev_dc_1, prev_dc_2, register, pointer, outputs = backend_ref(
+        block_4, prev_dc_0, prev_dc_1, prev_dc_2, register, 3, pointer)
+
+    for i in range(len(outputs)):
+        outputs_fin.append(outputs[i])
+
+    prev_dc_0, prev_dc_1, prev_dc_2, register, pointer, outputs = backend_ref(
+        block_5, prev_dc_0, prev_dc_1, prev_dc_2, register, 4, pointer)
+
+    for i in range(len(outputs)):
+        outputs_fin.append(outputs[i])
+
+    prev_dc_0, prev_dc_1, prev_dc_2, register, pointer, outputs = backend_ref(
+        block_6, prev_dc_0, prev_dc_1, prev_dc_2, register, 5, pointer)
+
+    for i in range(len(outputs)):
+        outputs_fin.append(outputs[i])
+
+    return outputs_fin
 
 
 def test_backend():
@@ -57,6 +137,7 @@ def test_backend():
             """stimulus generates inputs for entropy coder"""
 
             # reset the module
+            output_model = [0]*64
             yield pulse_reset(reset, clock)
 
             # write Y data into input buffer
@@ -120,6 +201,8 @@ def test_backend():
             yield clock.posedge
             for i in range(64):
                 data_in.next = i % 40
+                index = int(addr)
+                output_model[index] = int(data_out)
                 yield clock.posedge
                 write_addr.next = write_addr + 1
             valid_data.next = False
@@ -131,6 +214,8 @@ def test_backend():
             yield clock.posedge
             for i in range(64):
                 data_in.next = i % 31
+                index = int(addr)
+                output_model[index] = int(data_out)
                 yield clock.posedge
                 write_addr.next = write_addr + 1
             valid_data.next = False
@@ -140,19 +225,42 @@ def test_backend():
 
             yield toggle_signal(start_block, clock)
             while not ready:
+                index = int(addr)
+                output_model[index] = int(data_out)
                 yield clock.posedge
 
             yield toggle_signal(start_block, clock)
             while not ready:
+                index = int(addr)
+                output_model[index] = int(data_out)
                 yield clock.posedge
 
             yield toggle_signal(start_block, clock)
             while not ready:
+                index = int(addr)
+                output_model[index] = int(data_out)
                 yield clock.posedge
 
             yield toggle_signal(start_block, clock)
             while not ready:
+                index = int(addr)
+                output_model[index] = int(data_out)
                 yield clock.posedge
+
+            print ("===================")
+
+            for i in range(addr):
+                print ("outputs_hdl %d" % output_model[i])
+            print ("======================")
+            # get outputs from reference values
+            output_ref = []
+            output_ref = backend_soft()
+            for i in range(len(output_ref)):
+                print ("outputs_soft %d" % int(output_ref[i], 2))
+            print ("===========================")
+            # compare reference and HDL outputs
+            for i in range(len(output_ref)):
+                assert int(output_ref[i], 2) == output_model[i]
 
             raise StopSimulation
 
