@@ -1,5 +1,12 @@
 #!/bin/python
-"""Color Space Conversion Module"""
+"""Color Space Conversion Module
+
+.. module:: rgb2ycbcr
+    :platforms: Unix, Windows
+    :synopsis: Color Space Conversion Module
+
+"""
+
 
 import numpy as np
 
@@ -39,7 +46,7 @@ class ColorSpace(object):
         self.offset = np.array([0, 128, 128])
 
     def get_jfif_ycbcr(self):
-        """RGB to YCbCr Conversion"""
+        """RGB to YCbCr Conversion. Used as software reference."""
         rgb = np.array([self.red, self.green, self.blue])
         rgb = rgb[np.newaxis, :].transpose()
         offset = self.offset[np.newaxis, :].transpose()
@@ -61,7 +68,7 @@ class ColorSpace(object):
 
 
 def build_coeffs(fract_bits):
-    """function which used to build the coefficients"""
+    """Function which used to build the coefficients"""
     def list_of_ints(val, num):
         """create lists"""
         return [val for _ in range(num)]
@@ -78,7 +85,9 @@ def rgb2ycbcr(rgb, ycbcr, clock, reset, num_fractional_bits=14):
     """Color Space Conversion module
 
     This module is used to transform the rgb input
-    to an other representation called YCbCr
+    to an other representation called YCbCr.
+    The input interface is the RGB and the output is the
+    Ycbcr. The inputs and outputs are parallel.
 
     Inputs:
         Red, Green, Blue, data_valid

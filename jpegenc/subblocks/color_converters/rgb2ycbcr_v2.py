@@ -1,12 +1,12 @@
 #!/bin/python
-"""Color Space Conversion Module"""
+"""Color Space Conversion Module v2"""
 
 import numpy as np
 
 import myhdl
 from myhdl import Signal, ResetSignal, intbv, always_comb, always_seq
 from myhdl.conversion import analyze
-from jpegenc.subblocks.common import RGB_v2, YCbCr_v2
+from jpegenc.subblocks.common import RGB, YCbCr_v2
 
 class ColorSpace(object):
 
@@ -75,17 +75,22 @@ def build_coeffs(fract_bits):
 
 @myhdl.block
 def rgb2ycbcr_v2(rgb, ycbcr, clock, reset, num_fractional_bits=14):
-    """Color Space Conversion module
+    """Color Space Conversion Module v2
 
     This module is used to transform the rgb input
-    to an other representation called YCbCr
+    to an other representation called YCbCr.
+    The input interface is the RGB and the output is the
+    Ycbcr_v2. The inputs and outputs are serial. According
+    to the signal color_mode one of the 3 transformations occurs.
+    If color_mode equals to 0 then the rgb to Y transformation occurs
+    and so on.
 
     Inputs:
-        Red, Green, Blue, data_valid
-        clock, reset
+        Red, Green, Blue, data_valid,
+        color_mode, clock, reset
 
     Outputs:
-        Y, Cb ,Cr, data_valid
+        data_out, data_valid
 
     Parameters:
         num_fractional_bits
@@ -218,7 +223,7 @@ def rgb2ycbcr_v2(rgb, ycbcr, clock, reset, num_fractional_bits=14):
 
 def convert():
     ycbcr = YCbCr_v2()
-    rgb = RGB_v2()
+    rgb = RGB()
 
     clock = Signal(bool(0))
     reset = ResetSignal(1, active=True, async=True)

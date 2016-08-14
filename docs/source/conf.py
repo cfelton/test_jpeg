@@ -19,7 +19,7 @@ import os
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('.'))
 
 # -- General configuration ------------------------------------------------
 
@@ -53,8 +53,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'jpegenc'
-copyright = '2016, Merkourious and Vikram'
-author = 'Merkourious and Vikram'
+copyright = '2016, Merkourios and Vikram'
+author = 'Merkourios and Vikram'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
