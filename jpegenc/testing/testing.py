@@ -19,7 +19,7 @@ def sim_available(sim='ghdl'):
     version = '-V' if sim == 'iverilog' else '-v'
     try:
         subprocess.call([sim, version])
-    except FileNotFoundError as err:
+    except (OSError, IOError) as e:
         ok = False
     return ok
 

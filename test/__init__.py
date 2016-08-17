@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # coding=utf-8
+from __future__ import absolute_import
 
 from .test_rgb2ycbcr import test_color_translation
 from .test_rgb2ycbcr import test_block_conversion
