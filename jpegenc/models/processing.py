@@ -7,7 +7,7 @@ from myhdl import Signal, intbv, instance, always_comb
 from rhea import Global, Clock, Signals
 
 from .interfaces import DataStream, RGBStream
-from .fifo_ready_valid import FIFOReadyValid
+from .buffers import FIFOReadyValid
 
 
 class ProcessingSubblock(object):
@@ -29,6 +29,10 @@ class ProcessingSubblock(object):
                 the processing time, but the latency represents a pipeline,
                 new samples can.  If `latency` is a 2-element tuple a random
                 range is used with the tuple defining the range.~~
+
+            pipelined: indicates the procesing block is fully pipelined, a
+                new sample can be input on every clock.  The pipeline length
+                is the ``cycles_to_process``.
 
             block_size: the size of an image block, if None process
                 sample by sample.
