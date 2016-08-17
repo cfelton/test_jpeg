@@ -36,3 +36,5 @@ class BitstreamDevourer(object):
                 if src.pixel.valid:
                     print("  [BD]: {:03X}".format(src.pixel.data))
 
+        return myhdl.instances()
+

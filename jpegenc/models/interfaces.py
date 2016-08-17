@@ -68,10 +68,11 @@ class RGBStream(PixelStream):
         """
         assert len(color_depth) == 3
         data_width = sum(color_depth)
-        super(PixelStream, self).__init__(data_width=data_width)
+        super(RGBStream, self).__init__(data_width=data_width)
 
         self.color_depth = color_depth
         rbits, gbits, bbits = color_depth
+        print(vars(self))
 
         # a single pixel (color component) is the most
         if num_pixels == 1:

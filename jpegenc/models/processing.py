@@ -44,7 +44,8 @@ class ProcessingSubblock(object):
             assert len(cycles_to_process) == 2
         # assert isinstance(latency, int)
         # assert isinstance(process_block, bool)
-        assert isinstance(block_size, tuple) and len(block_size) == 2
+        if block_size is not None:
+            assert isinstance(block_size, tuple) and len(block_size) == 2
         assert isinstance(buffered, bool)
 
         # the cycles to process is the same as latency

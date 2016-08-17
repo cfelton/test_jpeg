@@ -5,7 +5,7 @@ from random import randint
 import myhdl
 from myhdl import Signal, intbv, instance, always_comb
 
-from .interfaces import DataStream, RGBStream
+from ..interfaces import DataStream, RGBStream
 
 
 class VideoSource(object):
@@ -50,7 +50,7 @@ class VideoSource(object):
     def get_ticks(self, clock):
         """Get the number of clock ticks per pixel"""
         pps = self.pixels_per_second
-        ticks = int(floor(pps / clock.freqeuncy))
+        ticks = int(floor(pps / clock.frequency))
         return ticks
 
     @myhdl.block
@@ -109,6 +109,8 @@ class VideoSource(object):
                     tcnt = 0
 
                 yield clock.posedge
+
+        return myhdl.instances()
 
     def pixel_value(self, row, col):
         self.pixel.red.next = r = randint(0, self.pixel.red.max - 1)
