@@ -9,8 +9,9 @@ from .quantizer import quantizer
 from .bytestuffer import bytestuffer
 from .huffman import huffman
 from .backend import backend
+from .frontend import frontend_v2
 
 __all__ = [
-    'rgb2ycbcr', 'dct_2d', 'rlencoder', 'zigzag', 'frontend', 'quantizer',
+    'rgb2ycbcr', 'dct_2d', 'rlencoder', 'zig_zag', 'frontend_v2', 'quantizer',
     'bytestuffer', 'huffman', 'backend'
 ]
