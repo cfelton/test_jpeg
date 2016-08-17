@@ -81,7 +81,7 @@ def test_bytestuffer():
                 if i == 63:
                     bs_in_stream.fifo_empty.next = True
 
-                for j in range(3):
+                for _ in range(3):
                     yield clock.posedge
 
                 if bs_out_stream.data_valid:

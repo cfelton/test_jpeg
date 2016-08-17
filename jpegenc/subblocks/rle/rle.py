@@ -3,9 +3,9 @@
 
 from myhdl import always_seq, always_comb, block
 from myhdl import Signal, concat, modbv
-from .rlecore import DataStream, rle
-from .rlecore import RLESymbols, RLEConfig
-from .doublebuffer import doublefifo
+from jpegenc.subblocks.rle.rlecore import DataStream, rle
+from jpegenc.subblocks.rle.rlecore import RLESymbols, RLEConfig
+from jpegenc.subblocks.rle.doublebuffer import doublefifo
 from rhea.system import FIFOBus
 
 
@@ -152,17 +152,22 @@ def rlencoder(clock, reset, datastream, bufferdatabus, rleconfig):
             else:
                 wr_cnt.next = wr_cnt + 1 + rlesymbols_temp.runlength
 
-        if dfifo.write_data == 0 and wr_cnt != 0:
-            rleconfig.ready.next = True
-        else:
-            if (wr_cnt + rlesymbols_temp.runlength) == max_addr_cnt:
+            if dfifo.write_data == 0 and wr_cnt != 0:
                 rleconfig.ready.next = True
+            else:
+                if (wr_cnt + rlesymbols_temp.runlength) == max_addr_cnt:
+                    rleconfig.ready.next = True
+
+    @always_seq(clock.posedge, reset=reset)
+    def assign3_buf():
+        """Input buffer selection"""
+        if rleconfig.start:
+            datastream.buffer_sel.next = not datastream.buffer_sel
 
     @always_comb
     def assign4():
         """output data valid signal generation"""
-
         bufferdatabus.dovalid.next = bufferdatabus.read_enable
 
     return (assign0, assign1, rle_core, rle_doublefifo,
-            assign3, seq1, assign4)
+            assign3, seq1, assign3_buf, assign4)

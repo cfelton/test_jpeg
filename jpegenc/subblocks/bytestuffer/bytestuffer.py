@@ -19,6 +19,7 @@ class BSInputDataStream(object):
         self.data_in = Signal(intbv(0)[width_data:])
         self.read = Signal(bool(0))
         self.fifo_empty = Signal(bool(0))
+        self.buffer_sel = Signal(bool(0))
 
 
 class BScntrl(object):
@@ -102,6 +103,12 @@ def bytestuffer(
         bs_in_stream.read.next = read_in_temp
 
     @always_seq(clock.posedge, reset=reset)
+    def toggle():
+        """Input Buffer Selection"""
+        if bs_cntrl.start:
+            bs_in_stream.buffer_sel.next = not bs_in_stream.buffer_sel
+
+    @always_seq(clock.posedge, reset=reset)
     def control_bs():
         """control sending data into the byte stuffer"""
         read_in_temp.next = False
@@ -176,4 +183,4 @@ def bytestuffer(
         # the plus 2 bytes are for EOI marker
         num_enc_bytes.next = write_addr + 2
 
-    return assign, control_bs, num_bytes
+    return assign, toggle, control_bs, num_bytes

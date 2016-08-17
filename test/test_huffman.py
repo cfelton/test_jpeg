@@ -7,7 +7,7 @@ from myhdl import ResetSignal, Signal, instance
 from myhdl.conversion import verify
 
 from jpegenc.subblocks.huffman import HuffmanCntrl, ImgSize, huffman
-from jpegenc.subblocks.huffman import HuffmanDataStream, BufferDataBus
+from jpegenc.subblocks.huffman import HuffmanDataStream, HuffBufferDataBus
 
 from jpegenc.testing import (clock_driver, reset_on_start,
                              pulse_reset, toggle_signal,)
@@ -76,7 +76,7 @@ def write_block(
 def read_block(output_data_bus, clock):
     """This function reads the data from FIFO"""
 
-    assert isinstance(output_data_bus, BufferDataBus)
+    assert isinstance(output_data_bus, HuffBufferDataBus)
     # enable read signal
     yield toggle_signal(output_data_bus.read_req, clock)
     print ("%s" % bin(output_data_bus.huf_packed_byte))
@@ -112,8 +112,8 @@ def test_huffman():
         width_runlength, width_size, width_amplitude, width_addr)
     assert isinstance(huffmandatastream, HuffmanDataStream)
 
-    bufferdatabus = BufferDataBus(width_packed_byte)
-    assert isinstance(bufferdatabus, BufferDataBus)
+    bufferdatabus = HuffBufferDataBus(width_packed_byte)
+    assert isinstance(bufferdatabus, HuffBufferDataBus)
 
     huffmancntrl = HuffmanCntrl()
     assert isinstance(huffmancntrl, HuffmanCntrl)
@@ -218,8 +218,8 @@ def test_block_conversion():
         width_runlength, width_size, width_amplitude, width_addr)
     assert isinstance(huffmandatastream, HuffmanDataStream)
 
-    bufferdatabus = BufferDataBus(width_packed_byte)
-    assert isinstance(bufferdatabus, BufferDataBus)
+    bufferdatabus = HuffBufferDataBus(width_packed_byte)
+    assert isinstance(bufferdatabus, HuffBufferDataBus)
 
     huffmancntrl = HuffmanCntrl()
     assert isinstance(huffmancntrl, HuffmanCntrl)
