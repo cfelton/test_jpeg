@@ -39,5 +39,5 @@ __all__ = ['test_block_conversion', 'test_color_translation', 'test_color_transl
            'test_color_translation_conversion_v2', 'test_dct_1d', 'test_dct_1d_conversion',
            'test_dct_2d', 'test_dct_2d_conversion', 'test_zig_zag', 'test_zig_zag_conversion',
            'test_frontend', 'test_frontend_conversion', 'tes_quantizer_core', 'test_quantizer',
-           'test_block_conversion', 'test_quant_conversion', 'test_rle', 'test_rlecore',
-           'test_rle_conversion']
+           'test_block_conversion', 'test_quant_conversion', 'test_rle', 'test_rle_core',
+           'test_rle_conversion', 'test_rle_conversion']
