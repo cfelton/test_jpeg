@@ -16,7 +16,7 @@ from jpegenc.testing import run_testbench
 from jpegenc.subblocks.rle import Component
 
 
-from huff_test_inputs import (vli_test_y, vli_size_test_y, runlength_test_y,
+from .huff_test_inputs import (vli_test_y, vli_size_test_y, runlength_test_y,
                               vli_test_cb, vli_size_test_cb,
                               runlength_test_cb, vli_test_cr,
                               vli_size_test_cr, runlength_test_cr,)

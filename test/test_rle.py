@@ -14,7 +14,7 @@ from jpegenc.testing import (clock_driver, reset_on_start,
 
 from jpegenc.testing import run_testbench
 
-from rle_test_inputs import (red_pixels_1, green_pixels_1, blue_pixels_1,
+from .rle_test_inputs import (red_pixels_1, green_pixels_1, blue_pixels_1,
                              red_pixels_2, green_pixels_2, blue_pixels_2,)
 
 
