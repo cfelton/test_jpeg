@@ -259,7 +259,3 @@ def test_block_conversion():
     verify.simulator = 'iverilog'
     assert bench_entropycoder().verify_convert() == 0
 
-
-if __name__ == "__main__":
-    test_huffman()
-    test_block_conversion()
