@@ -20,6 +20,10 @@ from .test_zig_zag import test_zig_zag_conversion
 from .test_frontend_v2 import test_frontend
 from .test_frontend_v2 import test_frontend_conversion
 
+from .rle_test_inputs import *
+from .huff_test_inputs import *
+from .quant_test_inputs import *
+
 __all__ = ['test_block_conversion', 'test_color_translation', 'test_color_translation_v2',
            'test_color_translation_conversion_v2', 'test_dct_1d', 'test_dct_1d_conversion',
            'test_dct_2d', 'test_dct_2d_conversion', 'test_zig_zag', 'test_zig_zag_conversion',
