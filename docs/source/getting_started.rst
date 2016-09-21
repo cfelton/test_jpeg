@@ -9,5 +9,6 @@ The easiest path to install the package is to use `pip`::
 
 Once the package is installed the test suite can be run::
 
+  >> cd tests
   >> py.test
 
