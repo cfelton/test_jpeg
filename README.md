@@ -8,18 +8,42 @@
 
 Introduction
 ============
-This repository is a development sandbox.  The respository 
+The `test_jpeg` repository is in the middle of a change, originally 
+this repository was an example how to use MyHDL to setup a cosimulation 
+environment and the jpegenc cores were used (cosim with Verilog) ... 
+it is evolving to something more.
+
+During the summer of 2016 two students participated in 
+[MyHDL's GSoC](http://dev.myhdl.org/gsoc/gsoc_2016.html).  The 
+students worked on implementing the various JPEG Encoder subblocks 
+in MyHDL.  The sublocks were broken into frontend and backend. 
+Their blogs, [the frontend](https://myhdlgsoc2016.blogspot.gr/) and 
+[the backend](https://vikram9866.wordpress.com/), outline their 
+work over the summer.  The [latest documentation is available 
+on readthedocs](http://jpegenc.readthedocs.io/en/latest/)
+
+The primary goal of this repository is to have a working JPEG 
+Encoder implemented in MyHDL.  But not simply implemented in
+MyHDL but also utilizing methodologies such as a focus on 
+clean and reusable block-to-block interfaces and a full 
+regression test suite.
+
+This repository is a development sandbox.  The repository 
 contains three related development efforts:
 
-1. VHDL to Verilog conversion of the first JPEG-encoder reference 
-   (rational explained below).
+1. A MyHDL implementation of a JPEG-Encoder.
+2. Two Verilog reference implementations.
 2. MyHDL verification and co-simulation environment, tests will 
-   functionally verify and compare the reference JPEG-encoders.
-3. A MyHDL implementation of a JPEG-encoder.
+   functionally verify and compare the reference JPEG-Encoders. 
 
 The JPEG encoders used are the cores available at open-cores in 
 addition to JPEG encoders being developed.  This is a WIP and not 
-fully complete.
+fully complete (yet).
+
+
+Quick start guide
+=================
+
 
 
 Verification Environment

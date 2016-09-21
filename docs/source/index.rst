@@ -6,10 +6,10 @@
 Welcome to jpegenc's documentation!
 ===================================
 
-Frontend Part Modules Documentation
-+++++++++++++++++++++++++++++++++++
+Frontend Documentation
+++++++++++++++++++++++
 
-Frontend Part Modules:
+Frontend Subblocks:
 
 .. toctree::
    :maxdepth: 1
