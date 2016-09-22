@@ -1,7 +1,11 @@
 
 Overview
 ========
-This is the documentation for a JPEG encoder implemented in MyHDL.
+The `jpegenc` package is a JPEG encoder implemented in
+[MyHDL](http://www.myhdl.org).  The JPEG encoder is intended to be
+flexible with reusable subblocks.  This project also includes a
+verification environment for the encoder.
+
 The following figure outlines the main subblocks in the system.
 
 .. figure:: https://cloud.githubusercontent.com/assets/766391/18724671/e3eff6e8-8002-11e6-9dfe-9a03379a06fb.png
@@ -13,8 +17,22 @@ The subblocks were designed to be independent and process an
 image stream.
 
 
+Uses
+----
+   * (M)JPEG real-time video compression.
+   * Framework for investigation image and video compression.
+
+
+Goals
+-----
+
+   * Easy to use and understand JPEG encoder implementation.
+   * Flexible (modular) and reusable subblocks.
+   * Base set of blocks to build various image and video encoders.
+
+
 Measurements
-------------
+============
 
 .. toctree::
     :maxdepth: 1

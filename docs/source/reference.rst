@@ -16,8 +16,6 @@ Frontend
 Interfaces
 ++++++++++
 
-Interfaces:
-
 .. toctree::
    :maxdepth: 1
 

@@ -4,4 +4,4 @@ cd myhdl
 python setup.py install
 make -C cosimulation/icarus
 # copy the VPI to the test directory
-cp cosimulation/icarus/myhdl.vpi ../test/
+cp cosimulation/icarus/myhdl.vpi ../tests/
