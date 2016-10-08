@@ -1,5 +1,6 @@
-"""The functionality of entire
-    Run Length Encoder is checked here"""
+"""
+The functionality of entire Run Length Encoder is checked here
+"""
 
 from myhdl import StopSimulation
 from myhdl import block
@@ -13,9 +14,7 @@ from jpegenc.testing import (clock_driver, reset_on_start,
                              pulse_reset, toggle_signal,)
 
 from jpegenc.testing import run_testbench
-
-from rle_test_inputs import (red_pixels_1, green_pixels_1, blue_pixels_1,
-                             red_pixels_2, green_pixels_2, blue_pixels_2,)
+from jpegenc.testing import rle_inputs
 
 
 def write_block(
@@ -57,7 +56,7 @@ def read_block(select, output_interface, clock):
 
     # pop data out into the bus until fifo becomes empty
     while not output_interface.fifo_empty:
-        print ("runlength %d size %d amplitude %d" % (
+        print("runlength %d size %d amplitude %d" % (
             output_interface.runlength,
             output_interface.size, output_interface.amplitude))
         yield clock.posedge
@@ -121,78 +120,78 @@ def test_rle():
             yield clock.posedge
 
             yield write_block(
-                clock, red_pixels_1,
+                clock, rle_inputs.red_pixels_1,
                 datastream,
                 rleconfig, component.y1_space
                 )
             yield clock.posedge
-            print ("============================")
+            print("============================")
 
             # read y1 component from 1st Buffer
             yield read_block(True, bufferdatabus, clock)
 
             # write y2 component into 2nd Buffer
             yield write_block(
-                clock, red_pixels_2,
+                clock, rle_inputs.red_pixels_2,
                 datastream,
                 rleconfig, component.y2_space
                 )
             yield clock.posedge
 
-            print ("============================")
+            print("============================")
 
             # read y2 component from 2nd Buffer
             yield read_block(False, bufferdatabus, clock)
 
             # write cb Component into 1st Buffer
             yield write_block(
-                clock, green_pixels_1,
+                clock, rle_inputs.green_pixels_1,
                 datastream,
                 rleconfig, component.cb_space
                 )
             yield clock.posedge
-            print ("=============================")
+            print("=============================")
 
             # read cb component from 1st Buffer
             yield read_block(True, bufferdatabus, clock)
 
             # write cb Component into 2nd Buffer
             yield write_block(
-                clock, green_pixels_2,
+                clock, rle_inputs.green_pixels_2,
                 datastream,
                 rleconfig, component.cb_space
                 )
             yield clock.posedge
-            print ("==============================")
+            print("==============================")
 
             # read cb component from 2nd Buffer
             yield read_block(False, bufferdatabus, clock)
 
             # write cr Component into 1st Buffer
             yield write_block(
-                clock, blue_pixels_1,
+                clock, rle_inputs.blue_pixels_1,
                 datastream,
                 rleconfig, component.cr_space
                 )
             yield clock.posedge
-            print ("==============================")
+            print("==============================")
 
             # read cr component from 1st Buffer
             yield read_block(True, bufferdatabus, clock)
 
             # write cr Component into 2nd Buffer
             yield write_block(
-                clock, blue_pixels_2,
+                clock, rle_inputs.blue_pixels_2,
                 datastream,
                 rleconfig, component.cr_space
                 )
             yield clock.posedge
-            print ("==============================")
+            print("==============================")
 
             # read cr component from 1st Buffer
             yield read_block(False, bufferdatabus, clock)
 
-            print ("==============================")
+            print("==============================")
 
             # end of stream when sof asserts
             yield clock.posedge

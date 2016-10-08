@@ -12,9 +12,8 @@ from PIL import Image
 from myhdl import *
 
 # local test support package
-from support import (prep_cosim, JPEGEncV1, JPEGEncV2, 
-                     set_default_args, get_cli_args)
-
+from jpegenc.testing.cosim import (prep_cosim, JPEGEncV1, JPEGEncV2,
+                                   set_default_args, get_cli_args)
 from jpegenc.testing import skip_ref_test
 
 

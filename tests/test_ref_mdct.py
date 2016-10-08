@@ -9,7 +9,7 @@ from myhdl import (Signal, ResetSignal, intbv, always, delay, instance,
                    StopSimulation)
 
 from jpegenc.testing import skip_ref_test
-from support import get_cli_args
+from jpegenc.testing.cosim import get_cli_args
 
 
 class DataBus(object):

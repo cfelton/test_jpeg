@@ -1,3 +1,8 @@
+
+# @todo: How were these generated ???  Create a github issue
+# How were these test inputs generated.  These should be replaced with a
+# model/function/object that generates the inputs instead of static inputs
+
 vli_test_y = [
     10, 1, 2, 4, 8, 16, 32, 65,
     128, 256, 1000, 1, 2, 4, 8, 16,

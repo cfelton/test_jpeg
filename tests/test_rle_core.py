@@ -11,9 +11,7 @@ from jpegenc.subblocks.rle.rlecore import RLESymbols, RLEConfig
 from jpegenc.testing import run_testbench
 from jpegenc.testing import (toggle_signal, clock_driver,
                              reset_on_start, pulse_reset)
-
-from rle_test_inputs import (red_pixels_1, green_pixels_1, blue_pixels_1,
-                             red_pixels_2, green_pixels_2, blue_pixels_2,)
+from jpegenc.testing import rle_inputs
 
 
 def block_process(
@@ -111,7 +109,7 @@ def test_rle_core():
     width_size = width_data.bit_length()
 
     # maximum counter value
-    max_addr_cnt = (2**(width_addr)) - 1
+    max_addr_cnt = (2**width_addr) - 1
 
     # maximum width of the runlength value
     width_runlength = 4
@@ -149,63 +147,63 @@ def test_rle_core():
 
             # components of type y1 or y2 processed
             yield block_process(
-                clock, red_pixels_1,
+                clock, rle_inputs.red_pixels_1,
                 datastream,
                 rlesymbols,
                 rleconfig, component.y1_space, max_count=max_addr_cnt
                 )
 
-            print ("======================")
+            print("======================")
 
             # components of type y1 or y2 processed
             yield block_process(
-                clock, red_pixels_2,
+                clock, rle_inputs.red_pixels_2,
                 datastream,
                 rlesymbols,
                 rleconfig, component.y2_space, max_count=max_addr_cnt
                 )
 
-            print ("=====================")
+            print("=====================")
 
             # components of type cb processes
             yield block_process(
-                clock, green_pixels_1,
+                clock, rle_inputs.green_pixels_1,
                 datastream,
                 rlesymbols,
                 rleconfig, component.cb_space, max_count=max_addr_cnt
                 )
 
-            print ("=====================")
+            print("=====================")
 
             # components od type cb processed
             yield block_process(
-                clock, green_pixels_2,
+                clock, rle_inputs.green_pixels_2,
                 datastream,
                 rlesymbols,
                 rleconfig, component.cb_space, max_count=max_addr_cnt
                 )
 
-            print ("=====================")
+            print("=====================")
 
             # components of type cr processed
             yield block_process(
-                clock, blue_pixels_1,
+                clock, rle_inputs.blue_pixels_1,
                 datastream,
                 rlesymbols,
                 rleconfig, component.cr_space, max_count=max_addr_cnt
                 )
 
-            print ("=====================")
+            print("=====================")
 
             # components of type cr processed
             yield block_process(
-                clock, blue_pixels_2,
+                clock, rle_inputs.blue_pixels_2,
                 datastream,
                 rlesymbols,
                 rleconfig, component.cr_space, max_count=max_addr_cnt
                 )
 
-            print ("=====================")
+            print("=====================")
 
             # start of new frame asserts
             rleconfig.sof.next = True

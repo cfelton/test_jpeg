@@ -187,7 +187,7 @@ Progress Log
 Things to be completed
 ----------------------
 
-   1. [ ] Use Python3 as the default python verson.
+   1. [X] Use Python3 as the default python verson.
    
    1. [ ] Check encoded bitstreams, determine metrics to compare 
           encoders.

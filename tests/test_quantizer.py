@@ -1,5 +1,6 @@
-"""This module is the testbench for
-    the Quantizer top module"""
+"""
+This module is the testbench for the Quantizer top module
+"""
 
 from myhdl import block, instance
 from myhdl import ResetSignal, Signal, StopSimulation
@@ -14,8 +15,7 @@ from jpegenc.testing import (clock_driver, reset_on_start,
                              pulse_reset, toggle_signal,)
 
 from jpegenc.testing import run_testbench
-
-from quant_test_inputs import quant_rom, quant_in
+from jpegenc.testing import quant_inputs
 
 
 def quant_top_block_process(
@@ -57,18 +57,18 @@ def quant_top_block_process(
     for i in range(max_addr):
         output_interface.addr.next = i
         if i >= 2:
-            print (" output data is %d" % (output_interface.data))
-            #assert list_ouput_ref.pop(0) == output_interface.data
+            print(" output data is %d" % (output_interface.data,))
+            # assert list_ouput_ref.pop(0) == output_interface.data
         yield clock.posedge
 
     # print left outputs
-    print (" output data is %d" % (output_interface.data))
-    #assert list_ouput_ref.pop(0) == output_interface.data
+    print(" output data is %d" % (output_interface.data,))
+    # assert list_ouput_ref.pop(0) == output_interface.data
     yield clock.posedge
 
     # print left outputs
-    print (" output data is %d" % (output_interface.data))
-    #assert list_ouput_ref.pop(0) == output_interface.data
+    print(" output data is %d" % (output_interface.data,))
+    # assert list_ouput_ref.pop(0) == output_interface.data
 
 
 def test_quantizer():
@@ -120,18 +120,20 @@ def test_quantizer():
 
             # process Cb or Cr component
             yield quant_top_block_process(
-                clock, quant_ctrl, color, quanto_datastream,
-                quanti_datastream, quant_in, quant_rom, max_addr, 1)
+                clock, quant_ctrl, color, quanto_datastream, quanti_datastream,
+                quant_inputs.quant_in, quant_inputs.quant_rom, max_addr, 1
+            )
 
-            print ("===============================================")
+            print("===============================================")
 
             # select Y1 or Y2 component
             color = component.cr_space
 
             # process Cb or Cr component
             yield quant_top_block_process(
-                clock, quant_ctrl, color, quanto_datastream,
-                quanti_datastream, quant_in, quant_rom, max_addr, 1)
+                clock, quant_ctrl, color, quanto_datastream, quanti_datastream,
+                quant_inputs.quant_in, quant_inputs.quant_rom, max_addr, 1
+            )
 
             raise StopSimulation
 
@@ -178,7 +180,7 @@ def test_quant_conversion():
         def tbstim():
             """dummy tests to convert the module"""
             yield clock.posedge
-            print ("Conversion done!!")
+            print("Conversion done!!")
             raise StopSimulation
 
         return tbstim, inst, inst_clock, inst_reset

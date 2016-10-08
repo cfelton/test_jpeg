@@ -1,5 +1,6 @@
-"""The functionality of entire
-    Run Length Encoder is checked here"""
+"""
+The functionality of entire Run Length Encoder is checked here
+"""
 
 from myhdl import StopSimulation
 from myhdl import block
@@ -15,11 +16,12 @@ from jpegenc.testing import (clock_driver, reset_on_start,
 from jpegenc.testing import run_testbench
 from jpegenc.subblocks.rle import Component
 
+from jpegenc.testing import huff_inputs
 
-from huff_test_inputs import (vli_test_y, vli_size_test_y, runlength_test_y,
-                              vli_test_cb, vli_size_test_cb,
-                              runlength_test_cb, vli_test_cr,
-                              vli_size_test_cr, runlength_test_cr,)
+# from huff_test_inputs import (vli_test_y, vli_size_test_y, runlength_test_y,
+#                               vli_test_cb, vli_size_test_cb,
+#                               runlength_test_cb, vli_test_cr,
+#                               vli_size_test_cr, runlength_test_cr,)
 
 
 def write_block(
@@ -147,41 +149,47 @@ def test_huffman():
             bufferdatabus.buffer_sel.next = False
             # send y1 component into the module
             color = component.y1_space
-            yield write_block(huffmandatastream, huffmancntrl, rle_fifo_empty,
-                              color, vli_test_y, runlength_test_y,
-                              vli_size_test_y, clock)
-            print ("=======================================")
+            yield write_block(
+                huffmandatastream, huffmancntrl, rle_fifo_empty,
+                color, huff_inputs.vli_test_y, huff_inputs.runlength_test_y,
+                huff_inputs.vli_size_test_y, clock
+            )
+            print("=======================================")
 
             # read y1 component from the double FIFO
             bufferdatabus.buffer_sel.next = True
             yield read_block(bufferdatabus, clock)
-            print ("==============================")
+            print("==============================")
 
             # send cb component into the module
             color = component.cb_space
-            yield write_block(huffmandatastream, huffmancntrl, rle_fifo_empty,
-                              color, vli_test_cb, runlength_test_cb,
-                              vli_size_test_cb, clock)
-            print ("==========================================")
+            yield write_block(
+                huffmandatastream, huffmancntrl, rle_fifo_empty,
+                color, huff_inputs.vli_test_cb, huff_inputs.runlength_test_cb,
+                huff_inputs.vli_size_test_cb, clock
+            )
+            print("==========================================")
 
             # read cb component from the double FIFO
             bufferdatabus.buffer_sel.next = False
             yield clock.posedge
             yield read_block(bufferdatabus, clock)
-            print ("==============================")
+            print("==============================")
 
             # send cr component into the module
             color = component.cr_space
-            yield write_block(huffmandatastream, huffmancntrl, rle_fifo_empty,
-                              color, vli_test_cr, runlength_test_cr,
-                              vli_size_test_cr, clock)
-            print ("============================")
+            yield write_block(
+                huffmandatastream, huffmancntrl, rle_fifo_empty,
+                color, huff_inputs.vli_test_cr, huff_inputs.runlength_test_cr,
+                huff_inputs.vli_size_test_cr, clock
+            )
+            print("============================")
 
             # read cr component from the double FIFO
             bufferdatabus.buffer_sel.next = True
             yield clock.posedge
             yield read_block(bufferdatabus, clock)
-            print ("==============================")
+            print("==============================")
 
             yield toggle_signal(huffmancntrl.sof, clock)
 

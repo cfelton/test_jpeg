@@ -1,3 +1,9 @@
+
+# @todo: How were these generated ???  Create a github issue
+# How were these test inputs generated.  These should be replaced with a
+# model/function/object that generates the inputs instead of static inputs
+
+
 red_pixels_1 = [
     1, 12, 0,  0, 0, 0, 0, 0,
     0,  0, 0,  0, 0, 0, 0, 0,

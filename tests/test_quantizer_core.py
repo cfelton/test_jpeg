@@ -1,5 +1,6 @@
-"""This module is the testbench for the
-    divider used in quantizer core module"""
+"""
+This module is the testbench for the divider used in quantizer core module
+"""
 
 from myhdl import block, instance, StopSimulation
 from myhdl import intbv, ResetSignal, Signal
@@ -14,8 +15,7 @@ from jpegenc.testing import (clock_driver, reset_on_start,
                              pulse_reset,)
 
 from jpegenc.testing import run_testbench
-
-from quant_test_inputs import quant_rom, quant_in
+from jpegenc.testing import quant_inputs
 
 
 def quant_block_process(
@@ -53,7 +53,7 @@ def quant_block_process(
         input_interface.valid.next = False
         # print the outputs
         if output_interface.valid:
-            print ("output is %d" % output_interface.data)
+            print("output is %d" % output_interface.data)
             assert list_ouput_ref.pop(0) == output_interface.data
 
     # de-assert data_valid signal
@@ -63,7 +63,7 @@ def quant_block_process(
     # print some more outputs
     for i in range(5):
         if output_interface.valid:
-            print ("output is %d" % output_interface.data)
+            print("output is %d" % output_interface.data)
             assert list_ouput_ref.pop(0) == output_interface.data
         yield clock.posedge
 
@@ -118,19 +118,23 @@ def test_quantizer_core():
 
             # process the component selected
             yield quant_block_process(
-                clock, color_component, color, quant_in, quant_rom,
-                quant_input_stream, quant_output_stream, max_addr)
+                clock, color_component, color,
+                quant_inputs.quant_in, quant_inputs.quant_rom,
+                quant_input_stream, quant_output_stream, max_addr
+            )
             yield clock.posedge
 
-            print ("====================================")
+            print("====================================")
 
             # select Y1 or Y2 component
             color = component.cb_space
 
             # process the component selected
             yield quant_block_process(
-                clock, color_component, color, quant_in, quant_rom,
-                quant_input_stream, quant_output_stream, max_addr)
+                clock, color_component, color,
+                quant_inputs.quant_in, quant_inputs.quant_rom,
+                quant_input_stream, quant_output_stream, max_addr
+            )
             yield clock.posedge
 
             raise StopSimulation
@@ -173,7 +177,7 @@ def test_block_conversion():
         def tbstim():
             """dummy tests to convert the module"""
             yield clock.posedge
-            print ("Conversion done!!")
+            print("Conversion done!!")
             raise StopSimulation
 
         return tbstim, inst, inst_clock, inst_reset
