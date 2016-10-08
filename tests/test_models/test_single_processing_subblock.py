@@ -37,9 +37,9 @@ def test_single_pb():
         vd_proc = video_source.process(glbl)
 
         # processing element that does nothing :)
-        data = DataStream(data_width=len(video_source.pixels.data))
+        data = DataStream(data_width=len(video_source.pixel.data))
         pe = ProcessingSubblock(cycles_to_process=1)
-        pe_proc = pe.process(glbl, video_source.pixels, data)
+        pe_proc = pe.process(glbl, video_source.pixel, data)
 
         # collect the output and compare if the video_source supports
         # checking, use an encoder (decode portion) if one exists
