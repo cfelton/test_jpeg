@@ -113,6 +113,12 @@ class VideoSource(object):
         return myhdl.instances()
 
     def pixel_value(self, row, col):
+        """Get the pixel value for the video source.
+        Given the ``row`` and ``col`` address return the RGB value
+        for the pixel.  The default is to return a random value
+        (will not be consistent across calls).  This method should
+        be implemented (overridden) for each video source type.
+        """
         self.pixel.red.next = r = randint(0, self.pixel.red.max - 1)
         self.pixel.green.next = g = randint(0, self.pixel.green.max - 1)
         self.pixel.blue.next = b = randint(0, self.pixel.blue.max - 1)

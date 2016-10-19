@@ -17,15 +17,18 @@ During the summer of 2016 two students participated in
 [MyHDL's GSoC](http://dev.myhdl.org/gsoc/gsoc_2016.html).  The 
 students worked on implementing the various JPEG Encoder subblocks 
 in MyHDL.  The sublocks were broken into frontend and backend. 
-Their blogs, [the frontend](https://myhdlgsoc2016.blogspot.gr/) and 
-[the backend](https://vikram9866.wordpress.com/), outline their 
+The student's blogs for 
+[the frontend](https://myhdlgsoc2016.blogspot.gr/) 
+and 
+[the backend](https://vikram9866.wordpress.com/), 
+outline their 
 work over the summer.  The [latest documentation is available 
 on readthedocs](http://jpegenc.readthedocs.io/en/latest/)
 
 The primary goal of this repository is to have a working JPEG 
-Encoder implemented in MyHDL.  But not simply implemented in
-MyHDL but also utilizing methodologies such as a focus on 
-clean and reusable block-to-block interfaces and a full 
+Encoder (`jpegenc`) implemented in MyHDL.  But not simply 
+implemented in MyHDL but also utilizing methodologies such as 
+a focus on clean and reusable block-to-block interfaces and a full 
 regression test suite.
 
 This repository is a development sandbox.  The repository 
@@ -36,17 +39,36 @@ contains three related development efforts:
 2. MyHDL verification and co-simulation environment, tests will 
    functionally verify and compare the reference JPEG-Encoders. 
 
-The JPEG encoders used are the cores available at open-cores in 
-addition to JPEG encoders being developed.  This is a WIP and not 
-fully complete (yet).
+The reference JPEG encoders are the cores available at open-cores.  
+
+This is a WIP and not fully complete (yet).
 
 
 Quick start guide
 =================
 
+Get the latest `jpegenc` package from the `test_jpeg` repository.
+
+>> git clone https://github.com/cfelton/test_jpeg
+
+Create a [virtualenv](https://www.davidfischer.name/2010/04/why-you-should-be-using-pip-and-virtualenv/) 
+to test the `jpegenc` package.
+
+>> virtualenv --no-site-packages env/test_jpeg
+>> source env/test_jpeg/bin/activate
+
+Install the required packages.
+
+>> pip install -r requirements.txt
+
+Run the test suite.
+
+>> cd tests
+>> py.test
 
 
-Verification Environment
+
+Verification environment
 ========================
 A stimulus and verification environment was created with Python and
 MyHDL.  An image is streamed to the encoder and the output is captured.
@@ -57,24 +79,28 @@ In the future the output of the various encoders will be compared to
 each other as well as the encoder performance (.e.g. max fps).
 
 
-JPEG Encoders
-=============
-
-   - hdl/jpegenc_v1: [VHDL JPEG encoder](http://opencores.org/project,mkjpeg) converted to Verilog
-   - hdl/jpegenc_v2: [OC Verilog JPEG](http://opencores.org/project,jpegencode) encoder.
-   - jpegenc: A fresh (non-ported) MyHDL implementation, `jpegenc` is a Python package
-     being developed.
-
-<!-- (@todo: the above need better names?) -->
+Cosimulation
+============
+This repository also contains a cosimulation interface to two 
+reference designs.
 
 
-Getting Started
-===============
-To run the test the following needs to be installed:
+Reference JPEG encoders
+-----------------------
+
+   - tests/reference_designs/jpegenc_v1: [VHDL JPEG encoder](http://opencores.org/project,mkjpeg) 
+     converted to Verilog
+   - tests/reference_designs/jpegenc_v2: [OC Verilog JPEG](http://opencores.org/project,jpegencode) 
+     encoder.
+     
+
+Getting started with cosim
+--------------------------
+To run the cosim tests the following needs to be installed:
 
   * Icarus Verilog
-  * Python (currently using 2.7)
-  * MyHDL
+  * Python (currently using 3.5)
+  * MyHDL (1.0dev)
   * Python Imaging Library (e.g. pip install Pillow)
 
 
@@ -84,15 +110,15 @@ directory.
 ```
 >> cd myhdl/cosimulation/icarus
 >> make 
->> cp myhdl.vpi <somewhere>/test_jpeg/test
+>> cp myhdl.vpi <somewhere>/test_jpeg/tests
 ```  
 
-Once the tools and installed and the VPI module built the test can
+Once the tools are installed and the VPI module built the tests can
 be run.
 
 ```
 >> cd test
->> python test_jpecenc.py
+>> py.test test_jpecenc.py
 ```
 
 Depending on the test file the test can take significant time to run.
@@ -166,20 +192,24 @@ and fast ... correct?
 Progress Log
 ==============
  
-   **28-Dec-2014** : Conversion error was found in V1, V1 finishes
+   **09-Oct-2016**: A version of the JPEG encoder has been 
+     implemented in MyHDL.  This was completed by two students 
+     during GSoC 2016.
+     
+   **28-Dec-2014**: Conversion error was found in V1, V1 finishes
      compressing the frame.  V2 has error with small images, this 
      might be a design limitation.
 
-   **07-Dec-2014** : Neither encoder completes successfully with a 
+   **07-Dec-2014**: Neither encoder completes successfully with a 
      small test image, currently debugging (design1 (v1) conversion 
      complete need to find any errors in conversion).  The test 
      environment will stream the image in and complete shortly after 
      the image has been streamed in.
 
-   **05-Dec-2014** : Design1 conversion to verilog is mostly complete, 
+   **05-Dec-2014**: Design1 conversion to verilog is mostly complete, 
      spending some time verifying.
 
-   **09-Nov-2014** : The test environment will stream an image to both
+   **09-Nov-2014**: The test environment will stream an image to both
      the design1 and design2 encoders.  The output is not interrogated
      (yet).  Design1 conversion to verilog is incomplete.
 
