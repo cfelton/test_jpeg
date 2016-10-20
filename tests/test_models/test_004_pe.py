@@ -33,6 +33,7 @@ def test_psb_basic():
 
         dw = len(video_source.pixel.data)
         pe_procs = []
+
         for ii in range(13):
             data_i = data_o if ii > 0 else video_source.pixel
             data_o = DataStream(data_width=dw)
@@ -45,7 +46,7 @@ def test_psb_basic():
 
         @instance
         def tbstim():
-            while video_sink.num_data < 32:
+            while video_sink.num_data_words < 32:
                 yield delay(1000)
             raise StopSimulation
 

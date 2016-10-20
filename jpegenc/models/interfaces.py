@@ -37,6 +37,13 @@ class DataStream(object):
         self.data.next = stream.data
         self.valid.next = stream.valid
 
+    def __copy__(self):
+        ds = DataStream(data_width=len(self.data))
+        return ds
+
+    def copy(self):
+        return self.__copy__()
+
 
 class PixelStream(DataStream):
     def __init__(self, data_width=24):
@@ -72,7 +79,6 @@ class RGBStream(PixelStream):
 
         self.color_depth = color_depth
         rbits, gbits, bbits = color_depth
-        print(vars(self))
 
         # a single pixel (color component) is the most
         if num_pixels == 1:

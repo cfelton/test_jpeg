@@ -51,7 +51,7 @@ def test_single_psb():
         @instance
         def tbstim():
             tcnt, timeout = 0, 10
-            while video_sink.num_data < 5 and tcnt < timeout:
+            while video_sink.num_data_words < 5 and tcnt < timeout:
                 yield delay(1000)
                 tcnt += 1
             assert tcnt < timeout

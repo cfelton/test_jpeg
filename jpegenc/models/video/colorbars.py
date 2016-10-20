@@ -40,7 +40,7 @@ class ColorBars(VideoSource):
         self.bar_width = int(res[0] // self.num_colors)
 
         # create a list to index into
-        self.color_bars = [vv for vv in COLOR_BARS.values()]
+        self.color_bars = [vv.copy() for vv in COLOR_BARS.values()]
 
         # convert the colors to the color depth
         rmx, gmx, bmx = [(cc**2)-1 for cc in self.color_depth]
@@ -49,7 +49,7 @@ class ColorBars(VideoSource):
             color['green'] = color['green'] * gmx
             color['blue'] = color['blue'] * gmx
 
-        super(ColorBars, self).__init__(resolution, frame_rate)
+        super(ColorBars, self).__init__(resolution, frame_rate, color_depth)
 
     def pixel_value(self, row, col):
         # the row index is not used/needed for color bars

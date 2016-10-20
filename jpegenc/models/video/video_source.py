@@ -9,7 +9,7 @@ from ..interfaces import DataStream, RGBStream
 
 
 class VideoSource(object):
-    def __init__(self, resolution=(1920, 1080), frame_rate=60):
+    def __init__(self, resolution=(1920, 1080), frame_rate=60, color_depth=(8, 8, 8)):
         """A model of a video source
         This object contains an example of a video source interface and
         a process to generate the video source.
@@ -36,7 +36,7 @@ class VideoSource(object):
         """
         self.resolution = resolution
         self.frame_rate = frame_rate
-        self.pixel = RGBStream(color_depth=(8, 8, 8))
+        self.pixel = RGBStream(color_depth=color_depth)
         # signals that monitor the current row and column
         self.rowmon = Signal(intbv(0, min=0, max=resolution[1]))
         self.colmon = Signal(intbv(0, min=0, max=resolution[0]))
@@ -50,7 +50,9 @@ class VideoSource(object):
     def get_ticks(self, clock):
         """Get the number of clock ticks per pixel"""
         pps = self.pixels_per_second
-        ticks = int(floor(pps / clock.frequency))
+        ticks = int(floor(clock.frequency / pps))
+        assert ticks > 0, "clock frequency too low {:.3f} MHz".format(
+            clock.frequency / 1e6)
         return ticks
 
     @myhdl.block
@@ -72,6 +74,7 @@ class VideoSource(object):
         # note, if the video rate is not a multiple of the clock then
         # the video rate will not be exact (which is fine)
         ticks = self.get_ticks(clock)
+        print("{} clock ticks per pixel".format(ticks))
 
         @instance
         def model_video_source():
@@ -94,7 +97,7 @@ class VideoSource(object):
 
                 tcnt += 1
                 # tick count expired, output a new pixel
-                if tcnt == ticks:
+                if tcnt >= ticks:
                     if row == 0 and col == 0:
                         self.pixel.start_of_frame.next = True
                     if row == num_rows-1 and col == num_cols-1:

@@ -54,6 +54,8 @@ class ProcessingSubblock(object):
         assert isinstance(datain, DataStream)
         assert isinstance(dataout, DataStream)
 
+        assert len(datain.data) == len(dataout.data)
+
         clock, reset = glbl.clock, glbl.reset
         ready = Signal(bool(0))
 
@@ -87,7 +89,8 @@ class ProcessingSubblock(object):
         #        To make this generic this needs a new (copy) instance
         #        with all the same attributes/properties, the current
         #        only uses the default.
-        dataproc = type(datain)()
+        dataproc = datain.copy()
+        
 
         @instance
         def processing_model():

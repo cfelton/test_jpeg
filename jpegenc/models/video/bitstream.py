@@ -1,6 +1,7 @@
 
+
 import myhdl
-from myhdl import instance
+from myhdl import Signal, instance
 
 from ..interfaces import DataStream
 from .video_source import VideoSource
@@ -8,38 +9,51 @@ from .video_source import VideoSource
 
 class BitstreamDevourer(object):
     def __init__(self, source, encoder=None):
-        assert isinstance(source, VideoSource)
+        """
+
+        Args:
+            source (VideoSource): the original video/image source to
+                compare the decoded bitstream to.
+            encoder (CODEC):
+        """
+        assert isinstance(source, (VideoSource, type(None)))
+
         self.source = source
-        self.resolution = source.resolution
+        if source is not None:
+            self.resolution = source.resolution
         self.encoder = encoder
+        self.bits = None
 
         # keep track of the data words captured
-        self.num_data = 0
+        self.num_data_words = Signal(0)
 
     @myhdl.block
-    def process(self, glbl, data):
+    def process(self, glbl, bits):
         """
 
         Args:
             glbl (Global): global interface, contains clock and reset
-            data (DataStream): final bitstream
+            bits (DataStream): final bitstream
 
         """
-        assert isinstance(data, DataStream)
+        assert isinstance(bits, DataStream)
         clock, reset = glbl.clock, glbl.reset
+        self.bits = bits
         src = self.source
-        self.num_data = 0
+        ndw = self.num_data_words
 
         @instance
         def mdl_simple_capture():
             """Temp capture and display"""
             # ready to receive the data
-            src.pixel.ready.next = True
+            bits.ready.next = True
+
             while True:
                 yield clock.posedge
-                if src.pixel.valid:
-                    print("  [BD]: {:03X}".format(src.pixel.data))
-                    self.num_data += 1
+                if bits.valid:
+                    print("  [BD][{:5d}]: {:06X}".format(
+                        int(ndw), int(bits.data)))
+                    ndw.next = ndw + 1
 
         return myhdl.instances()
 
