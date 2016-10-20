@@ -90,7 +90,7 @@ class ProcessingSubblock(object):
         #        with all the same attributes/properties, the current
         #        only uses the default.
         dataproc = datain.copy()
-        
+
 
         @instance
         def processing_model():

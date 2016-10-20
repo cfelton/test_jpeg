@@ -31,13 +31,13 @@ def test():
 
     @instance
     def monitor():
-        print "\t".join(
+        print("\t".join(
             ['red', 'green', 'blue', 'e_in', 'y', 'cb', 'cr',
-             'e_out', 'reset', 'clk', 'now'])
-        print "-" * 70
+             'e_out', 'reset', 'clk', 'now']))
+        print("-" * 70)
         while True:
             yield delay(11)
-            print "\t".join(["%d"] * 11) % \
+            print("\t".join(["%d"] * 11) % \)
                 (rgb.red, rgb.green, rgb.blue, enable_in,
                     ycbcr.y, ycbcr.cb, ycbcr.cr, enable_out,
                     reset, clk, now())

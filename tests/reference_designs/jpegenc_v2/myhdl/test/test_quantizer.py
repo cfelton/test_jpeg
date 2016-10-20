@@ -60,13 +60,13 @@ def test():
     def monitor():
         while True:
             yield delay(1)
-            print "\t".join(['e_in', 'e_out', 'reset', 'clk', 'now'])
-            print "\t".join(["%d"]*5) % (enable_in, enable_out, reset, clk, now())
-            print "-" * 70
+            print("\t".join(['e_in', 'e_out', 'reset', 'clk', 'now']))
+            print("\t".join(["%d"]*5) % (enable_in, enable_out, reset, clk, now()))
+            print("-" * 70)
             print_matrix(iPixelBlock)
-            print "-" * 70
+            print("-" * 70)
             print_matrix(qPixelBlock)
-            print "-" * 70
+            print("-" * 70)
             yield delay(19)
 
     quantizer_inst = quantizer(qPixelBlock, enable_out, iPixelBlock, enable_in, clk, reset)

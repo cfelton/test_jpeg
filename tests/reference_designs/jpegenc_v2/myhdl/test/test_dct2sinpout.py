@@ -53,13 +53,13 @@ def test():
     def monitor():
         while True:
             yield delay(11)
-            print "\t".join(['input', 'en_out', 'en_in', 'reset',
-                             'clk', 'now'])
-            print "\t".join(["%d"]*6) % (pixelVal, enable_out,
-                                         enable_in, reset, clk, now())
-            print "-" * 70
+            print("\t".join(['input', 'en_out', 'en_in', 'reset',
+                             'clk', 'now']))
+            print("\t".join(["%d"]*6) % (pixelVal, enable_out,
+                                         enable_in, reset, clk, now()))
+            print("-" * 70)
             print_matrix(pixelBlock)
-            print "-" * 70
+            print("-" * 70)
             yield delay(9)
 
     dct_inst = dct2SinPout(
