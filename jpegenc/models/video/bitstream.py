@@ -13,6 +13,9 @@ class BitstreamDevourer(object):
         self.resolution = source.resolution
         self.encoder = encoder
 
+        # keep track of the data words captured
+        self.num_data = 0
+
     @myhdl.block
     def process(self, glbl, data):
         """
@@ -25,6 +28,7 @@ class BitstreamDevourer(object):
         assert isinstance(data, DataStream)
         clock, reset = glbl.clock, glbl.reset
         src = self.source
+        self.num_data = 0
 
         @instance
         def mdl_simple_capture():
@@ -35,6 +39,7 @@ class BitstreamDevourer(object):
                 yield clock.posedge
                 if src.pixel.valid:
                     print("  [BD]: {:03X}".format(src.pixel.data))
+                    self.num_data += 1
 
         return myhdl.instances()
 

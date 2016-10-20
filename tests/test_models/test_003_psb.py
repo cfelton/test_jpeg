@@ -11,7 +11,7 @@ from jpegenc.models.video import BitstreamDevourer
 from jpegenc.testing import run_testbench
 
 
-def test_single_pb():
+def test_single_psb():
     """Test a single processing subblock
 
     This test will verify the basic building blocks to model and prototype
@@ -32,8 +32,10 @@ def test_single_pb():
         ck_drv = clock.gen()
 
         # a known generated video stream
-        video_source = ColorBars(resolution=resolution, color_depth=color_depth,
-                                 frame_rate=frame_rate)
+        video_source = ColorBars(
+            resolution=resolution, color_depth=color_depth,
+            frame_rate=frame_rate
+        )
         vd_proc = video_source.process(glbl)
 
         # processing element that does nothing :)
@@ -48,10 +50,14 @@ def test_single_pb():
 
         @instance
         def tbstim():
-            yield delay(1000)
+            tcnt, timeout = 0, 10
+            while video_sink.num_data < 5 and tcnt < timeout:
+                yield delay(1000)
+                tcnt += 1
+            assert tcnt < timeout
             raise StopSimulation
 
         return myhdl.instances()
 
-    run_testbench(bench, trace=True, bench_id="single_process_subblock")
+    run_testbench(bench, trace=True, bench_id="single_pe")
 

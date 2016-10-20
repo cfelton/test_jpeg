@@ -15,42 +15,28 @@ class ProcessingSubblock(object):
         """A simple model to represent a processing subblock in the jpegenc
 
         Arguments:
-            cycles_to_process: the number of cycles to model, this is the
-                number of cycles to process a sample/block.  If
-                `cycles_to_process` is a 2-element tuple a random range is
-                used with the tuple defining the range.
+            cycles_to_process (int): the number of cycles to model,
+                this is the number of cycles to process a sample/block.
 
-            @todo: latency is the same (essentially) as cycles_to_process, need
-                   some other argument to indicated successive output gaps,
-                   no gap fully pipelined (latency == ctp) if gap == ctp not
-                   pipelined and stalls in between, the same for sample or
-                   block processing.
-            ~~latency: the latency of the processing, this is additional to
-                the processing time, but the latency represents a pipeline,
-                new samples can.  If `latency` is a 2-element tuple a random
-                range is used with the tuple defining the range.~~
+            pipelined (bool): indicates the processing block is fully
+                pipelined, a new sample can be input on every clock.
+                The pipeline length is the ``cycles_to_process``.
 
-            pipelined: indicates the procesing block is fully pipelined, a
-                new sample can be input on every clock.  The pipeline length
-                is the ``cycles_to_process``.
-
-            block_size: the size of an image block, if None process
+            block_size (tuple): the size of an image block, if None process
                 sample by sample.
 
-            buffered
+            buffered (bool):
+
+        The processing element class is named ProcessingSubblock and `psb`
+        and `pe` will be used as shorthand in various spots.
         """
-        assert isinstance(cycles_to_process, (int, tuple))
-        if isinstance(cycles_to_process, tuple):
-            assert len(cycles_to_process) == 2
-        # assert isinstance(latency, int)
-        # assert isinstance(process_block, bool)
+        assert isinstance(cycles_to_process, int)
         if block_size is not None:
             assert isinstance(block_size, tuple) and len(block_size) == 2
         assert isinstance(buffered, bool)
 
         # the cycles to process is the same as latency
         self.ctp = cycles_to_process
-        # self.lat = latency
         self.block_size = block_size
         self.buffered = buffered
 

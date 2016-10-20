@@ -1,6 +1,6 @@
 
 # invoke the test with the python 
-# nosetests --verbosity=2 --with-converage
+# nosetests --verbosity=2 --with-coverage
 all:
 	python test_jpegenc.py
 
