@@ -5,10 +5,11 @@ from random import randint
 import myhdl
 from myhdl import Signal, intbv, instance, always_comb
 
+from .. import ObjectWithBlocks
 from ..interfaces import DataStream, RGBStream
 
 
-class VideoSource(object):
+class VideoSource(ObjectWithBlocks):
     def __init__(self, resolution=(1920, 1080), frame_rate=60, color_depth=(8, 8, 8)):
         """A model of a video source
         This object contains an example of a video source interface and
@@ -34,6 +35,8 @@ class VideoSource(object):
             row_buffer_inst = video.row_buffer(video, image_block)
 
         """
+        super(VideoSource, self).__init__(name='video_source')
+
         self.resolution = resolution
         self.frame_rate = frame_rate
         self.pixel = RGBStream(color_depth=color_depth)

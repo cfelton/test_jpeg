@@ -1,6 +1,7 @@
 
 from random import randint
 from math import floor
+import traceback
 
 import myhdl
 from myhdl import Signal, intbv, instance, always_comb
@@ -9,8 +10,10 @@ from rhea import Global, Clock, Signals
 from .interfaces import DataStream, RGBStream
 from .buffers import FIFOReadyValid
 
+from . import ObjectWithBlocks
 
-class ProcessingSubblock(object):
+
+class ProcessingSubblock(ObjectWithBlocks):
     def __init__(self, cycles_to_process=1, pipelined=False, block_size=None, buffered=False):
         """A simple model to represent a processing subblock in the jpegenc
 
@@ -35,6 +38,8 @@ class ProcessingSubblock(object):
         assert isinstance(pipelined, bool)
         if block_size is not None:
             assert isinstance(block_size, tuple) and len(block_size) == 2
+
+        super(ProcessingSubblock, self).__init__(name='pe')
 
         # the cycles to process is the same as latency
         self.ctp = cycles_to_process
@@ -107,8 +112,9 @@ class ProcessingSubblock(object):
                     pipeline[0].next = datain
                     for ii in range(1, npipe):
                         pipeline[ii].next = pipeline[ii-1]
+                    dataproc.next = pipeline[-1]
                 else:
-                    dataproc.assign(datain)
+                    dataproc.next = datain
                     for nn in range(self.ctp-1):
                         ready.next = False
                         yield clock.posedge
@@ -121,11 +127,13 @@ class ProcessingSubblock(object):
         # @todo: this causes a duplicate error in the
         # many of the interface signals are not traced by default,
         # get a bunch of monitors so the signals can be traced.
-        # mon_insts = []
-        # for intf in (datain, dataproc, dataout):
-        #     inst = intf.monitor()
-        #     # inst.name = intf.name
-        #     mon_insts += [inst]
+        mon_insts = []
+        for intf in (datain, dataproc, dataout):
+            inst = intf.monitor()
+            inst.name = intf.name
+            mon_insts.append(inst)
+        # must delete the temp inst reference when using myhdl.instances()
+        del inst
 
         return myhdl.instances()
 

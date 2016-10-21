@@ -1,4 +1,4 @@
-#!/bin/python
+
 from myhdl import *
 from commons import *
 from dctconstructs import PixelBlock
@@ -9,8 +9,8 @@ RANGE1_8 = range(8)
 
 def print_list(signalList):
     for i in RANGE1_8:
-        print "{:6d}".format(int(signalList[i])),
-    print ""
+        print("{:6d}".format(int(signalList[i])),)
+    print("")
 
 
 def print_matrix(matrix):

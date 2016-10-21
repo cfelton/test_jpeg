@@ -12,7 +12,6 @@ definition):
 """
 
 from random import randint
-from copy import copy, deepcopy
 
 import myhdl
 from myhdl import (Signal, SignalType, ResetSignal, ConcatSignal, intbv,
@@ -25,13 +24,15 @@ try:
 except ImportError:
     from .useful_things import Signals, assign
 
+from . import ObjectWithBlocks
+
 # @todo: refactor each of the interfaces to their own module
 #     There is a fair amount of documentation with the interfaces.
 #     Having the interfaces in their own file (python.module) makes
 #     it easier to navigate
 
 
-class DataStream(object):
+class DataStream(ObjectWithBlocks):
     def __init__(self, data_width=24):
         """Data stream with ready-valid flow control.
 
@@ -42,13 +43,7 @@ class DataStream(object):
         self.data = Signal(intbv(0)[data_width:0])
         self.valid = Signal(bool(0))
         self.ready = Signal(bool(0))
-
-    @property
-    def name(self):
-        nm = 'data_stream_inst'
-        if hasattr(self, '__name__'):
-            nm = self.__name__
-        return nm
+        super(DataStream, self).__init__(name='datastream')
 
     @property
     def next(self):
@@ -66,10 +61,17 @@ class DataStream(object):
         self.valid.next = stream.valid
 
     def copy(self):
-        # hmmm, wanted deepcopy but it doesn't work because the
-        # myhdl.Signal does a deepcopy ...
         ds = DataStream(data_width=self.data_width)
         return ds
+
+    @staticmethod
+    def always_deco(clock=None):
+        if clock is None:
+            deco = always_comb
+        else:
+            deco = always(clock.posedge)
+
+        return deco
 
     @myhdl.block
     def monitor(self):
@@ -79,6 +81,7 @@ class DataStream(object):
         the interfaces.  This block will trace the signals in
         the interface.
         """
+        # @todo: there is an odd issue with this and myhdl 1.0dev
         mdata = Signal(intbv(0)[len(self.data):0])
         mvalid = Signal(bool(0))
         mready = Signal(bool(0))
@@ -89,16 +92,7 @@ class DataStream(object):
             mvalid.next = self.valid
             mready.next = self.ready
 
-        return myhdl.instances()
-
-    @staticmethod
-    def always_deco(clock=None):
-        if clock is None:
-            deco = always_comb
-        else:
-            deco = always(clock.posedge)
-
-        return deco
+        return mon_interface_attrs
 
     @myhdl.block
     def assign(self, ds, clock=None):

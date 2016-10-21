@@ -1,4 +1,6 @@
 
+from .owb import ObjectWithBlocks
+
 from .interfaces import DataStream
 from .interfaces import RGBStream
 

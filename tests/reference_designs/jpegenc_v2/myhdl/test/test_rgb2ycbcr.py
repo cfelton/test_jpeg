@@ -1,4 +1,4 @@
-#!/bin/python
+
 from myhdl import *
 from random import randrange
 from commons import *
@@ -37,10 +37,10 @@ def test():
         print("-" * 70)
         while True:
             yield delay(11)
-            print("\t".join(["%d"] * 11) % \)
-                (rgb.red, rgb.green, rgb.blue, enable_in,
-                    ycbcr.y, ycbcr.cb, ycbcr.cr, enable_out,
-                    reset, clk, now())
+            print("\t".join(["%d"] * 11) %
+                  (rgb.red, rgb.green, rgb.blue, enable_in,
+                   ycbcr.y, ycbcr.cb, ycbcr.cr, enable_out,
+                   reset, clk, now()))
             yield delay(9)
 
     rgb2ycbcr_inst = rgb2ycbcr(ycbcr, enable_out, rgb, enable_in, clk, reset)

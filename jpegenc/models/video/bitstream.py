@@ -3,11 +3,12 @@
 import myhdl
 from myhdl import Signal, instance
 
+from .. import ObjectWithBlocks
 from ..interfaces import DataStream
 from .video_source import VideoSource
 
 
-class BitstreamDevourer(object):
+class BitstreamDevourer(ObjectWithBlocks):
     def __init__(self, source, encoder=None):
         """
 
@@ -17,6 +18,7 @@ class BitstreamDevourer(object):
             encoder (CODEC):
         """
         assert isinstance(source, (VideoSource, type(None)))
+        super(BitstreamDevourer, self).__init__(name='bitdevour')
 
         self.source = source
         if source is not None:
