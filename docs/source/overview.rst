@@ -2,9 +2,11 @@
 Overview
 ========
 The `jpegenc` package is a JPEG encoder implemented in
-[MyHDL](http://www.myhdl.org).  The JPEG encoder is intended to be
+MyHDL_.  The JPEG encoder is intended to be
 flexible with reusable subblocks.  This project also includes a
 verification environment for the encoder.
+
+.. _MyHDL: http://www.myhdl.org
 
 The following figure outlines the main subblocks in the system.
 
@@ -32,7 +34,7 @@ Goals
 
 
 Measurements
-============
+------------
 
 .. toctree::
     :maxdepth: 1

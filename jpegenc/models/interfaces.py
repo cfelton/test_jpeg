@@ -12,10 +12,11 @@ definition):
 """
 
 from random import randint
+from copy import copy, deepcopy
 
 import myhdl
-from myhdl import (Signal, ResetSignal, ConcatSignal, intbv,
-                   always_seq, always_comb, )
+from myhdl import (Signal, SignalType, ResetSignal, ConcatSignal, intbv,
+                   always_seq, always, always_comb, )
 from myhdl import instance, delay, StopSimulation
 from myhdl.conversion import verify
 
@@ -24,25 +25,108 @@ try:
 except ImportError:
     from .useful_things import Signals, assign
 
+# @todo: refactor each of the interfaces to their own module
+#     There is a fair amount of documentation with the interfaces.
+#     Having the interfaces in their own file (python.module) makes
+#     it easier to navigate
+
 
 class DataStream(object):
     def __init__(self, data_width=24):
-        """Data stream with ready-valid flow control."""
+        """Data stream with ready-valid flow control.
+
+        The "next" property can only be used in simulation, it is
+        not convertible!
+        """
+        self.data_width = data_width
         self.data = Signal(intbv(0)[data_width:0])
         self.valid = Signal(bool(0))
         self.ready = Signal(bool(0))
 
-    def assign(self, stream):
+    @property
+    def name(self):
+        nm = 'data_stream_inst'
+        if hasattr(self, '__name__'):
+            nm = self.__name__
+        return nm
+
+    @property
+    def next(self):
+        return None
+
+    @next.setter
+    def next(self, ds):
+        self._assign_next(ds)
+
+    def _assign_next(self, stream):
+        """Simulation assign only (see next)
+        """
         assert isinstance(stream, DataStream)
         self.data.next = stream.data
         self.valid.next = stream.valid
 
-    def __copy__(self):
-        ds = DataStream(data_width=len(self.data))
+    def copy(self):
+        # hmmm, wanted deepcopy but it doesn't work because the
+        # myhdl.Signal does a deepcopy ...
+        ds = DataStream(data_width=self.data_width)
         return ds
 
-    def copy(self):
-        return self.__copy__()
+    @myhdl.block
+    def monitor(self):
+        """
+        In the current myhdl tracing there are some limitations
+        that prevent most of the signals not to be traced in
+        the interfaces.  This block will trace the signals in
+        the interface.
+        """
+        mdata = Signal(intbv(0)[len(self.data):0])
+        mvalid = Signal(bool(0))
+        mready = Signal(bool(0))
+
+        @always_comb
+        def mon_interface_attrs():
+            mdata.next = self.data
+            mvalid.next = self.valid
+            mready.next = self.ready
+
+        return myhdl.instances()
+
+    @staticmethod
+    def always_deco(clock=None):
+        if clock is None:
+            deco = always_comb
+        else:
+            deco = always(clock.posedge)
+
+        return deco
+
+    @myhdl.block
+    def assign(self, ds, clock=None):
+        """Assign another datastream to this datastream
+        This assign block needs to be used in convertible in place
+        of the `next` attribute.
+
+        Args:
+            ds (DataStream): the datastream to assign from
+            clock (Signal): system clock, optional
+
+        This needs to be implemented for each interface that uses
+        DataStream as a base class.  In subclasses the `data` field
+        is read-only (shadow), the lower bits are the data bits and
+        upper bits of the data field are additional control and meta
+        data.
+
+        myhdl convertible
+        """
+        assert isinstance(ds, DataStream)
+
+        @self.always_deco(clock)
+        def beh_assign():
+            self.data.next = ds.data
+            self.ready.next = ds.ready
+            self.valid.next = ds.valid
+
+        return beh_assign
 
 
 class PixelStream(DataStream):
@@ -50,19 +134,23 @@ class PixelStream(DataStream):
         """Pixel stream."""
         self.start_of_frame = Signal(bool(0))
         self.end_of_frame = Signal(bool(0))
+        self.pixel = Signal(intbv(0)[data_width:0])
         super(PixelStream, self).__init__(data_width+2)
-        self.data = ConcatSignal(self.start_of_frame, self.end_of_frame,
-                                 self.data)
 
-    def assign(self, stream):
+        # override the data to be a shadow (read-only)
+        self.data = ConcatSignal(self.start_of_frame,
+                                 self.end_of_frame,
+                                 self.pixel)
+
+    def _assign_next(self, stream):
         assert isinstance(stream, PixelStream)
-        self.data.next = stream.data
+        self.pixel.next = stream.pixel
         self.valid.next = stream.valid
         self.start_of_frame.next = stream.start_of_frame
         self.end_of_frame.next = stream.end_of_frame
 
-    # def map_to_data(self):
-    #     raise NotImplementedError()
+    def copy(self):
+        raise NotImplementedError
 
 
 class RGBStream(PixelStream):
@@ -75,17 +163,19 @@ class RGBStream(PixelStream):
         """
         assert len(color_depth) == 3
         data_width = sum(color_depth)
-        super(RGBStream, self).__init__(data_width=data_width)
+        super(RGBStream, self).__init__(data_width=data_width+2)
 
         self.color_depth = color_depth
         rbits, gbits, bbits = color_depth
 
         # a single pixel (color component) is the most
+        self.num_pixels = num_pixels
         if num_pixels == 1:
             self.red = Signal(intbv(0)[rbits:0])
             self.green = Signal(intbv(0)[gbits:0])
             self.blue = Signal(intbv(0)[rbits:0])
-            # alias to the above signals
+            # alias to the above signals, overrides data, data is
+            # a shadow (read-only) of the RGB attributes
             self.data = ConcatSignal(self.start_of_frame, self.end_of_frame,
                                      self.red, self.green, self.blue)
         else:
@@ -95,41 +185,60 @@ class RGBStream(PixelStream):
             # @todo data alias for multiple pixels
             raise NotImplementedError
 
-    def assign(self, stream):
-        assert isinstance(stream, RGBStream)
-        self.valid.next = stream.valid
-        self.start_of_frame.next = stream.start_of_frame
-        self.end_of_frame.next = stream.end_of_frame
-        self.red.next = stream.red
-        self.green.next = stream.green
-        self.blue.next = stream.blue
-        
-    def assign_from_data(self, data):
-        """Given a data vector, update the attributes"""
-        assert len(data) == len(self.data)
-        rbits, gbits, bbits = self.color_depth
-        self.blue.next = data[bbits:0]
-        self.green.next = data[gbits+bbits:bbits]
-        self.red.next = data[rbits+gbits+bbits:gbits]
-        self.end_of_frame.next = data[rbits]
-        self.start_of_frame.next = data[rbits+1]
+    def copy(self):
+        rgb = RGBStream(color_depth=self.color_depth,
+                        num_pixels=self.num_pixels)
+        return rgb
 
-    # @myhdl.block
-    # def map_to_data(self):
-    #     """Map red, green, and blue to data
-    #     The base interface to all the subblocks is `DataStream` but in most
-    #     of the subblocks it is more convenient to deal with the color
-    #     components.  When using the color components the data needs to be
-    #     assigned.
-    #
-    #     myhdl convertible
-    #     """
-    #     raise NotImplementedError
-    #
-    #     # insts = []
-    #     # for nn in range(self.num_pixels):
-    #     #     for jj in range(3):
-    #     #         insts = assign()
+    def _assign_next(self, stream):
+        if isinstance(stream, RGBStream):
+            self.valid.next = stream.valid
+            self.start_of_frame.next = stream.start_of_frame
+            self.end_of_frame.next = stream.end_of_frame
+            self.red.next = stream.red
+            self.green.next = stream.green
+            self.blue.next = stream.blue
+        elif isinstance(stream, (DataStream, SignalType,)):
+            data = stream.data if isinstance(stream, DataStream) else stream
+            assert len(data) == len(self.data)
+            rbits, gbits, bbits = self.color_depth
+            self.blue.next = data[bbits:0]
+            self.green.next = data[gbits + bbits:bbits]
+            self.red.next = data[rbits + gbits + bbits:gbits]
+            self.end_of_frame.next = data[rbits]
+            self.start_of_frame.next = data[rbits + 1]
+        else:
+            raise TypeError("Invalid stream type {}".format(type(stream)))
+
+    @myhdl.block
+    def assign(self, stream, clock=None):
+        # @todo this should be identical to _assign_next
+        #    but the assignments need to be wrapped in a myhdl always decorator
+
+        # @todo: maybe make these external modules and name the instances
+        #    if RGBStream:
+        #        inst = rgb_assign_rgbstream(stream, clock)
+        #    elif DataStream, SignalType
+        #        inst = rgb_assign_data(data, color_depth, clock)
+        #    inst.name = self.name
+        if isinstance(stream, RGBStream):
+            @self.always_deco(clock)
+            def beh_assign():
+                pass
+        elif isinstance(stream (DataStream, SignalType)):
+            data = stream.data if isinstance(stream, DataStream) else stream
+            assert len(data) == len(self.data)
+            rbits, gbits, bbits = self.color_depth
+
+            @self.always_deco(clock)
+            def beh_assign():
+                pass
+        else:
+            raise TypeError("Invalid stream type {}".format(type(stream)))
+
+        raise NotImplementedError
+
+        return beh_assign
 
 
 class YCbCrStream(PixelStream):
@@ -151,6 +260,15 @@ class YCbCrStream(PixelStream):
 
         # alias to the above color signals
         self.data = ConcatSignal(self.y, self.cb, self.cr)
+
+    def copy(self):
+        raise NotImplementedError
+
+    def _assign_next(self, stream):
+        raise NotImplementedError
+
+    def assign(self, ds, clock=None):
+        raise NotImplementedError
 
 
 class DataBlock(object):

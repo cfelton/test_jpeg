@@ -11,7 +11,7 @@ from .buffers import FIFOReadyValid
 
 
 class ProcessingSubblock(object):
-    def __init__(self, cycles_to_process=1, block_size=None, buffered=False):
+    def __init__(self, cycles_to_process=1, pipelined=False, block_size=None, buffered=False):
         """A simple model to represent a processing subblock in the jpegenc
 
         Arguments:
@@ -27,17 +27,28 @@ class ProcessingSubblock(object):
 
             buffered (bool):
 
-        The processing element class is named ProcessingSubblock and `psb`
-        and `pe` will be used as shorthand in various spots.
+        The processing element class is named ProcessingSubblock, `psb`
+        and `pe` will be used as shorthand.
         """
         assert isinstance(cycles_to_process, int)
+        assert cycles_to_process > 0
+        assert isinstance(pipelined, bool)
         if block_size is not None:
             assert isinstance(block_size, tuple) and len(block_size) == 2
-        assert isinstance(buffered, bool)
 
         # the cycles to process is the same as latency
         self.ctp = cycles_to_process
+        self.pipe = pipelined
         self.block_size = block_size
+
+        # determine if buffered on inputs, outputs, or both
+        assert isinstance(buffered, (bool, str))
+        if isinstance(buffered, str):
+            assert buffered in ('input', 'output')
+            self.buffer_type = buffered
+            buffered = True
+        else:
+            self.buffer_type = 'both' if buffered else 'none'
         self.buffered = buffered
 
         if buffered:
@@ -53,20 +64,17 @@ class ProcessingSubblock(object):
     def process(self, glbl, datain, dataout):
         assert isinstance(datain, DataStream)
         assert isinstance(dataout, DataStream)
-
         assert len(datain.data) == len(dataout.data)
+
+        ctp, piped, buffered = self.ctp, self.pipe, self.buffered
 
         clock, reset = glbl.clock, glbl.reset
         ready = Signal(bool(0))
 
         # include an input and output fifo
         if self.buffered:
-            # @todo: implement the FIFO
-            raise NotImplementedError
-
-            # @todo: the interfaces need to override copy ...
-            buffered_data_i = type(datain)()
-            buffered_data_o = type(datain)()
+            buffered_data_i = datain.copy()
+            buffered_data_o = datain.copy()
 
             fifo_i = self.fifo_i
             fifo_i_inst = fifo_i.process(glbl, datain, buffered_data_i)
@@ -85,24 +93,39 @@ class ProcessingSubblock(object):
                 datain.ready.next = ready
 
         # need an intermediate to hold the signal values
-        # @todo: the interfaces need to overload __copy__,
-        #        To make this generic this needs a new (copy) instance
-        #        with all the same attributes/properties, the current
-        #        only uses the default.
         dataproc = datain.copy()
-
+        npipe = ctp-1
+        pipeline = [datain.copy() for _ in range(npipe)]
 
         @instance
         def processing_model():
             ready.next = True
+
             while True:
                 # datain -> dataproc -> dataout
-                dataproc.assign(datain)
-                # @todo: fixed at 1 cycle for now
-                #        if the latency is less than
-                # for nn in range(self.ctp):
+                if piped:
+                    pipeline[0].next = datain
+                    for ii in range(1, npipe):
+                        pipeline[ii].next = pipeline[ii-1]
+                else:
+                    dataproc.assign(datain)
+                    for nn in range(self.ctp-1):
+                        ready.next = False
+                        yield clock.posedge
+                    ready.next = True
+
+                # always at least one
                 yield clock.posedge
-                dataout.assign(dataproc)
+                dataout.next = dataproc
+
+        # @todo: this causes a duplicate error in the
+        # many of the interface signals are not traced by default,
+        # get a bunch of monitors so the signals can be traced.
+        # mon_insts = []
+        # for intf in (datain, dataproc, dataout):
+        #     inst = intf.monitor()
+        #     # inst.name = intf.name
+        #     mon_insts += [inst]
 
         return myhdl.instances()
 
