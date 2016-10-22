@@ -3,8 +3,7 @@
 import myhdl
 from myhdl import Signal, instance
 
-from .. import ObjectWithBlocks
-from ..interfaces import DataStream
+from jpegenc.interfaces import ObjectWithBlocks, DataStream
 from .video_source import VideoSource
 
 

@@ -3,10 +3,9 @@ from math import floor
 from random import randint
 
 import myhdl
-from myhdl import Signal, intbv, instance, always_comb
+from myhdl import Signal, intbv, instance
 
-from .. import ObjectWithBlocks
-from ..interfaces import DataStream, RGBStream
+from jpegenc.interfaces import ObjectWithBlocks, RGBStream
 
 
 class VideoSource(ObjectWithBlocks):

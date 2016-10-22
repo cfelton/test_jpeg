@@ -5,7 +5,7 @@ import myhdl
 from myhdl import instance, delay, StopSimulation
 from rhea import Global, Clock
 
-from jpegenc.models import DataStream
+from jpegenc.interfaces import DataStream
 from jpegenc.models.video import BitstreamDevourer
 from jpegenc.testing import run_testbench
 

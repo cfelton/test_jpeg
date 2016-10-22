@@ -82,7 +82,6 @@ class ColorBars(VideoSource):
         if npixel >= (nrows * ncols):
             npixel = 0
 
-
     def check_pixel(self, buffer, frame=0, offset=0):
         """Regenerate a frame and compare it to a buffer
 

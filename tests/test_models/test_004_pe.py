@@ -3,7 +3,7 @@ import myhdl
 from myhdl import instance, delay, StopSimulation
 from rhea import Global, Clock
 
-from jpegenc.models import DataStream
+from jpegenc.interfaces import DataStream
 from jpegenc.models import ProcessingSubblock
 from jpegenc.models.video import ColorBars
 from jpegenc.models.video import BitstreamDevourer

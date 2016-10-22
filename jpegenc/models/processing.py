@@ -4,13 +4,10 @@ from math import floor
 import traceback
 
 import myhdl
-from myhdl import Signal, intbv, instance, always_comb
-from rhea import Global, Clock, Signals
+from myhdl import Signal, instance, always_comb
 
-from .interfaces import DataStream, RGBStream
+from jpegenc.interfaces import ObjectWithBlocks, DataStream
 from .buffers import FIFOReadyValid
-
-from . import ObjectWithBlocks
 
 
 class ProcessingSubblock(ObjectWithBlocks):
@@ -124,9 +121,6 @@ class ProcessingSubblock(ObjectWithBlocks):
                 yield clock.posedge
                 dataout.next = dataproc
 
-        # @todo: this causes a duplicate error in the
-        # many of the interface signals are not traced by default,
-        # get a bunch of monitors so the signals can be traced.
         mon_insts = []
         for intf in (datain, dataproc, dataout):
             inst = intf.monitor()
