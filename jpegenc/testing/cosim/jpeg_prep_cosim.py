@@ -33,7 +33,7 @@ def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
     print("compiling v2 ...")
     os.system(cmd)
 
-    files = ['tb_jpegenc.v']
+    files = ['test_ref/tb_jpegenc.v']
     vstr = "-D VTRACE" if args.vtrace else ""
     dstr = "%s -D VTRACE_LEVEL=%d -D VTRACE_MODULE=%s " % \
            (vstr, args.vtrace_level, args.vtrace_module)
@@ -61,8 +61,8 @@ def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
         reset=reset,
         
         # encoder 1 (V1, design1)
-        j1_iram_wdata      = jpgv1.iram_wdata,
-        j1_iram_wren       = jpgv1.iram_wren,
+        j1_iram_wdata=jpgv1.iram_wdata,
+        j1_iram_wren=jpgv1.iram_wren,
         j1_iram_fifo_afull = jpgv1.iram_fifo_afull,
         j1_ram_byte        = jpgv1.ram_byte,
         j1_ram_wren        = jpgv1.ram_wren,

@@ -25,7 +25,7 @@ def prep_cosim(clock, reset, datai, datao, args=None):
                 'MDCT.v']
 
     filelist = [os.path.join(spth, ff) for ff in filelist]
-    filelist += ['tb_mdct.v']
+    filelist += ['test_ref/tb_mdct.v']
 
     for ff in filelist:
         assert os.path.isfile(ff), "%s" % (ff,)
