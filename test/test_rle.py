@@ -1,5 +1,5 @@
 """The functionality of entire
-    Run Length Encoder is checked here"""
+    RLE Module is checked here"""
 
 from myhdl import StopSimulation
 from myhdl import block

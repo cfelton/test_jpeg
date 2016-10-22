@@ -1,4 +1,4 @@
-"""This module tests the functionality and conversion of Entropy Coder"""
+"""This module tests the functionality and conversion of Backend Module"""
 
 from myhdl import block, instance, modbv
 from myhdl import intbv, ResetSignal, Signal, StopSimulation
