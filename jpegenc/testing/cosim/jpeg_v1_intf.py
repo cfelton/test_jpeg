@@ -4,18 +4,15 @@ from __future__ import division, print_function, absolute_import
 import datetime
 import struct
 
-from PIL import Image
+import myhdl
+from myhdl import Signal, SignalType, intbv, instance, concat
 
-from myhdl import *
-
-from .signal_queue import SignalQueue
 from .opb import OPBBus
 from .jpeg_intf import JPEGEnc
 from .jpeg_roms import rom_lum, rom_chr
 
 
 class JPEGEncV1(JPEGEnc):
-    
     def __init__(self, clock, reset, args=None):
         """
         """
@@ -116,7 +113,7 @@ class JPEGEncV1(JPEGEnc):
                 print("V1: encode image %s %d x %d" % (str(img), nx, ny,))
                 self.img_size = img.size
 
-                self.encode_start_time = now()
+                self.encode_start_time = myhdl.now()
                 for yy in range(0, ny):
                     for xx in range(0, nx):
                         self.iram_wren.next = False
@@ -148,7 +145,7 @@ class JPEGEncV1(JPEGEnc):
                     yield self.clock.posedge
 
                 # at this point the next frame can be sent
-                self.encode_end_time = now()
+                self.encode_end_time = myhdl.now()
                 # display the max frame rate
                 dt = self.encode_end_time - self.encode_start_time
                 self.max_frame_rate = 1/(dt * 1e-9)
@@ -179,19 +176,18 @@ class JPEGEncV1(JPEGEnc):
                     word = (word << 8) | nb
                     ii += 1
                     # when 4 bytes received save it
-                    if (ii%4) ==  0:
+                    if (ii % 4) == 0:
                         self._bitstream.append(word)
                         nwords += 1
-                        if nwords%Ncyc == 0:
+                        if nwords % Ncyc == 0:
                             print("V1: %6d output, latest %08X" % (nwords, self._bitstream[-1],))
 
                         # write this word to the file
                         fword = struct.pack('>L', word)
-                        #print("V1: {:08X}, {}".format(word, fword))
+                        # print("V1: {:08X}, {}".format(word, fword))
                         jfp.write(fword)
                         word = 0
 
-                #if ii > 10:
                 if ((self.nout > 0 and ii >= self.nout) or self._enc_done):
                     yield self._outq.put(self._bitstream)
                     do_capture = False

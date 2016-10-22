@@ -44,7 +44,7 @@ def jpegenc_top(
             iram_wren.next = True
             bytecnt.next = 0
         elif datain_valid:
-            if bytecnt ==  2:
+            if bytecnt == 2:
                 iram_wdata.next[24:16] = datain
                 bytecnt.next = 3
             elif bytecnt == 1:
@@ -131,6 +131,7 @@ jpegenc.verilog_code = """
     );
 
 """
+
 
 def convert():
     portmap = jpegenc_top.portmap
