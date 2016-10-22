@@ -5,12 +5,12 @@ from argparse import Namespace
 
 from myhdl import Signal, ResetSignal, Cosimulation
 
+from .jpeg_filelist import filelist_v1, filelist_v2
+
 
 def prep_cosim(clock, reset, jpgv1, jpgv2, args=None):
     """
     """
-    global filelist_v1, filelist_v2
-
     # build the first JPEG encoder
     # @note: this encoder is still being converted to 
     #    Verilog, for now just build
