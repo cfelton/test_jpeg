@@ -7,6 +7,12 @@ g_inst_id = 0
 
 class ObjectWithBlocks(object):
     def __init__(self, name="owb"):
+        """
+
+        Args:
+            name: a name for the object, this will be used for
+             the instance names in the tracing and conversion.
+        """
         global g_inst_id
         self.inst_id = g_inst_id
         g_inst_id += 1
