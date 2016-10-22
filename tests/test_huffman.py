@@ -18,11 +18,6 @@ from jpegenc.subblocks.rle import Component
 
 from jpegenc.testing import huff_inputs
 
-# from huff_test_inputs import (vli_test_y, vli_size_test_y, runlength_test_y,
-#                               vli_test_cb, vli_size_test_cb,
-#                               runlength_test_cb, vli_test_cr,
-#                               vli_size_test_cr, runlength_test_cr,)
-
 
 def write_block(
         input_stream, control_unit, input_fifo_empty, color,

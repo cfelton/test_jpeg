@@ -39,6 +39,7 @@ Measurements
 .. toctree::
     :maxdepth: 1
 
-     Coverage<./subblocks/coverage.rst>
+     Coverage Frontend<./subblocks/coverage.rst>
+     Coverage Backend<./subblocks/coverage_backend.rst>
      Implementation Results<./subblocks/impl.rst>
 

@@ -1,4 +1,4 @@
-"""The above testbench tests rle functioning and conversion"""
+"""The above testbench tests rle core functioning and conversion"""
 
 from myhdl import StopSimulation
 from myhdl import block
