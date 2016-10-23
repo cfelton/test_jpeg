@@ -1,7 +1,11 @@
-
+"""
+Test inputs for the Huffman encoder
+"""
 # @todo: How were these generated ???  Create a github issue
-# How were these test inputs generated.  These should be replaced with a
-# model/function/object that generates the inputs instead of static inputs
+#     How were these test inputs generated.  These should be replaced
+#     with a model/function/object that generates the inputs instead
+#     of static inputs
+
 
 vli_test_y = [
     10, 1, 2, 4, 8, 16, 32, 65,
@@ -14,7 +18,6 @@ vli_test_y = [
     2, 2, 2, 2, 3, 3, 3, 2,
 ]
 
-
 vli_size_test_y = [
     4, 1, 2, 3, 4, 5, 6, 7,
     8, 9, 10, 1, 2, 3, 4, 5,
@@ -25,7 +28,6 @@ vli_size_test_y = [
     2, 2, 2, 2, 2, 2, 2, 2,
     1, 1, 1, 1, 2, 2, 2, 1,
 ]
-
 
 runlength_test_y = [
     0, 2, 0, 0, 0, 0, 0, 0,
@@ -49,7 +51,6 @@ vli_test_cb = [
     2, 2, 2, 2, 3, 3, 3, 2,
 ]
 
-
 vli_size_test_cb = [
     4, 1, 1, 1, 1, 1, 1, 1,
     8, 2, 2, 1, 2, 3, 4, 5,
@@ -60,7 +61,6 @@ vli_size_test_cb = [
     2, 2, 2, 2, 2, 2, 2, 2,
     2, 2, 2, 2, 2, 2, 2, 2,
 ]
-
 
 runlength_test_cb = [
     0, 2, 0, 0, 0, 0, 0, 0,
@@ -84,7 +84,6 @@ vli_test_cr = [
     2, 2, 2, 2, 3, 3, 3, 2,
 ]
 
-
 vli_size_test_cr = [
     4, 1, 1, 1, 1, 1, 1, 1,
     8, 1, 1, 1, 2, 3, 4, 5,
@@ -95,7 +94,6 @@ vli_size_test_cr = [
     2, 2, 2, 2, 2, 2, 2, 2,
     1, 1, 1, 1, 2, 2, 2, 1,
 ]
-
 
 runlength_test_cr = [
     0, 2, 0, 0, 0, 0, 0, 0,

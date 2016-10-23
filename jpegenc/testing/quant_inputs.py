@@ -1,7 +1,11 @@
-
+"""
+Test inputs for the quantizer.
+"""
 # @todo: How were these generated ???  Create a github issue
-# How were these test inputs generated.  These should be replaced with a
-# model/function/object that generates the inputs instead of static inputs
+#     How were these test inputs generated.  These should be replaced
+#     with a model/function/object that generates the inputs instead
+#     of static inputs
+
 
 quant_rom = [
     16, 11, 10, 16, 24, 40, 51, 61,
