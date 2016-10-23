@@ -82,7 +82,7 @@ class RGBStream(PixelStream):
         elif isinstance(stream (DataStream, SignalType)):
             data = stream.data if isinstance(stream, DataStream) else stream
             assert len(data) == len(self.data)
-            rbits, gbits, bbits = self.color_depth
+            # rbits, gbits, bbits = self.color_depth
 
             @self.always_deco(clock)
             def beh_assign():
@@ -92,4 +92,8 @@ class RGBStream(PixelStream):
 
         raise NotImplementedError
 
-        return beh_assign
+        # return beh_assign
+
+    @myhdl.block
+    def process(self):
+        raise NotImplementedError

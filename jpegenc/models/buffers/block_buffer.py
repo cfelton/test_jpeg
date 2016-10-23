@@ -36,11 +36,10 @@ class PixelStream(object):
 
 
 class ImageBlock(object):
-    """ Interface to a block of memory
-    This interface is used to retrieve blocks of an image
-    """
     def __init__(self, pxl, block_size=(9, 9)):
-
+        """ Interface to a block of memory
+        This interface is used to retrieve blocks of an image.
+        """
         pw = pxl.width
         v, h = pxl.resolution
         m, n = block_size
@@ -61,10 +60,10 @@ def _dump_info(resolution, block_size, pwidth):
     video horizontal resolution times M times the number of
     bytes required for a pixel times 2 (double buffered).
 
-    :param block_size:
-    :param pwidth:
-    :return bytes:
-    :return mem_bytes:
+    Args:
+        resolution: video resolution
+        block_size: the sub-image size (matrix size)
+        pwidth: pixel width (change to color_depth)
     """
     v, h = resolution
     m, n = block_size

@@ -30,5 +30,10 @@ class YCbCrStream(PixelStream):
     def _assign_next(self, stream):
         raise NotImplementedError
 
+    @myhdl.block
     def assign(self, ds, clock=None):
+        raise NotImplementedError
+
+    @myhdl.block
+    def process(self):
         raise NotImplementedError

@@ -10,7 +10,7 @@ def compare_bitstreams(ipth, bitstreams):
     software generated JPEG bitstream from the original file.
     """
     if os.path.isfile(ipth):
-        img = Image(ipth)
+        img = Image.open(ipth, 'r')
 
         # @todo: complete this function, the following is not valid
         assert img == bitstreams

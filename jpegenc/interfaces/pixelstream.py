@@ -1,4 +1,5 @@
 
+import myhdl
 from myhdl import Signal, intbv, ConcatSignal
 from .datastream import DataStream
 
@@ -24,4 +25,8 @@ class PixelStream(DataStream):
         self.end_of_frame.next = stream.end_of_frame
 
     def copy(self):
+        raise NotImplementedError
+
+    @myhdl.block
+    def process(self):
         raise NotImplementedError
