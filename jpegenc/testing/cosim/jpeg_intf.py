@@ -2,16 +2,15 @@ from __future__ import division, print_function, absolute_import
 
 from PIL import Image
 
-from myhdl import *
+from myhdl import Signal, intbv
 from .signal_queue import SignalQueue
     
                  
 class JPEGEnc(object):
 
-    def __init__(self, clock, reset, args=None):
+    def __init__(self, clock, reset):
+        """An interface to the Verilog JPEG encoders.
         """
-        """
-
         # @todo: the following parameters should be part of the args
         self.pixel_nbits = 24
         self.block_size = (8, 8,)
@@ -47,11 +46,11 @@ class JPEGEnc(object):
         self.encode_start_time = 0
         self.encode_end_time = 0
 
-    def _ext(self, img, N=16):
+    def _ext(self, img, n=16):
         """ extend an image to be a multiple of N pixels
         """
         w, h = img.size
-        we, he = w+(N-w % N), h+(N-h % N)
+        we, he = w+(n-w % n), h+(n-h % n)
         nimg = Image.new("RGB", (we, he,))
         nimg.paste(img, (0, 0,))
         return nimg
@@ -60,7 +59,7 @@ class JPEGEnc(object):
         """ put an image to stream into the encoder
         """
         assert img.mode == 'RGB'
-        nimg = self._ext(img, N=16)
+        nimg = self._ext(img, n=16)
         self._bitstream = []
         yield self._inq.put(nimg)
         yield self.clock.posedge
@@ -77,11 +76,11 @@ class JPEGEnc(object):
 
     def stream_img_in(self):
         """ stream image in adapter """
-        raise NotImplemented
+        raise NotImplementedError
 
     def stream_jpg_out(self):
         """ stream jpeg bitstream out """
-        raise NotImplemented
+        raise NotImplementedError
 
     def get_gens(self):
         d = self.stream_img_in()
