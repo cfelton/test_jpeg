@@ -36,7 +36,7 @@ class JPEGEncV1(JPEGEnc):
         self._enc_done = Signal(bool(0))
 
         # set the encoder parameters 
-        self.block_size = (16,8,)
+        self.block_size = (16, 8,)
 
         self.nout = args.nout
         self.start_time = args.start_time
@@ -44,17 +44,16 @@ class JPEGEncV1(JPEGEnc):
     def initialize(self, luminance=1, chrominance=1):
         """ initialize the encoder 
 
-        Arguments
-        ---------
-          luninance : 1, .85, .75 or .5
-          chrominance : 1, .85, .75 or .5
+        Arguments:
+            luminance: 1, .85, .75 or .5
+            chrominance: 1, .85, .75 or .5
         """
         # lum address
         offset = {1: 0x00, .85: 0x40, .75: 0x80, .50: 0xC0}
         lbase, cbase = 64*offset[luminance], 64*offset[chrominance]
 
         # program the luminance table
-        for ii, off in enumerate(range(lbase,lbase+64)):
+        for ii, off in enumerate(range(lbase, lbase+64)):
             addr = 0x00000100 + ii*4
             # print("[%8d] V1 init %8X --> %8X" % (now(), addr, rom_lum[off]))
             yield self.opb.write(addr, rom_lum[off])
@@ -66,7 +65,7 @@ class JPEGEncV1(JPEGEnc):
 
     def check_done(self, done):        
         assert isinstance(done, SignalType)
-        dn = False
+
         # read the status register
         rval = Signal(intbv(0)[32:])        
         yield self.opb.read(0x0C, rval)
@@ -121,7 +120,7 @@ class JPEGEncV1(JPEGEnc):
                             yield self.clock.posedge
 
                         # clear to write a pixel in
-                        r, g, b = img.getpixel((xx,yy,))
+                        r, g, b = img.getpixel((xx, yy,))
                         self.iram_wren.next = True
                         self.iram_wdata.next[24:16] = b
                         self.iram_wdata.next[16:8] = g
@@ -163,7 +162,7 @@ class JPEGEncV1(JPEGEnc):
         def t_bus_out():
             ii = 0
             do_capture = True
-            Ncyc = self.args.ncyc
+            ncyc = self.args.ncyc
             word = 0
             nwords = 0
 
@@ -179,7 +178,7 @@ class JPEGEncV1(JPEGEnc):
                     if (ii % 4) == 0:
                         self._bitstream.append(word)
                         nwords += 1
-                        if nwords % Ncyc == 0:
+                        if nwords % ncyc == 0:
                             print("V1: %6d output, latest %08X" % (nwords, self._bitstream[-1],))
 
                         # write this word to the file
@@ -188,7 +187,7 @@ class JPEGEncV1(JPEGEnc):
                         jfp.write(fword)
                         word = 0
 
-                if ((self.nout > 0 and ii >= self.nout) or self._enc_done):
+                if (self.nout > 0 and ii >= self.nout) or self._enc_done:
                     yield self._outq.put(self._bitstream)
                     do_capture = False
 

@@ -6,7 +6,7 @@ from myhdl import Signal, SignalType, intbv, always_comb
 class OPBBus(object):
     def __init__(self, clock, reset):
         self.clock = clock
-        self.reest = reset
+        self.reset = reset
         self.ABus = Signal(intbv(0)[32:])
         self.BE = Signal(intbv(0)[4:])
         self.DBus_in = Signal(intbv(0)[32:])
@@ -46,7 +46,7 @@ class OPBBus(object):
         while not ack:
             yield self.clock.posedge
             ack = self.XferAck
-        #rval.append(self.DBus_in.val)
+        # rval.append(self.DBus_in.val)
         rval.next = self.DBus_out
         self.ABus.next = 0
         self.select.next = False

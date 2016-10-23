@@ -33,6 +33,7 @@ def jpegenc_top(
         ram_byte, ram_wren, ram_wraddr, outif_almost_full,
         frame_size
     )
+    jpegenc_inst.name = 'jpegenc'
 
     bytecnt = Signal(intbv(0, min=0, max=4))
 
@@ -58,7 +59,6 @@ def jpegenc_top(
         dataout_valid.next = ram_wren
 
         frame_size.next = 1024
-
 
     return myhdl.instances()
 
@@ -98,7 +98,6 @@ def jpegenc(
     def beh_stub():
         if opb_rnw:
             opb_dbus_out.next = 0
-
 
     return beh_stub
 

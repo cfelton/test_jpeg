@@ -29,7 +29,7 @@ class SignalQueue(Queue):
             yield delay(1)
 
     def put_nowait(self, item):
-        self.put(item, Block=False, timeout=None)
+        self.put(item, block=False, timeout=None)
 
     def get(self, item, block=True, timeout=None):
         assert timeout is None, "Timeout not yet implemented"
@@ -47,7 +47,7 @@ class SignalQueue(Queue):
         yield self.get(item, block=False, timeout=None)
 
     def __str__(self):
-        s = 'len %d, max %d'%(self.qsize(),self._max)
+        s = 'len %d, max %d' % (self.qsize(), self._max,)
         return s
 
     def __repr__(self):

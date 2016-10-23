@@ -51,9 +51,9 @@ class JPEGEnc(object):
         """ extend an image to be a multiple of N pixels
         """
         w, h = img.size
-        we, he = w+(N-w%N), h+(N-h%N)
-        nimg = Image.new("RGB", (we,he,))
-        nimg.paste(img, (0,0,))
+        we, he = w+(N-w % N), h+(N-h % N)
+        nimg = Image.new("RGB", (we, he,))
+        nimg.paste(img, (0, 0,))
         return nimg
 
     def put_image(self, img):

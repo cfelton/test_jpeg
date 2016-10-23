@@ -5,7 +5,7 @@ import datetime
 import struct
 
 import myhdl
-from myhdl import Signal, SignalType, ResetSignal, intbv, instance
+from myhdl import Signal, intbv, instance
 
 from .jpeg_intf import JPEGEnc
 
@@ -29,7 +29,7 @@ class JPEGEncV2(JPEGEnc):
         self.eof_data_partial_ready = Signal(bool(0))            # output
   
         # set the encoder parameters 
-        self.block_size = (8,8,)
+        self.block_size = (8, 8,)
         self.nout = args.nout
         self.start_time = args.start_time
 
@@ -50,7 +50,7 @@ class JPEGEncV2(JPEGEnc):
                 yield self._inq.get(imglst, block=True)
                 self.pxl_done.next = False
                 img = imglst[0]
-                nx,ny = img.size
+                nx, ny = img.size
                 print("V2: encode image %s %d x %d" % (str(img), nx, ny,))
                 self.img_size = img.size
 
@@ -66,7 +66,7 @@ class JPEGEncV2(JPEGEnc):
                         # send the 8x8 block
                         for yb in range(8):
                             for xb in range(8):
-                                r, g, b = img.getpixel((xx+xb,yy+yb,))
+                                r, g, b = img.getpixel((xx+xb, yy+yb,))
                                 self.data_in.next[24:16] = b
                                 self.data_in.next[16:8] = g
                                 self.data_in.next[8:0] = r
@@ -109,7 +109,7 @@ class JPEGEncV2(JPEGEnc):
         def t_bus_out():
             ii = 0
             do_capture = True
-            Ncyc = self.args.ncyc
+            ncyc = self.args.ncyc
             
             # capture the output from the encoder
             while do_capture:
@@ -119,15 +119,15 @@ class JPEGEncV2(JPEGEnc):
                     word = int(self.jpeg_bitstream)
                     self._bitstream.append(word)
                     ii += 1
-                    if ii % Ncyc == 0:
+                    if ii % ncyc == 0:
                         print("V2: %6d output, latest %08X" % (ii, self._bitstream[-1],))
                         
                     fword = struct.pack('>L', word)
                     # print("V2: {:08X}, {}".format(word, fword))
                     jfp.write(fword)
 
-                if ((self.nout > 0 and ii >= self.nout) or 
-                     self.eof_data_partial_ready):
+                if (self.nout > 0 and ii >= self.nout or
+                    self.eof_data_partial_ready):
                     yield self._outq.put(self._bitstream)
                     do_capture = False
                     
