@@ -36,7 +36,7 @@ def test_dct_data_flow():
 
         @instance
         def tbstim():
-            npxl = 3*64   # get 3 blocks
+            npxl = 13*64   # number of blocks to get
             tcnt, timeout = 0, 4*npxl
 
             while bd.num_data_words < npxl and tcnt < timeout:
