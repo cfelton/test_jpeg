@@ -1,26 +1,26 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-import numpy as np
-
 from itertools import chain
+
 import myhdl
-from myhdl import Signal, intbv, always_comb, always_seq, block, ResetSignal
+from myhdl import Signal, intbv, always_comb, always_seq, ResetSignal
 
 from jpegenc.subblocks.color_converters import ColorSpace, rgb2ycbcr_v2
 from jpegenc.subblocks.dct.dct_2d import dct_2d_transformation, dct_2d
 from jpegenc.subblocks.zig_zag import zig_zag_scan, zig_zag
-from jpegenc.subblocks.common import YCbCr_v2, input_interface, outputs_2d, RGB, outputs_frontend_new
+from jpegenc.subblocks.common import (YCbCr_v2, input_interface, outputs_2d,
+                                      RGB, outputs_frontend_new,)
 
 
-def frontend_transform(blockr, blockg, blockb, N=8):
+def frontend_transform(blockr, blockg, blockb, n=8):
     """Software implementation of the frontend part"""
-    ycbcr_blocks = [[[] for _ in range(N)] for _ in range(3)]
+    ycbcr_blocks = [[[] for _ in range(n)] for _ in range(3)]
     dct_blocks, dct_blocks_linear, zig_zag_blocks = [[] for _ in range(3)]
 
-    """Color space conversion"""
-    for i in range(N):
-        for j in range(N):
+    # Color space conversion
+    for i in range(n):
+        for j in range(n):
             red = blockr[i][j]
             green = blockg[i][j]
             blue = blockb[i][j]
@@ -31,17 +31,22 @@ def frontend_transform(blockr, blockg, blockb, N=8):
                 ycbcr_blocks[k][i].append(ycbcr[k][0])
 
     for i in range(3):
-        """dct-2d transformation"""
-        dct_blocks.append(dct_2d_transformation(N).dct_2d_transformation(ycbcr_blocks[i]))
-        """dct blocks to linear lists"""
+        # dct-2d transformation
+        dct_blocks.append(
+            dct_2d_transformation(n).dct_2d_transformation(ycbcr_blocks[i])
+        )
+
+        # dct blocks to linear lists
         dct_blocks_linear.append(list(chain.from_iterable(dct_blocks[i])))
-        """zig zag scan"""
-        zig_zag_blocks.append(zig_zag_scan(N).zig_zag(dct_blocks_linear[i]))
+
+        # zig zag scan
+        zig_zag_blocks.append(zig_zag_scan(n).zig_zag(dct_blocks_linear[i]))
 
     return zig_zag_blocks
 
-@block
-def frontend_top_level_v2(inputs, outputs, clock, reset, N=8):
+
+@myhdl.block
+def frontend_top_level_v2(inputs, outputs, clock, reset):
 
     """Frontend Part of the JPEG Encoder
 
@@ -60,24 +65,24 @@ def frontend_top_level_v2(inputs, outputs, clock, reset, N=8):
 
     """
 
-    """Color Space Conversion"""
+    # Color Space Conversion
     rgb2ycbcr_out = YCbCr_v2()
     inputs_reg = RGB()
     color_space_converter = rgb2ycbcr_v2(inputs_reg, rgb2ycbcr_out, clock, reset)
 
-    """2D-DCT Transformation"""
+    # 2D-DCT Transformation
     dct_2d_input = input_interface()
 
     dct_2d_output = outputs_2d()
 
     dct_2d_inst = dct_2d(dct_2d_input, dct_2d_output, clock, reset)
 
-    """Zig-Zag Module"""
+    # Zig-Zag Module
     zig_zag_out = outputs_2d()
 
     zig_zag_inst = zig_zag(dct_2d_output, zig_zag_out, clock, reset)
 
-    """Intermediate signals"""
+    # Intermediate signals
     input_counter = Signal(intbv(0, min=0, max=64))
     color_mode = Signal(intbv(0, min=0, max=3))
     output_counter = Signal(intbv(0, min=0, max=64))
@@ -93,15 +98,19 @@ def frontend_top_level_v2(inputs, outputs, clock, reset, N=8):
 
     @always_seq(clock.posedge, reset=reset)
     def color_space_to_dct():
-        """signal assignment from color_space_conversion module to dct_2d inputs"""
+        """
+        signal assignment from color_space_conversion module to
+        dct_2d inputs
+        """
         if rgb2ycbcr_out.data_valid:
             dct_2d_input.data_in.next = rgb2ycbcr_out.data_out
             dct_2d_input.data_valid.next = rgb2ycbcr_out.data_valid
 
     @always_seq(clock.posedge, reset=reset)
     def first_control_signals_update():
-        """Is used to update the control signal color_mode for the first mux of the rgb2ycbcr
-        output to 2d dct"""
+        """
+        Is used to update the control signal color_mode for the
+        first mux of the rgb2ycbcr output to 2d dct"""
         if inputs.data_valid:
             if input_counter == 63:
                 input_counter.next = 0
@@ -136,20 +145,24 @@ def frontend_top_level_v2(inputs, outputs, clock, reset, N=8):
             else:
                 output_counter.next = output_counter + 1
 
-    return (color_space_converter, zig_zag_inst, dct_2d_inst, color_space_to_dct,
-            zig_zag_to_output_mux, first_control_signals_update, set_start_out,
-            output_counter_reset, input_reg, data_valid_assign)
+    return (color_space_converter, zig_zag_inst, dct_2d_inst,
+            color_space_to_dct, zig_zag_to_output_mux,
+            first_control_signals_update, set_start_out,
+            output_counter_reset, input_reg, data_valid_assign,)
+
 
 def convert():
-
     input_interface = RGB()
     output_interface = outputs_frontend_new()
     clock = Signal(bool(0))
     reset = ResetSignal(0, active=True, async=False)
 
-    inst = frontend_top_level_v2(input_interface, output_interface, clock, reset)
+    inst = frontend_top_level_v2(input_interface, output_interface,
+                                 clock, reset)
 
     inst.convert(hdl='vhdl')
     inst.convert(hdl='verilog')
 
-#convert()
+
+if __name__ == '__main__':
+    convert()

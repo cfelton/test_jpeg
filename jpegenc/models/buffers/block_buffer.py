@@ -2,16 +2,16 @@
 from __future__ import print_function, division
 
 from math import ceil
-from random import randint
 
 import myhdl
 from myhdl import Signal, intbv, always
 
 
 class PixelStream(object):
-    """ Pixel stream interface
-    """
     def __init__(self, resolution=(640, 480,), pformat=(8, 8, 8)):
+        """ Pixel stream interface
+        """
+        # @todo: merge this with jpegenc.interfaces.pixelstream.py
         self.resolution = resolution
         self.pformat = pformat
         self.width = sum(pformat)
@@ -36,24 +36,22 @@ class PixelStream(object):
 
 
 class ImageBlock(object):
-    """ Interface to a block of memory
-    This interface is used to retrieve blocks of an image
-    """
     def __init__(self, pxl, block_size=(9, 9)):
-
+        """ Interface to a block of memory
+        This interface is used to retrieve blocks of an image.
+        """
         pw = pxl.width
-        V, H = pxl.resolution
-        M, N = block_size
+        v, h = pxl.resolution
+        m, n = block_size
         self.block_size = block_size
 
         self.pixel = Signal(intbv(0)[pw:])
-        self.row = Signal(intbv(0, min=0, max=M))
-        self.col = Signal(intbv(0, min=0, max=N))
+        self.row = Signal(intbv(0, min=0, max=m))
+        self.col = Signal(intbv(0, min=0, max=n))
 
         # number of blocks in a buffer, number of blocks in a row
-        self.blocks_per_buffer = H//N
-        self.block_num = Signal(intbv(0, min=0,
-                                      max=self.blocks_per_buffer))
+        self.blocks_per_buffer = bpb = h//n
+        self.block_num = Signal(intbv(0, min=0, max=bpb))
 
 
 def _dump_info(resolution, block_size, pwidth):
@@ -62,15 +60,15 @@ def _dump_info(resolution, block_size, pwidth):
     video horizontal resolution times M times the number of
     bytes required for a pixel times 2 (double buffered).
 
-    :param block_size:
-    :param pwidth:
-    :return bytes:
-    :return mem_bytes:
+    Args:
+        resolution: video resolution
+        block_size: the sub-image size (matrix size)
+        pwidth: pixel width (change to color_depth)
     """
-    V, H = resolution
-    M, N = block_size
-    bytes = int(ceil(pwidth / 8))
-    mem_bytes = 2 * M * H * bytes
+    v, h = resolution
+    m, n = block_size
+    bytez = int(ceil(pwidth / 8))
+    mem_bytes = 2 * m * h * bytez
     print("Memory requirements:")
     print("  {:d} bytes for double buffer".format(mem_bytes))
 
@@ -86,26 +84,25 @@ def mdl_block_buffer(pxl, bmem):
     row (line) at a time.  The buffer needs to store M rows
     into memory
 
-
-    :param pxl: input pixel stream interface
-    :param bmem: block memory interface
-    :return:
+    Args:
+        pxl: input pixel stream interface
+        bmem: block memory interface
     """
     block_size = bmem.block_size
     pw = pxl.width         # pixel width
-    V, H = pxl.resolution  # video stream resolution
-    M, N = block_size      # block size
+    v, h = pxl.resolution  # video stream resolution
+    m, n = block_size      # block size
 
     # dump information
-    bytes, mb = _dump_info(pxl.resolution, block_size, pw)
+    bytez, mb = _dump_info(pxl.resolution, block_size, pw)
 
     # memory buffers, double buffered
-    num_pixels = M*H
+    num_pixels = m * h
     line_buffer_a = [Signal(intbv(0)[pw:]) for _ in range(num_pixels)]
     line_buffer_b = [Signal(intbv(0)[pw:]) for _ in range(num_pixels)]
 
     anotb = Signal(bool(0))
-    ccnt = Signal(intbv(0, min=0, max=M*H))
+    ccnt = Signal(intbv(0, min=0, max=m*h))
 
     # input double buffer, capture the stream
     @always(pxl.clock.posedge)
@@ -116,7 +113,7 @@ def mdl_block_buffer(pxl, bmem):
             else:
                 line_buffer_b[ccnt].next = pxl.pixel
 
-            if ccnt == num_pixels-1:
+            if ccnt == num_pixels - 1:
                 ccnt.next = 0
                 anotb.next = not anotb
             else:

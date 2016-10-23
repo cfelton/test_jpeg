@@ -42,7 +42,7 @@ install:
 
 
 script:
-   - cd test
+   - cd tests
    - coverage run --source=jpegenc -m py.test --include-reference 
    - cp .coverage ../
 
