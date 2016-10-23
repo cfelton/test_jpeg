@@ -7,11 +7,12 @@ from .signal_queue import SignalQueue
     
                  
 class JPEGEnc(object):
-
-    def __init__(self, clock, reset):
+    def __init__(self, clock, reset, args=None):
         """An interface to the Verilog JPEG encoders.
         """
         # @todo: the following parameters should be part of the args
+        if hasattr(args, 'pixel_nbits'):
+            pass
         self.pixel_nbits = 24
         self.block_size = (8, 8,)
         self.max_frame_rate = 0
