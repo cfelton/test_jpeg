@@ -16,7 +16,7 @@ from jpegenc.testing import run_testbench
 from jpegenc.subblocks.rle import Component
 
 
-from huff_test_inputs import (vli_test_y, vli_size_test_y, runlength_test_y,
+from .huff_test_inputs import (vli_test_y, vli_size_test_y, runlength_test_y,
                               vli_test_cb, vli_size_test_cb,
                               runlength_test_cb, vli_test_cr,
                               vli_size_test_cr, runlength_test_cr,)
@@ -259,7 +259,3 @@ def test_block_conversion():
     verify.simulator = 'iverilog'
     assert bench_entropycoder().verify_convert() == 0
 
-
-if __name__ == "__main__":
-    test_huffman()
-    test_block_conversion()

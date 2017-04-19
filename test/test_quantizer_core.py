@@ -15,7 +15,7 @@ from jpegenc.testing import (clock_driver, reset_on_start,
 
 from jpegenc.testing import run_testbench
 
-from quant_test_inputs import quant_rom, quant_in
+from .quant_test_inputs import quant_rom, quant_in
 
 
 def quant_block_process(
